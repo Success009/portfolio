@@ -1,0 +1,395 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> My grand portfolio </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #4f46e5;
+            --background: #0f172a;
+            --text: #f8fafc;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            margin-left: 2rem;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .hero-text h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        .hero-text p {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+        .hero-image {
+            position: relative;
+        }
+        .profile-img {
+            width: 400px;
+            height: 400px;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            object-fit: cover;
+            box-shadow: 0 0 50px rgba(56, 189, 248, 0.3);
+            animation: morphing 10s ease-in-out infinite;
+        }
+        @keyframes morphing {
+            0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            25% { border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%; }
+            50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
+            75% { border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%; }
+            100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+        }
+        .section {
+            padding: 8rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        .skill-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .skill-card:hover {
+            transform: translateY(-10px);
+        }
+        .skill-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .project-card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-10px);
+        }
+        .project-content {
+            padding: 2rem;
+        }
+        .project-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        .project-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: background 0.3s ease;
+        }
+        .project-link:hover {
+            background: var(--secondary);
+        }
+        .experience-timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+        .timeline-item {
+            margin-bottom: 4rem;
+            position: relative;
+            padding-left: 3rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--accent);
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+        .contact {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 4rem 2rem;
+            border-radius: 1rem;
+            margin-top: 4rem;
+        }
+
+        .contact-email {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 1.25rem;
+            display: inline-block;
+            margin-top: 1rem;
+            transition: color 0.3s ease;
+        }
+        .contact-email:hover {
+            color: var(--primary);
+        }
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .profile-img {
+                width: 300px;
+                height: 300px;
+                margin: 0 auto;
+            }
+            .nav-links {
+                display: none;
+            }
+        }
+        .nav-logo {
+            height: 80px;
+            display: flex;
+            align-items: center;
+        }
+        .nav-logo img {
+            height: 100%;
+            width: auto;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">
+            <img src="logo.png" alt="Success Logo">
+        </div>
+        <div class="nav-links">
+            <a href="#about">About</a>
+            <a href="#skills">Skills</a>
+            <a href="#projects">Projects</a>
+            <a href="#experience">Experience</a>
+        </div>
+    </nav>
+    <section class="hero" id="about">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Hello, I'm Success</h1>
+                <p>A 17-year-old developer passionate about creating innovative solutions through code. Currently studying at Narendra Model Secondary School, I specialize in Python, JavaScript, and web development.</p>
+            </div>
+            <div class="hero-image">
+                <img src="success.jpg" alt="Success's Profile" class="profile-img">
+            </div>
+        </div>
+    </section>
+    <section class="section" id="skills">
+        <h2 class="section-title">Technical Skills</h2>
+        <div class="skills-grid">
+            <div class="skill-card">
+                <div class="skill-icon">🐍</div>
+                <h3>Python</h3>
+                <p>Advanced programming and automation</p>
+            </div>
+            <div class="skill-card">
+                <div class="skill-icon">⚡</div>
+                <h3>JavaScript</h3>
+                <p>Expert in advanced TypeScript</p>
+            </div>
+            <div class="skill-card">
+                <div class="skill-icon">🎨</div>
+                <h3>HTML & CSS</h3>
+                <p>Good in creating Responsive web designs with transitions and animations</p>
+            </div>
+            <div class="skill-card">
+                <div class="skill-icon">🚀</div>
+                <h3>Node.js</h3>
+                <p>Skilled in backend development and API creation using Node.js.</p>
+            </div>
+        </div>
+    </section>
+    <section class="section" id="projects">
+        <h2 class="section-title">Featured Projects</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <div class="project-content">
+                    <h3 class="project-title">Bharatpur Bazar</h3>
+                    <p>An online marketplace platform connecting local vendors with customers</p>
+                    <a href="http://bharatpurbazar.shop/" class="project-link" target="_blank">View Project</a>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-content">
+                    <h3 class="project-title">Ability Website</h3>
+                    <p>A showcase of development capabilities and interactive web features</p>
+                    <a href="https://success0.fr.to/ability/" class="project-link" target="_blank">View Project</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="section" id="experience">
+        <h2 class="section-title">Experience</h2>
+        <div class="experience-timeline">
+            <div class="timeline-item">
+                <h3>Freelance Developer</h3>
+                <p>Building custom web applications and solutions for various clients, focusing on creating efficient and scalable solutions.</p>
+            </div>
+            <div class="timeline-item">
+                <h3>High School</h3>
+                <p>Current</p>
+                <p>Pursuing computer science education while working on personal projects and expanding technical skills.</p>
+            </div>
+        </div>
+    </section>
+    <div class="contact">
+        <h2 class="section-title">Get in Touch</h2>
+        <h3>Email:</h3>
+        <a href="mailto:s@0.hs.vc" class="contact-email">s@0.hs.vc</a>
+    </div>
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.to('.nav', {
+            scrollTrigger: {
+                start: 'top top',
+                end: '+=50',
+                toggleActions: 'play none none reverse'
+            },
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            duration: 0.3
+        });
+        gsap.from('.hero-text', {
+            opacity: 0,
+            x: -100,
+            duration: 1,
+            delay: 0.5
+        });
+
+        gsap.from('.profile-img', {
+            opacity: 0,
+            x: 100,
+            duration: 1,
+            delay: 0.5
+        });
+        gsap.from('.skill-card', {
+            scrollTrigger: {
+                trigger: '.skills-grid',
+                start: 'top center'
+            },
+            opacity: 0,
+            y: 50,
+            duration: 0.6,
+            stagger: 0.2
+        });
+        gsap.from('.project-card', {
+            scrollTrigger: {
+                trigger: '.projects-grid',
+                start: 'top center'
+            },
+            opacity: 0,
+            y: 50,
+            duration: 0.6,
+            stagger: 0.2
+        });
+        gsap.from('.timeline-item', {
+            scrollTrigger: {
+                trigger: '.experience-timeline',
+                start: 'top center'
+            },
+            opacity: 0,
+            x: -50,
+            duration: 0.6,
+            stagger: 0.2
+        });
+    </script>
+</body>
+</html>

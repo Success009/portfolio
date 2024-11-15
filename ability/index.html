@@ -1,0 +1,471 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="Slayer_MC_Logo.ico" type="image/x-icon">
+  <title>Ability SMP - Minecraft SMP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('https://wallpapercave.com/wp/wp2586787.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    header {
+      background: green;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 36px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+    }
+
+    .ip-discord-tabs {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 10px 20px;
+      background: #f0f0f0;
+      border-radius: 5px;
+    }
+
+    .ip-tab {
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    .discord-logo,
+    .youtube-logo {
+      width: 48px;
+      height: 48px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .discord-logo:hover,
+    .youtube-logo:hover {
+      transform: scale(1.1);
+    }
+
+    .tabs {
+      display: flex;
+      background: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    .tab {
+      cursor: pointer;
+      padding: 10px 20px;
+      border-radius: 5px;
+      transition: background-color .3s, color .3s;
+      margin-right: 10px;
+    }
+
+    .tab.selected {
+      background: green;
+      color: #fff;
+    }
+
+    .tab:not(.selected) {
+      background: grey;
+      color: #fff;
+    }
+
+    .rules-content {
+      display: none;
+    }
+
+    .home-content {
+      margin-top: 20px;
+      padding: 0 20px;
+    }
+
+    .sub-Abilitys {
+      display: none;
+    }
+
+    .ranks {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    .rank {
+      text-align: center;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 10px;
+      border-radius: 5px;
+      width: calc(25% - 20px);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .rank h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .rank img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    .buy-button {
+      background: green;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .buy-button:hover {
+      background: #4CAF50;
+    }
+
+    .about-us-text,
+    .rules-content {
+      padding: 0 20px;
+    }
+
+    .logo-container {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .logo {
+      max-width: 50%;
+      height: auto;
+      transition: transform 0.2s;
+    }
+
+    .logo:hover {
+      transform: scale(1.1);
+    }
+
+    .ip-details {
+      display: none;
+      text-align: left;
+      margin: 20px 0;
+    }
+
+    .Abilitys {
+      margin: 10px 0;
+    }
+
+    .ip-button {
+      display: inline-block;
+      padding: 5px 10px;
+      background: green;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f9f9f9;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .dropdown-content p {
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Welcome to Ability SMP Website</h1>
+    <p>Your Ultimate Minecraft SMP Experience</p>
+    <!-- Slayer MC Logo below the text, between Discord and YouTube logos -->
+    <div class="logo-container">
+
+    </div>
+  </header>
+  <div class="container">
+    <div class="ip-discord-tabs">
+      <!-- New YouTube logo in place of previous IP -->
+      <a href=" " target="_blank"><img src="Youtube_logo.png" alt="YouTube Logo" class="youtube-logo"></a>
+      <img src="Slayer_MC_Logo.png" alt="Slayer MC Logo" class="logo">
+      <!-- Discord logo in its original place -->
+      <a href=" " target="_blank"><img src="Discord_Logo.png" alt="Discord Logo" class="discord-logo"></a>
+    </div>
+    <div class="tabs">
+      <div class="tab selected" id="home-tab">Home</div>
+      <div class="tab" id="ability-tab">Ability</div>
+      <div class="tab" id="sub-abilities-tab">Sub-Abilities</div>
+      <div class="tab" id="rules-tab">Rules</div>
+      <div class="tab" id="announcement-tab">Announcement</div>
+    </div>
+    <div class="home-content">
+      <div class="about-us-text">
+        <h2>About SMP</h2>
+        <h4>
+          <p>Welcome, members! Here, you'll find all about Ability SMP - its abilities, rules, sub-abilities,
+            announcements, and other essential details.<br>
+            <br>
+            Explore each tab:<br>
+            - **Home:** Details about our purpose and offerings.<br>
+            - **Abilities:** A list and descriptions of SMP abilities.<br>
+            - **Sub-Abilities:** Specifics about sub-abilities.<br>
+            - **Rules:** Server's specified rules.<br>
+            - **Announcements:** Latest server-related news.<br>
+            <br>
+            Explore and discover everything about Ability SMP Website.
+          </p>
+        </h4>
+      </div>
+    </div>
+    <div class="rules-content">
+      <h2>Server Rules</h2>
+      <p>1. No Spam: Please refrain from excessive and repetitive messages in the chat. Spamming can disrupt for
+        others.<br>
+        <br>2. No Advertisement: We do not allow any form of advertising in the chat. This includes promoting other
+        servers, products, or services unrelated to Ability SMP.<br>
+        <br>3.Cheating or Hacking: x-ray is allowed on the server but other kind of cheats and exploit are strictly
+        prohibited.<br>
+        <br>4. Keep Chat Friendly: Keep the chat friendly and suitable for all ages. Inappropriate language,
+        discussions, or content are not allowed.<br>
+        <br>5. Lag: Lag machines are strictly prohibited if found will result in permanent Ban. Any kind of large farm
+        which can affect server performance should we received by admin before being in use<br>
+        <br>5. Chunk loader: kind of junk loaders are prohibited. Because I believe that it will cause server lag.<br>
+        <br>6. Have Fun: Most importantly, have fun!.
+      </p>
+    </div>
+    <div class="ok">
+
+    </div>
+    <div class="sub-Abilitys">
+      <h2>sub-Abilitys</h2><br>
+      <h3>1)Dragon Welder</h3>
+      <h5>
+        Type: Combat<br>
+        Rarity: Mythical<br>
+        The sub Ability will be granted to the user when the user welding dragon eggs.</h5>
+      <h5>
+        -The user will be able to Summon iron golems [Cool down = 2 minutes]<br>
+        -Dragon instinct,"The user will be able to make nearby player glow by activating the instant" [Cool down = 2
+        minutes , Duration = 5 second]<br>
+        -Dragon vision,"The user can activate ability to see in dark" [Cool down = 0 , Duration = infinite]<br>
+        -Fire Ball,"The welder can summon a weak Fire Ball" [Cool down = 0 second]<br>
+        -Dragonic Aura," the welder will be surrounded by Dragonic particles[Just looks cool nothing very special]"<br>
+      </h5><br>
+
+      <h3 style="color: #00AA00;">2)Undead<h3>
+          <h5>Type: Survival<br>
+            Rarity: Legendary<br>
+            <h5>
+              - User can activate a command to become extremely slow and invincible [Cool down = 60 second , Duration =
+              5 second]<br>
+              - Welder can use a command apply one heart of damage to all entities and players within 10 blocks. If the
+              player gets damage by the aura the sub-ability welder will be healed by the damage applied to the player.
+              The healing effect can stack. [Cool down = 60 second , Duration = 0 seconde]</h5><br>
+
+            <h3 style="color: black;">3)Unseen<h3>
+                <h5>Type: Tactical<br>
+                  Rarity: Rear<br>
+                  <h5>
+                    - Welder can use the sub-ability to go completely invisible with no particle effects [Cool down = 5
+                    second , Duration = infinite]<br>
+                    - The sub-ability can be toggled on and off whenever the welder wants.<br>
+                    -The sub-ability cannot stay hidden against "Dragon instinct"
+                  </h5><br><br>
+    </div>
+
+    <div class="ip-details" id="ip-details">
+      <div class="Abilitys">
+        <h2>Abilitys</h2><br>
+        <h3 style="color: #55FFFF;">1)Spector:</h3>
+        <h5>This ability makes the user be able to switch users own gamemode to spectator and survival.<br>This ability
+          does not provide every function of the spectator mode for example restricting teleportation.<br> The ability
+          has no cool down and duration.<br> Ability is disabled in combat.</h5><br>
+
+        <h3 style="color: #5555FF;">2)Enchanter:</h3>
+        <h5>This ability makes the user be able to enchant any enchantable item in any players hand with its
+          enchantment.<br> The ability has 5 minute cool down.</h5><br>
+
+        <h3 style="color: #000000;">3)Flotter:</h3>
+        <h5>This ability makes the user be able to give/take the ability of flight to any player.<br> The ability has no
+          cool down and duration.<br> The welder of the ability can manipulate his own flying speed going 2 or three 3
+          faster.</h5><br>
+
+        <h3 style="color: #00AA00;">4)Wizard:</h3>
+        <h5>This ability makes the user be able to give different buff like strength jumbost speed etc to any
+          player<br>User can also give Blessings and Curse other players.<br>Different skills have different cool down
+          and duration with infinite range.</h5><br>
+
+        <h3 style="color: #AA00AA;">5)Strengther:</h3>
+        <h5>This ability makes the user to have different buff like strength jumbost speed etc. To give advantage over
+          combat and in general survive.<br>The ability has no gameplay impacting cool down or duration.</h5><br>
+
+        <h3 style="color: #AA0000;">6)Immortal:</h3>
+        <h5>This ability makes the user be able to instantly Heal him/herself which will instantly fill the ability
+          welder health bar and saturation bar.<br> The ability has no cool down or duration.</h5><br>
+
+        <h3 style="color: #555555;">7)Reaper:</h3>
+        <h5>This ability allows to activate a skill that hunts all players under 10 blocks.<br>When the player is
+          Haunted the player will receive different kind of stunning effects<br>User can activated skill to pull the
+          nearest player under 10 blocks to his position.</h5><br>
+
+        <h3 style="color: #FFFF55;">8)Teleporter:</h3>
+        <h5>This ability allows the user to teleport anywhere in the world.<br> The the welder of the ability can also
+          send a request to other player to teleport them to the ability welder or vice versa.<br> The welder can also
+          use and teleportation wand which allows the welder to teleport wherever they look and more.<br> The ability
+          has no cool down and duration.<br>The ability is disabled in combat.</h5><br>
+
+        <h3><span style="color: #0000AA;">9)Freezing </span><span style="color: #AA0000;">Blazer</span></h3>
+        <h5>This Ability allows the user the skill the power of fire and ice.<br>User can create a explosion of
+          Fire.<br>User can use a skill to freeze nearby players for 5 seconds.<br>As passive abilities user is immune
+          to heat can breathe in water and faster in water.</h5><br>
+
+        <h3 style="color: #FF5555;">10)Locator:</h3>
+        <h5>This ability allows the user structure, biome or player from anywhere in the world with no
+          consequences.<br>The welder of the ability will also receive speed boost and also can see in dark.<br> The
+          ability has no cool down and duration.</h5><br>
+
+      </div>
+    </div>
+    <div class="announcement-content" style="display: none;">
+      <h2>Recent Announcement</h2>
+      <h5>Announcement<br>
+        ---------------*---------------*---------------*---------------*---------------<br>
+        New sub-ability concept.<br>
+        type: ice<br>
+        Active Skills:<br>
+        Command: /freeze<br>
+        { whenever the command is used if any player is standing around ability wilder they will be in case in ice for 5
+        second}<br>
+        Passive skills:<br>
+        -No freezing damage<br>
+        -can breathe in water<br>
+        -Can swim faster in water<br>
+        ---------------*---------------*---------------*---------------*---------------<br>
+        <h5>
+          <p></p>
+    </div>
+    <script>
+      const homeTab = document.getElementById('home-tab');
+      const abilityTab = document.getElementById('ability-tab');
+      const subAbilitiesTab = document.getElementById('sub-abilities-tab');
+      const announcementTab = document.getElementById('announcement-tab');
+      const rulesTab = document.getElementById('rules-tab');
+
+      const homeContent = document.querySelector('.home-content');
+      const rulesContent = document.querySelector('.rules-content');
+      const shopContent = document.querySelector('.sub-Abilitys');
+      const ipDetails = document.getElementById('ip-details');
+      const announcementContent = document.querySelector('.announcement-content');
+
+      homeTab.addEventListener('click', () => {
+        homeContent.style.display = 'block';
+        rulesContent.style.display = 'none';
+        shopContent.style.display = 'none';
+        ipDetails.style.display = 'none';
+        announcementContent.style.display = 'none';
+        homeTab.classList.add('selected');
+        abilityTab.classList.remove('selected');
+        subAbilitiesTab.classList.remove('selected');
+        announcementTab.classList.remove('selected');
+        rulesTab.classList.remove('selected');
+      });
+
+      abilityTab.addEventListener('click', () => {
+        homeContent.style.display = 'none';
+        rulesContent.style.display = 'none';
+        shopContent.style.display = 'none';
+        ipDetails.style.display = 'block';
+        announcementContent.style.display = 'none';
+        homeTab.classList.remove('selected');
+        abilityTab.classList.add('selected');
+        subAbilitiesTab.classList.remove('selected');
+        announcementTab.classList.remove('selected');
+        rulesTab.classList.remove('selected');
+      });
+
+      subAbilitiesTab.addEventListener('click', () => {
+        homeContent.style.display = 'none';
+        rulesContent.style.display = 'none';
+        shopContent.style.display = 'block';
+        ipDetails.style.display = 'none';
+        announcementContent.style.display = 'none';
+        homeTab.classList.remove('selected');
+        abilityTab.classList.remove('selected');
+        subAbilitiesTab.classList.add('selected');
+        announcementTab.classList.remove('selected');
+        rulesTab.classList.remove('selected');
+      });
+
+      announcementTab.addEventListener('click', () => {
+        homeContent.style.display = 'none';
+        rulesContent.style.display = 'none';
+        shopContent.style.display = 'none';
+        ipDetails.style.display = 'none';
+        announcementContent.style.display = 'block';
+        homeTab.classList.remove('selected');
+        abilityTab.classList.remove('selected');
+        subAbilitiesTab.classList.remove('selected');
+        announcementTab.classList.add('selected');
+        rulesTab.classList.remove('selected');
+      });
+
+      rulesTab.addEventListener('click', () => {
+        homeContent.style.display = 'none';
+        rulesContent.style.display = 'block';
+        shopContent.style.display = 'none';
+        ipDetails.style.display = 'none';
+        announcementContent.style.display = 'none';
+        homeTab.classList.remove('selected');
+        abilityTab.classList.remove('selected');
+        subAbilitiesTab.classList.remove('selected');
+        announcementTab.classList.remove('selected');
+        rulesTab.classList.add('selected');
+      });
+
+      function copyToClipboard(text) {
+        const tempInput = document.createElement('input');
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        alert(`Copied to clipboard: ${text}`);
+      }
+  </script>
+</body>
+</html>
