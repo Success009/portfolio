@@ -1,0 +1,138 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>By Success</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { width: 90%; max-width: 800px; background-color: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); border-radius: 8px; text-align: center; }
+        h1 { margin-bottom: 20px; font-size: 24px; color: #333; }
+        form { display: flex; justify-content: center; margin-bottom: 20px; }
+        input[type="number"], input[type="text"], select { padding: 10px; margin: 0 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        input[type="number"] { width: 80px; }
+        input[type="text"] { width: 150px; }
+        button { padding: 10px 15px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; color: #fff; background-color: #4CAF50; transition: background-color 0.3s; }
+        button:hover { background-color: #45a049; }
+        .user-list { text-align: left; font-size: 16px; }
+        .user-list p { margin: 5px 0; }
+        .user-item { padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+        .user-item:first-child { border-top: 2px solid #ddd; }
+        .total-amount { font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Admin Money Management for 9 I</h1>
+    <form id="addUserForm">
+        <input type="number" id="roleNumber" placeholder="Role #" required>
+        <input type="text" id="userName" placeholder="User Name" required>
+        <button type="submit">Add User</button>
+    </form>
+    <form id="adjustAmountForm">
+        <select id="userSelect" required></select>
+        <input type="number" id="adjustAmount" placeholder="Amount" required>
+        <button type="submit">Adjust Amount</button>
+    </form>
+    <div id="userInfoContainer" class="user-list"></div>
+    <div id="totalAmount" class="total-amount"></div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+        authDomain: "community-canvas-255fa.firebaseapp.com",
+        databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+        projectId: "community-canvas-255fa",
+        storageBucket: "community-canvas-255fa.appspot.com",
+        messagingSenderId: "729445267995",
+        appId: "1:729445267995:web:05da6756d66c58b9ccd6be",
+        measurementId: "G-FW93CB5QL7"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const userDatabaseRef = database.ref('nmss/9i');
+    document.getElementById('addUserForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const roleNumber = parseInt(document.getElementById('roleNumber').value.trim());
+        const userName = document.getElementById('userName').value.trim().charAt(0).toUpperCase() + document.getElementById('userName').value.trim().slice(1);
+        userDatabaseRef.child(roleNumber + "-" + userName).set({
+            roleNumber: roleNumber,
+            userName: userName,
+            payAmount: 0
+        }, (error) => {
+            if (!error) {
+                document.getElementById('roleNumber').value = '';
+                document.getElementById('userName').value = '';
+            } else {
+                alert('Failed to add user. Please try again.');
+            }
+        });
+    });
+    function populateUserSelect(userList) {
+        const userSelect = document.getElementById('userSelect');
+        userSelect.innerHTML = '';
+        userList.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.roleNumber + "-" + user.userName;
+            option.textContent = `${user.roleNumber}. ${user.userName}`;
+            userSelect.appendChild(option);
+        });
+    }
+    document.getElementById('adjustAmountForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const selectedUser = document.getElementById('userSelect').value;
+        const adjustAmount = parseFloat(document.getElementById('adjustAmount').value);
+        const userRef = userDatabaseRef.child(selectedUser);
+        userRef.once('value').then(snapshot => {
+            const currentPayAmount = snapshot.val().payAmount || 0;
+            userRef.update({ payAmount: currentPayAmount + adjustAmount }, (error) => {
+                if (!error) {
+                    document.getElementById('adjustAmount').value = '';
+                } else {
+                    alert('Failed to adjust amount. Please try again.');
+                }
+            });
+        });
+    });
+    function displayUserInfo(userList) {
+        const userInfoContainer = document.getElementById('userInfoContainer');
+        userInfoContainer.innerHTML = '';
+        let totalAmount = 0;
+        userList.sort((a, b) => a.roleNumber - b.roleNumber).forEach(user => {
+            const userItem = document.createElement('div');
+            userItem.classList.add('user-item');
+            userItem.innerHTML = `<p>${user.roleNumber}. ${user.userName} - Rs ${user.payAmount}</p>`;
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.style.backgroundColor = '#f44336'; // Red color for delete button
+            deleteButton.onclick = () => deleteUser(user.roleNumber + "-" + user.userName);
+            userItem.appendChild(deleteButton);
+            userInfoContainer.appendChild(userItem);
+            totalAmount += user.payAmount;
+        });
+        document.getElementById('totalAmount').textContent = `Total Amount: Rs ${totalAmount}`;
+        populateUserSelect(userList);
+    }
+    function deleteUser(userId) {
+        if (confirm('Are you sure you want to completely delete the data for this person?')) {
+            userDatabaseRef.child(userId).remove()
+            .then(() => {
+                alert('User deleted successfully.');
+            })
+            .catch((error) => {
+                alert('Failed to delete user. Please try again.');
+            });
+        }
+    }
+    userDatabaseRef.on('value', (snapshot) => {
+        const userList = [];
+        snapshot.forEach((childSnapshot) => {
+            const userData = childSnapshot.val();
+            userList.push(userData);
+        });
+        displayUserInfo(userList);
+    });
+</script>
+</body>
+</html>
