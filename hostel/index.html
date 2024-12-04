@@ -1,0 +1,544 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>by Success</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-white: #ffffff;
+            --text-primary: #1a365d;
+            --text-secondary: #4a5568;
+            --accent-blue: #3182ce;
+            --accent-green: #48bb78;
+            --accent-red: #e53e3e;
+            --border-light: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: var(--bg-white);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #mainSection,
+        #studentDetails {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        h1 {
+            background-color: var(--accent-blue);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        h2 {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 10px;
+            background-color: #f7fafc;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .total {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 10px;
+            background-color: #f0f4f8;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background-color: white;
+        }
+
+        form input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #f8fafc;
+        }
+
+        form input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        form button {
+            padding: 12px;
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        form button:hover {
+            background-color: #38a169;
+            transform: translateY(-2px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        th {
+            background-color: #f7fafc;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .positive {
+            background-color: #f0f4f8;
+            cursor: pointer;
+        }
+
+        .positive:hover {
+            background-color: #e6f2ff;
+        }
+
+        .positive td {
+            position: relative;
+        }
+
+        .positive button,
+        .deleteEntryBtn {
+            background-color: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .deleteEntryBtn:hover,
+        .positive button:hover {
+            background-color: #c53030;
+            transform: scale(1.05);
+        }
+
+        #backButton {
+            width: 100%;
+            padding: 12px;
+            background-color: #718096;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        #backButton:hover {
+            background-color: #4a5568;
+            transform: translateY(-2px);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                width: calc(100% - 20px);
+                max-height: calc(100vh - 20px);
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Hostel Manager By Success</h1>
+        <div id="mainSection">
+            <div class="total" id="totalReceived">Total Received: 0</div>
+            <form id="studentForm">
+                <input type="date" id="studentDate" />
+                <input type="text" id="studentName" placeholder="Enter student name" required />
+                <button type="submit">Add Student</button>
+            </form>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date Added</th>
+                        <th>Student Name</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTable"></tbody>
+            </table>
+        </div>
+        <div id="studentDetails" class="hidden">
+            <button id="backButton">Go Back</button>
+            <h2 id="selectedStudent"></h2>
+            <div class="total" id="studentTotal">Total Paid: 0</div>
+            <form id="studentDataForm">
+                <input type="date" id="entryDate" />
+                <input type="number" id="entryAmount" placeholder="Enter amount paid" />
+                <input type="number" id="moneyTaken" placeholder="Enter money taken" />
+                <button type="submit">Add Entry</button>
+            </form>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount Paid</th>
+                        <th>Money Taken</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                </thead>
+                <tbody id="entryTable"></tbody>
+            </table>
+        </div>
+    </div>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+        import { getDatabase, ref, update, get } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+            authDomain: "community-canvas-255fa.firebaseapp.com",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+            projectId: "community-canvas-255fa",
+            storageBucket: "community-canvas-255fa.appspot.com",
+            messagingSenderId: "729445267995",
+            appId: "1:729445267995:web:05da6756d66c58b9ccd6be",
+            measurementId: "G-FW93CB5QL7"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const addSyncButtons = () => {
+            if (navigator.onLine) {
+                const syncButtons = document.createElement('div');
+                syncButtons.id = 'syncButtons';
+                syncButtons.style.display = 'flex';
+                syncButtons.style.justifyContent = 'space-between';
+                syncButtons.style.padding = '10px';
+                syncButtons.style.backgroundColor = '#f7fafc';
+                syncButtons.style.borderBottom = '1px solid var(--border-light)';
+
+                // Sync to Database Button
+                const syncToDbButton = document.createElement('button');
+                syncToDbButton.textContent = 'Sync to Database';
+                syncToDbButton.style.backgroundColor = 'var(--accent-blue)';
+                syncToDbButton.style.color = 'white';
+                syncToDbButton.style.padding = '10px';
+                syncToDbButton.style.border = 'none';
+                syncToDbButton.style.borderRadius = '6px';
+                syncToDbButton.style.cursor = 'pointer';
+                syncToDbButton.onclick = syncToDatabase;
+
+                // Load from Database Button
+                const loadFromDbButton = document.createElement('button');
+                loadFromDbButton.textContent = 'Load from Database';
+                loadFromDbButton.style.backgroundColor = 'var(--accent-green)';
+                loadFromDbButton.style.color = 'white';
+                loadFromDbButton.style.padding = '10px';
+                loadFromDbButton.style.border = 'none';
+                loadFromDbButton.style.borderRadius = '6px';
+                loadFromDbButton.style.cursor = 'pointer';
+                loadFromDbButton.onclick = loadFromDatabase;
+
+                syncButtons.appendChild(syncToDbButton);
+                syncButtons.appendChild(loadFromDbButton);
+
+                const container = document.querySelector('.container');
+                container.insertBefore(syncButtons, container.firstChild);
+            }
+        };
+
+        // Ensure the DOM is fully loaded before running
+        document.addEventListener('DOMContentLoaded', () => {
+            addSyncButtons();
+        });
+        // Function for syncing to database
+        const syncToDatabase = () => {
+            if (!navigator.onLine) {
+                alert("You are offline. Cannot sync to database.");
+                return;
+            }
+            const students = JSON.parse(localStorage.getItem('students')) || [];
+            const updates = {};
+
+            updates['/students'] = students;
+
+            students.forEach(student => {
+                const data = JSON.parse(localStorage.getItem(`studentData_${student.name}`)) || [];
+                updates[`/studentData/${student.name}`] = data;
+            });
+
+            update(ref(database), updates)
+                .then(() => alert("Data successfully synced to database!"))
+                .catch(error => {
+                    console.error("Error syncing to database:", error);
+                    alert("Failed to sync to database.");
+                });
+        };
+
+        // Function for loading from database
+        const loadFromDatabase = () => {
+            if (!navigator.onLine) {
+                alert("You are offline. Cannot load from database.");
+                return;
+            }
+            get(ref(database))
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        const students = data.students || [];
+                        localStorage.setItem('students', JSON.stringify(students));
+
+                        for (const studentName in data.studentData || {}) {
+                            localStorage.setItem(`studentData_${studentName}`, JSON.stringify(data.studentData[studentName]));
+                        }
+
+                        alert("Data successfully loaded from database!");
+                        displayStudents();
+                        updateTotalReceived();
+                    } else {
+                        alert("No data found in database.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading from database:", error);
+                    alert("Failed to load data from database.");
+                });
+        };
+    </script>
+
+    <script>
+        const studentKey = 'students';
+        const dataKeyPrefix = 'studentData_';
+
+        const loadStudents = () => JSON.parse(localStorage.getItem(studentKey)) || [];
+        const saveStudents = (students) => localStorage.setItem(studentKey, JSON.stringify(students));
+        const loadStudentData = (name) => JSON.parse(localStorage.getItem(`${dataKeyPrefix}${name}`)) || [];
+        const saveStudentData = (name, data) => localStorage.setItem(`${dataKeyPrefix}${name}`, JSON.stringify(data));
+
+        const calculateTotalReceived = () => {
+            const students = loadStudents();
+            return students.reduce((total, student) => {
+                const studentData = loadStudentData(student.name);
+                return total + studentData.reduce((sum, entry) => sum + entry.amount, 0);
+            }, 0);
+        };
+        const updateTotalReceived = () => {
+            const totalReceived = calculateTotalReceived();
+            document.getElementById('totalReceived').textContent = `Total Received: ${totalReceived}`;
+        };
+        const calculateStudentTotal = (name) => {
+            const data = loadStudentData(name);
+            const totalPaid = data.reduce((total, entry) => total + entry.amount, 0);
+            const totalMoneyTaken = data.reduce((total, entry) => total + (entry.moneyTaken || 0), 0);
+            return {totalPaid, totalMoneyTaken};
+        };
+        const updateStudentTotal = (name) => {
+            const {totalPaid, totalMoneyTaken} = calculateStudentTotal(name);
+            document.getElementById('studentTotal').textContent = `Total Paid: ${totalPaid}, Total Taken: ${totalMoneyTaken}`;
+        };
+
+        const displayStudents = () => {
+            const students = loadStudents().sort((a, b) => a.name.localeCompare(b.name));
+            const studentTable = document.getElementById('studentTable');
+            studentTable.innerHTML = '';
+            students.forEach((student) => {
+                const row = document.createElement('tr');
+                row.className = 'positive';
+                row.innerHTML = `
+                    <td>${student.date}</td>
+                    <td>${student.name}</td>
+                    <td><button data-name="${student.name}" class="deleteStudentBtn">Delete</button></td>
+                `;
+                row.onclick = () => showStudentDetails(student.name);
+                row.querySelector('.deleteStudentBtn').onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Are you sure you want to delete ${student.name}?`)) {
+                        deleteStudent(student.name);
+                    }
+                };
+                studentTable.appendChild(row);
+            });
+        };
+        const showStudentDetails = (name) => {
+            document.getElementById('mainSection').classList.add('hidden');
+            document.getElementById('studentDetails').classList.remove('hidden');
+            document.getElementById('selectedStudent').textContent = name;
+            displayStudentEntries(name);
+            updateStudentTotal(name);
+        };
+        const deleteStudent = (name) => {
+            const students = loadStudents();
+            const updatedStudents = students.filter((student) => student.name !== name);
+            saveStudents(updatedStudents);
+            localStorage.removeItem(`${dataKeyPrefix}${name}`);
+            displayStudents();
+            updateTotalReceived();
+        };
+        const displayStudentEntries = (name) => {
+            const studentData = loadStudentData(name).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const entryTable = document.getElementById('entryTable');
+            entryTable.innerHTML = '';
+            studentData.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.date}</td>
+                    <td>${entry.amount}</td>
+                    <td>${entry.moneyTaken || 0}</td>
+                    <td><button data-index="${index}" class="deleteEntryBtn">Delete</button></td>
+                `;
+                row.querySelector('.deleteEntryBtn').onclick = () => {
+                    if (confirm('Are you sure you want to delete this entry?')) {
+                        deleteStudentEntry(name, index);
+                    }
+                };
+                entryTable.appendChild(row);
+            });
+        };
+        const deleteStudentEntry = (name, index) => {
+            const studentData = loadStudentData(name);
+            studentData.splice(index, 1);
+            saveStudentData(name, studentData);
+            displayStudentEntries(name);
+            updateStudentTotal(name);
+            updateTotalReceived();
+        };
+        const setupMainSection = () => {
+            const form = document.getElementById('studentForm');
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const date = document.getElementById('studentDate').value;
+                const name = document.getElementById('studentName').value.trim();
+                if (!date || !name) {
+                    alert('Please fill out all fields.');
+                    return;
+                }
+                const students = loadStudents();
+                if (students.some((student) => student.name === name)) {
+                    alert('Student with this name already exists.');
+                    return;
+                }
+                students.push({date, name});
+                saveStudents(students);
+                form.reset();
+                displayStudents();
+            };
+            document.getElementById('backButton').onclick = () => {
+                document.getElementById('mainSection').classList.remove('hidden');
+                document.getElementById('studentDetails').classList.add('hidden');
+                updateTotalReceived();
+            };
+        };
+        const setupStudentDetails = () => {
+            const form = document.getElementById('studentDataForm');
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const name = document.getElementById('selectedStudent').textContent;
+                const date = document.getElementById('entryDate').value;
+                const amount = parseFloat(document.getElementById('entryAmount').value) || 0;
+                const moneyTaken = parseFloat(document.getElementById('moneyTaken').value) || 0;
+
+                if (!date) {
+                    alert('Please enter a valid date.');
+                    return;
+                }
+
+                const studentData = loadStudentData(name);
+                studentData.push({date, amount, moneyTaken});
+                saveStudentData(name, studentData);
+
+                form.reset();
+                displayStudentEntries(name);
+                updateStudentTotal(name);
+                updateTotalReceived();
+            };
+        };
+        setupMainSection();
+        setupStudentDetails();
+        displayStudents();
+        updateTotalReceived();
+    </script>
+    <footer>&copy; Copyright 2028 | Permitted by Success</footer>
+</body>
+
+</html>
