@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pirated Goodies</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a1f25 0%, #2c3e50 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      color: #f10410;
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    h1:hover {
+      color: #7508e2;
+      transform: scale(1.02);
+      letter-spacing: 1px;
+    }
+
+    .search-container {
+      position: sticky;
+      top: 1rem;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-container:focus-within {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    #searchInput:focus {
+      outline: none;
+      border-color: #60a5fa;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #searchInput::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    #stats {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin: 1rem 0;
+      text-align: center;
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      border: none;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .download-btn:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .contacts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .contact {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.5s ease forwards;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .contact:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .contact-field {
+      margin-bottom: 0.8rem;
+    }
+
+    .contact-label {
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .contact-value {
+      color: #fff;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      padding: 0.2rem 0;
+    }
+
+    .contact-value:hover {
+      color: #60a5fa;
+      transform: translateX(5px);
+    }
+
+    .stats-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .stats-value:hover {
+      transform: scale(1.1);
+      color: #bfdbfe;
+    }
+
+    .stats-label {
+      transition: all 0.3s ease;
+    }
+
+    .stats-label:hover {
+      color: #bfdbfe;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .contacts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Data Library</h1>
+    </div>
+
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search contacts...">
+      <button class="download-btn" onclick="downloadText()">Download Contacts</button>
+    </div>
+
+    <div id="stats"></div>
+    <div id="results" class="contacts-grid"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC3pnVKpMYszW9XCEXkeOqIkAQUHXYdMRI",
+      authDomain: "d-data-storage-399801.firebaseapp.com",
+      databaseURL: "https://d-data-storage-399801-default-rtdb.firebaseio.com",
+      projectId: "d-data-storage-399801",
+      storageBucket: "d-data-storage-399801.appspot.com",
+      messagingSenderId: "515303559494",
+      appId: "1:515303559494:web:f108f881e01ee3ddec9547",
+      measurementId: "G-BECRQ4T8BP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    let contacts = [];
+
+    function displayContacts(filteredContacts = contacts) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+
+      const uniqueContacts = [];
+      const seen = new Set();
+
+      filteredContacts.forEach(contact => {
+        if (contact.senderName && !seen.has(contact.senderName)) {
+          seen.add(contact.senderName);
+          uniqueContacts.push({
+            name: contact.senderName,
+            phone: contact.senderContact,
+            email: contact.email || 'N/A'
+          });
+        }
+
+        if (contact.receiverName && !seen.has(contact.receiverName)) {
+          seen.add(contact.receiverName);
+          uniqueContacts.push({
+            name: contact.receiverName,
+            phone: contact.receiverContact,
+            email: contact.email || 'N/A'
+          });
+        }
+      });
+
+      const statsDiv = document.getElementById('stats');
+      statsDiv.innerHTML = `
+        <div>
+          <div class="stats-label">Unique Contacts</div>
+          <div class="stats-value">${uniqueContacts.length}</div>
+        </div>
+        <div>
+          <div class="stats-label">Total Records</div>
+          <div class="stats-value">${filteredContacts.length}</div>
+        </div>
+      `;
+
+      uniqueContacts.forEach((contact, index) => {
+        const div = document.createElement('div');
+        div.className = 'contact';
+        div.style.animationDelay = `${index * 0.05}s`;
+        div.innerHTML = `
+          <div class="contact-field">
+            <div class="contact-label">Name</div>
+            <div class="contact-value">${contact.name}</div>
+          </div>
+          <div class="contact-field">
+            <div class="contact-label">Phone</div>
+            <div class="contact-value">${contact.phone}</div>
+          </div>
+          <div class="contact-field">
+            <div class="contact-label">Email</div>
+            <div class="contact-value">${contact.email}</div>
+          </div>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    const searchContacts = debounce(() => {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = contacts.filter(contact => 
+        (contact.senderName && contact.senderName.toLowerCase().includes(searchTerm)) ||
+        (contact.receiverName && contact.receiverName.toLowerCase().includes(searchTerm))
+      );
+      displayContacts(filtered);
+    }, 300);
+
+    document.getElementById('searchInput').addEventListener('input', searchContacts);
+
+    function downloadText() {
+      const uniqueContacts = [];
+      const seen = new Set();
+
+      contacts.forEach(contact => {
+        if (contact.senderName && !seen.has(contact.senderName)) {
+          seen.add(contact.senderName);
+          uniqueContacts.push({
+            name: contact.senderName,
+            phone: contact.senderContact,
+            email: contact.email || 'N/A'
+          });
+        }
+        if (contact.receiverName && !seen.has(contact.receiverName)) {
+          seen.add(contact.receiverName);
+          uniqueContacts.push({
+            name: contact.receiverName,
+            phone: contact.receiverContact,
+            email: contact.email || 'N/A'
+          });
+        }
+      });
+
+      let textContent = 'Contact Directory\n';
+      textContent += '================\n\n';
+      textContent += `Total Contacts: ${uniqueContacts.length}\n`;
+      textContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+
+      uniqueContacts.forEach(contact => {
+        textContent += `Name: ${contact.name}\n`;
+        textContent += `Phone: ${contact.phone}\n`;
+        textContent += `Email: ${contact.email}\n`;
+        textContent += '----------------\n';
+      });
+
+      const blob = new Blob([textContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'contacts.txt';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+
+    database.ref('packets').on('value', (snapshot) => {
+      contacts = [];
+      snapshot.forEach((childSnapshot) => {
+        contacts.push(childSnapshot.val());
+      });
+      displayContacts();
+    });
+  </script>
+</body>
+</html>
