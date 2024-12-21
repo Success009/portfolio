@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> My grand portfolio </title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script><!--i don't "really understand" this is tough to be honest :) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script><!--i don't "really understand" this stuff to be honest :) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <style>
         /* defining vars*/
@@ -122,9 +122,9 @@
             border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
             object-fit: cover;
             box-shadow: 0 0 50px rgba(56, 189, 248, 0.3);
-            animation: morphing 10s ease-in-out infinite;
+            animation: morph 10s ease-in-out infinite; 
         }
-        
+
         @keyframes morph { /* pretty easy stuff ;) */
             0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
             25% { border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%; }
