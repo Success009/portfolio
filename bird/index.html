@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bird By Success</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #87CEEB, #1E90FF);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .clouds {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+            animation: float linear infinite;
+            filter: blur(2px);
+        }
+
+        @keyframes float {
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-200px); }
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        #counter {
+            font-size: 4rem;
+            color: #333;
+            margin: 1rem 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        #counter.pulse {
+            transform: scale(1.1);
+            color: #1E90FF;
+        }
+
+        #clickArea {
+            width: 200px;
+            height: 200px;
+            margin: 2rem auto;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        #clickArea:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        #clickArea:active {
+            transform: scale(0.95);
+        }
+
+        .bird {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #000;
+            clip-path: polygon(0% 50%, 50% 0%, 100% 50%, 50% 100%);
+            animation: fly 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            z-index: 2;
+        }
+
+        @keyframes fly {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0.2);
+                opacity: 0;
+            }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .info {
+            color: #666;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .stat {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .milestone {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 144, 255, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            animation: slideDown 0.5s ease-out forwards, fadeOut 0.5s ease-in forwards 2s;
+            z-index: 100;
+        }
+
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100%); }
+            to { transform: translate(-50%, 0); }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+
+        .bird-colors {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="clouds"></div>
+    <div class="container">
+        <h1>Bird Released</h1>
+        <div id="counter">0</div>
+        <div id="clickArea">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3Mt32Rmz4oh_GVQTQ75CUqx4H01Pgo32GnA&s" alt="Bird nest">
+        </div>
+        <div class="bird-colors">
+            <div class="color-option active" style="background: #000000" data-color="#000000"></div>
+            <div class="color-option" style="background: #FF6B6B" data-color="#FF6B6B"></div>
+            <div class="color-option" style="background: #4ECDC4" data-color="#4ECDC4"></div>
+            <div class="color-option" style="background: #FFE66D" data-color="#FFE66D"></div>
+        </div>
+        <div class="info">Click to release birds!</div>
+        <div class="stats">
+            <div class="stat">Clicks per second: <span id="cps">0.0</span></div>
+            <div class="stat">Birds released by you: <span id="personalBirds">0</span></div>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+            authDomain: "community-canvas-255fa.firebaseapp.com",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+            projectId: "community-canvas-255fa",
+            storageBucket: "community-canvas-255fa.appspot.com",
+            messagingSenderId: "729445267995",
+            appId: "1:729445267995:web:05da6756d66c58b9ccd6be"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const birdsRef = ref(database, 'birds');
+
+        // DOM Elements
+        const counterElement = document.getElementById('counter');
+        const clickArea = document.getElementById('clickArea');
+        const cpsElement = document.getElementById('cps');
+        const personalBirdsElement = document.getElementById('personalBirds');
+        const cloudsContainer = document.querySelector('.clouds');
+
+        // State variables
+        let lastClick = 0;
+        let currentCount = 0;
+        let clicks = [];
+        let selectedColor = '#000000';
+        let personalBirds = parseInt(localStorage.getItem('personalBirds')) || 0;
+        personalBirdsElement.textContent = personalBirds.toLocaleString();
+
+        function createClouds() {
+            for (let i = 0; i < 5; i++) {
+                createCloud();
+            }
+        }
+
+        function createCloud() {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            
+            const size = 50 + Math.random() * 100;
+            const top = Math.random() * 100;
+            const duration = 20 + Math.random() * 30;
+            
+            cloud.style.width = `${size}px`;
+            cloud.style.height = `${size/2}px`;
+            cloud.style.top = `${top}%`;
+            cloud.style.animationDuration = `${duration}s`;
+            
+            cloudsContainer.appendChild(cloud);
+            
+            cloud.addEventListener('animationend', () => {
+                cloud.remove();
+                createCloud();
+            });
+        }
+
+        createClouds();
+
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelector('.color-option.active').classList.remove('active');
+                option.classList.add('active');
+                selectedColor = option.dataset.color;
+            });
+        });
+
+        setInterval(() => {
+            const now = Date.now();
+            clicks = clicks.filter(click => now - click < 1000);
+            cpsElement.textContent = clicks.length.toFixed(1);
+        }, 100);
+
+        function showMilestone(message) {
+            const milestone = document.createElement('div');
+            milestone.className = 'milestone';
+            milestone.textContent = message;
+            document.body.appendChild(milestone);
+            setTimeout(() => milestone.remove(), 2500);
+        }
+
+        onValue(birdsRef, (snapshot) => {
+            const newCount = snapshot.val() || 0;
+            if (newCount > currentCount) {
+                counterElement.classList.add('pulse');
+                setTimeout(() => counterElement.classList.remove('pulse'), 200);
+            }
+            currentCount = newCount;
+            counterElement.textContent = currentCount.toLocaleString();
+            
+            if (currentCount % 100 === 0 && currentCount > 0) {
+                showMilestone(`🎉 Milestone: ${currentCount} birds released!`);
+            }
+        });
+
+        function createBird(x, y) {
+            const bird = document.createElement('div');
+            bird.className = 'bird';
+            bird.style.left = `${x}px`;
+            bird.style.top = `${y}px`;
+            bird.style.background = selectedColor;
+            
+            const randomX = (Math.random() - 0.5) * 400;
+            const randomY = -Math.random() * 400;
+            const randomRotation = Math.random() * 720 - 360;
+            
+            bird.style.setProperty('--x', `${randomX}px`);
+            bird.style.setProperty('--y', `${randomY}px`);
+            bird.style.setProperty('--r', `${randomRotation}deg`);
+            
+            clickArea.appendChild(bird);
+            setTimeout(() => bird.remove(), 1500);
+        }
+
+        clickArea.addEventListener('click', async (e) => {
+            const now = Date.now();
+            if (now - lastClick < 100) return;
+            
+            lastClick = now;
+            clicks.push(now);
+            personalBirds++;
+            localStorage.setItem('personalBirds', personalBirds);
+            personalBirdsElement.textContent = personalBirds.toLocaleString();
+
+            const snapshot = await get(birdsRef);
+            const newCount = (snapshot.val() || 0) + 1;
+            set(birdsRef, newCount);
+
+            const rect = clickArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => createBird(x, y), i * 50);
+            }
+        });
+    </script>
+</body>
+</html>
