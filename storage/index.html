@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{margin:0;font-family:system-ui;background:#f1f1f1;padding:20px}.container{background:#fff;border-radius:8px;padding:20px;max-width:1200px;margin:auto;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.file-list{border:1px solid #ddd;border-radius:4px}.file-item{display:flex;align-items:center;padding:8px;border-bottom:1px solid #ddd;transition:background .2s;user-select:none}.file-item:hover{background:#f8f9fa}.file-item:last-child{border:0}.file-name{flex:1;cursor:pointer}.file-info{width:250px;color:#666}.actions{display:flex;gap:8px}.btn{padding:4px 8px;border:0;border-radius:4px;cursor:pointer;transition:opacity .2s}.btn:hover{opacity:.9}.primary{background:#0066ff;color:#fff}.danger{background:#dc3545;color:#fff}.path{background:#f8f9fa;padding:8px;border-radius:4px;margin-bottom:12px}.upload-list{margin-top:12px}.upload-item{background:#f8f9fa;padding:8px;border-radius:4px;margin-bottom:8px}.progress-bar{height:4px;background:#eee;border-radius:2px;margin-top:4px;overflow:hidden}.progress-fill{height:100%;background:#0066ff;transition:width .2s}.spinner{border:2px solid #f3f3f3;border-top:2px solid #0066ff;border-radius:50%;width:12px;height:12px;animation:spin 1s linear infinite;display:inline-block;margin-right:8px}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.status{position:fixed;bottom:20px;right:20px;padding:12px;border-radius:4px;background:#333;color:#fff;opacity:0;transition:opacity .3s}.show{opacity:1}.checkbox{margin-right:8px;width:16px;height:16px}.bulk-actions{display:none;margin-bottom:12px;gap:8px}.type-icon{margin-right:8px;color:#666}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>File Manager</h2>
+        <h2>Free Storage by Success</h2>
+        <div>
+            <button class="btn primary" onclick="document.getElementById('fileInput').click()">Upload</button>
+            <button class="btn primary" onclick="createFolder()">New Folder</button>
+            <input type="file" id="fileInput" style="display:none" multiple onchange="upload(this.files)">
+        </div>
+    </div>
+    <div class="bulk-actions" id="bulkActions">
+        <button class="btn danger" onclick="deleteSelected()">Delete Selected</button>
+        <button class="btn primary" onclick="downloadSelected()">Download Selected</button>
+    </div>
+    <div class="path" id="path"></div>
+    <div class="file-list" id="files"></div>
+    <div class="upload-list" id="uploads"></div>
+</div>
+<div class="status" id="status"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+<script>
+const storage=firebase.initializeApp({apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",authDomain:"community-canvas-255fa.firebaseapp.com",projectId:"community-canvas-255fa",storageBucket:"community-canvas-255fa.appspot.com",messagingSenderId:"729445267995",appId:"1:729445267995:web:05da6756d66c58b9ccd6be"}).storage();
+let path='';
+
+const formatSize=b=>{const k=1024,s=['B','KB','MB','GB'];return b===0?'0 B':parseFloat((b/Math.pow(k,Math.floor(Math.log(b)/Math.log(k)))).toFixed(1))+' '+s[Math.floor(Math.log(b)/Math.log(k))]};
+const showStatus=(msg,err)=>{const s=document.getElementById('status');s.textContent=msg;s.style.background=err?'#dc3545':'#333';s.classList.add('show');setTimeout(()=>s.classList.remove('show'),3000)};
+
+const updatePath=()=>{
+    const parts=path.split('/').filter(p=>p);
+    document.getElementById('path').innerHTML=`<a href="#" onclick="goto('')">Home</a>${parts.map((p,i)=>' > <a href="#" onclick="goto(\''+parts.slice(0,i+1).join('/')+'\')">'+p+'</a>').join('')}`;
+};
+
+const checkSelection=()=>{
+    const hasChecked=document.querySelectorAll('input[type="checkbox"]:checked').length>0;
+    document.getElementById('bulkActions').style.display=hasChecked?'flex':'none';
+};
+
+const getFolderSize=async(folderPath)=>{
+    let totalSize=0;
+    const calcSize=async(p)=>{
+        const list=await storage.ref(p).listAll();
+        for(const prefix of list.prefixes){
+            await calcSize(prefix.fullPath);
+        }
+        for(const item of list.items){
+            const meta=await item.getMetadata();
+            totalSize+=meta.size;
+        }
+    };
+    await calcSize(folderPath);
+    return totalSize;
+};
+
+const getFileType=(name)=>{
+    const ext=name.split('.').pop().toLowerCase();
+    const types={
+        pdf:'PDF Document',
+        doc:'Word Document',docx:'Word Document',
+        xls:'Excel Spreadsheet',xlsx:'Excel Spreadsheet',
+        txt:'Text File',
+        jpg:'Image',jpeg:'Image',png:'Image',gif:'Image',
+        zip:'Archive',rar:'Archive',
+        mp3:'Audio File',wav:'Audio File',
+        mp4:'Video File',avi:'Video File',
+        default:'File'
+    };
+    return types[ext]||types.default;
+};
+
+const loadFiles=async()=>{
+    try{
+        const ref=storage.ref(path),list=await ref.listAll(),files=document.getElementById('files');
+        files.innerHTML='<div class="spinner"></div>';
+        
+        const folderItems=await Promise.all(list.prefixes.map(async p=>{
+            const size=await getFolderSize(path+'/'+p.name);
+            return`<div class="file-item">
+                <input type="checkbox" class="checkbox" onchange="checkSelection()">
+                <div class="file-name" ondblclick="goto('${path}/${p.name}')">📁 ${p.name}</div>
+                <div class="file-info">Folder • ${formatSize(size)}</div>
+            </div>`;
+        }));
+
+        const fileItems=await Promise.all(list.items.map(async i=>{
+            const meta=await i.getMetadata();
+            const type=getFileType(i.name);
+            return`<div class="file-item">
+                <input type="checkbox" class="checkbox" onchange="checkSelection()">
+                <div class="file-name" ondblclick="openFile('${i.name}')">📄 ${i.name}</div>
+                <div class="file-info">${type} • ${formatSize(meta.size)} • ${new Date(meta.timeCreated).toLocaleDateString()}</div>
+            </div>`;
+        }));
+
+        files.innerHTML=folderItems.join('')+fileItems.join('');
+    }catch(e){console.error(e);showStatus('Error loading files',true)}
+};
+
+const upload=async files=>{
+    const uploads=document.getElementById('uploads');
+    for(const file of files){
+        const id='upload-'+Date.now();
+        uploads.innerHTML+=`
+            <div class="upload-item" id="${id}">
+                <div>📄 ${file.name}</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:0%"></div>
+                </div>
+            </div>`;
+        
+        try{
+            await storage.ref(path+'/'+file.name).put(file,{
+                customMetadata:{timestamp:Date.now().toString()}
+            },snapshot=>{
+                const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
+                document.querySelector(`#${id} .progress-fill`).style.width=progress+'%';
+            });
+            setTimeout(()=>document.getElementById(id).remove(),1000);
+            showStatus('Uploaded: '+file.name);
+        }catch(e){
+            console.error(e);
+            document.getElementById(id).remove();
+            showStatus('Error uploading: '+file.name,true);
+        }
+    }
+    loadFiles();
+};
+
+const openFile=async name=>{
+    try{
+        const url=await storage.ref(path+'/'+name).getDownloadURL();
+        window.open(url,'_blank');
+    }catch(e){console.error(e);showStatus('Error opening file',true)}
+};
+
+const download=async name=>{
+    try{
+        showStatus('Downloading: '+name);
+        const url=await storage.ref(path+'/'+name).getDownloadURL();
+        const a=document.createElement('a');
+        a.href=url;
+        a.download=name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showStatus('Downloaded: '+name);
+    }catch(e){console.error(e);showStatus('Error downloading file',true)}
+};
+
+const downloadSelected=async()=>{
+    const selected=Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(cb=>cb.closest('.file-item').querySelector('.file-name').textContent.slice(2));
+    for(const name of selected){
+        if(name.includes('📁')){
+            await downloadFolder(name.trim());
+        }else{
+            await download(name.trim());
+        }
+    }
+};
+
+const downloadFolder=async name=>{
+    try{
+        showStatus('Downloading folder: '+name);
+        const list=await storage.ref(path+'/'+name).listAll();
+        let count=0;
+        for(const item of list.items){
+            if(item.name==='.placeholder')continue;
+            await download(name+'/'+item.name);
+            count++;
+        }
+        showStatus(`Downloaded ${count} files from: ${name}`);
+    }catch(e){console.error(e);showStatus('Error downloading folder',true)}
+};
+
+const createFolder=async()=>{
+    const name=prompt('Folder name:');
+    if(!name)return;
+    try{
+        await storage.ref(path+'/'+name+'/.placeholder').putString('');
+        showStatus('Created folder: '+name);
+        loadFiles();
+    }catch(e){console.error(e);showStatus('Error creating folder',true)}
+};
+
+const deleteSelected=async()=>{
+    const selected=Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(cb=>cb.closest('.file-item').querySelector('.file-name').textContent.slice(2));
+    if(!confirm(`Delete ${selected.length} items?`))return;
+    
+    for(const name of selected){
+        if(name.includes('📁')){
+            await deleteFolder(name.trim());
+        }else{
+            await deleteFile(name.trim());
+        }
+    }
+    loadFiles();
+};
+
+const deleteFile=async name=>{
+    try{
+        await storage.ref(path+'/'+name).delete();
+        showStatus('Deleted: '+name);
+    }catch(e){console.error(e);showStatus('Error deleting file',true)}
+};
+
+const deleteFolder=async name=>{
+    try{
+        const deleteRecursive=async p=>{
+            const list=await p.listAll();
+            for(const prefix of list.prefixes)await deleteRecursive(prefix);
+            for(const item of list.items)await item.delete();
+        };
+        await deleteRecursive(storage.ref(path+'/'+name));
+        showStatus('Deleted folder: '+name);
+    }catch(e){console.error(e);showStatus('Error deleting folder',true)}
+};
+
+const goto=p=>{path=p;updatePath();loadFiles()};
+window.onload=()=>{updatePath();loadFiles()};
+</script>
+</body>
+</html>
