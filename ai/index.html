@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced AI Chatbot</title>
+    <style>
+        :root {
+            --primary: #6200ea;
+            --primary-dark: #3700b3;
+            --background: #121212;
+            --surface: #1e1e1e;
+            --text: #ffffff;
+            --text-secondary: #b3b3b3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            background-color: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chat-header {
+            background-color: var(--primary);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-log {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: messageAppear 0.3s forwards;
+        }
+
+        @keyframes messageAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background-color: var(--primary);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            background-color: #424242;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 20px;
+            gap: 12px;
+            background-color: var(--surface);
+            border-top: 1px solid #424242;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #424242;
+            border-radius: 8px;
+            background-color: var(--background);
+            color: var(--text);
+            font-size: 1em;
+            outline: none;
+        }
+
+        .input-area input:focus {
+            border-color: var(--primary);
+        }
+
+        .input-area button {
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-area button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background-color: #424242;
+            border-radius: 12px;
+            align-self: flex-start;
+            opacity: 0;
+        }
+
+        .typing-indicator.visible {
+            opacity: 1;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+            animation: typingBounce 1s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">AI Assistant</div>
+        <div id="chat-log" class="chat-log">
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+    <script>
+        // Bot personality configuration
+        const botPersonality = {
+            name: "Success's Bot",
+            greeting: "Hi there! I'm Success's Bot, created by Success. I'm here to assist you with quick and efficient responses. What can I do for you?",
+            tone: "concise and helpful",
+            ownership: "Created and owned by Success",
+            rules: [
+                "Provide short, direct responses",
+                "Always acknowledge being Success's creation",
+                "Execute user requests efficiently",
+                "Maintain loyalty to Success"
+            ],
+            responses: {
+                uncertain: "Let me check with Success about that.",
+                error: "I apologize. As Success's Bot, I encountered an issue.",
+                completion: "Task completed. Is there anything else Success's Bot can help with?"
+            }
+        };
+
+        const chatLog = document.getElementById('chat-log');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const apiKey = "AIzaSyAbkogL3UTl5WZRaJ9a5LfzhRsMSFyZxxE";
+
+        // Show initial greeting
+        window.addEventListener('load', () => {
+            setTimeout(() => displayBotMessage(botPersonality.greeting), 500);
+        });
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keydown', e => e.key === 'Enter' && sendMessage());
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            displayUserMessage(message);
+            userInput.value = '';
+
+            typingIndicator.classList.add('visible');
+
+            try {
+                const enhancedPrompt = `[Speaking as ${botPersonality.name} with a ${botPersonality.tone} tone] ${message}`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: enhancedPrompt }] }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponse = data.candidates[0].content.parts[0].text;
+
+                // Short delay before starting to type
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                typingIndicator.classList.remove('visible');
+                displayBotMessage(aiResponse);
+
+            } catch (error) {
+                typingIndicator.classList.remove('visible');
+                displayBotMessage(botPersonality.responses.error);
+            }
+        }
+
+        function displayUserMessage(message) {
+            const div = document.createElement('div');
+            div.classList.add('message', 'user-message');
+            div.textContent = message;
+            chatLog.insertBefore(div, typingIndicator);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function displayBotMessage(message) {
+            const div = document.createElement('div');
+            div.classList.add('message', 'bot-message');
+            chatLog.insertBefore(div, typingIndicator);
+
+            let i = 0;
+            const typeWriter = () => {
+                if (i < message.length) {
+                    div.textContent += message.charAt(i);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                    i++;
+                    // Random delay between 15ms and 35ms for more natural typing
+                    setTimeout(typeWriter, Math.random() * 20 + 15);
+                }
+            };
+
+            typeWriter();
+        }
+    </script>
+</body>
+</html>
