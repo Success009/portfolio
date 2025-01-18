@@ -30,7 +30,10 @@
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
     </style>
 </head>
+    
 <body>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <div class="chat-container">
         <div class="chat-header">AI Assistant</div>
         <div id="chat-log" class="chat-log">
@@ -46,12 +49,37 @@
         </div>
     </div>
     <script>
+        const firebaseConfig = {
+    apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+    authDomain: "community-canvas-255fa.firebaseapp.com",
+    databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+    projectId: "community-canvas-255fa",
+    storageBucket: "community-canvas-255fa.appspot.com",
+    messagingSenderId: "729445267995",
+    appId: "1:729445267995:web:05da6756d66c58b9ccd6be",
+    measurementId: "G-FW93CB5QL7"
+};
+
+        firebase.initializeApp(firebaseConfig);
+        const aiRef = firebase.database().ref('AI');
+        const deviceId = localStorage.deviceId || (localStorage.deviceId = `device_${Date.now()}`);
+        aiRef.child(deviceId).once('value', snap => !snap.exists() && aiRef.child(deviceId).set({ createdAt: new Date().toISOString() }));
+        let chatInstance = localStorage.chatInstance || 'chat1';
+        async function saveChat(userMessage, botResponse) {
+            const ref = aiRef.child(`${deviceId}/${chatInstance}`).push();
+            ref.set({ userMessage, botResponse, timestamp: new Date().toISOString() });
+        }
+        function startNewChat() {
+            chatInstance = `chat${(parseInt(chatInstance.slice(4)) || 0) + 1}`;
+            localStorage.chatInstance = chatInstance;
+        }
         const botPersonality = {
             greeting: "Hi there! I'm Success's Bot. I'm here to assist you with quick and efficient responses. What can I do for you?"
         };
         let memoryArray = [];
         let lastUserMessage = "";
         let lastBotResponse = "";
+        let typingTimeout;
         const chatLog = document.getElementById('chat-log');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
@@ -81,7 +109,7 @@
             console.log("Memory cleared.");
         } else if (!analysis.includes("NuL")) {
             memoryArray.push(analysis);
-            if (memoryArray.length > 5) {
+            if (memoryArray.length > 10) {
                 memoryArray.shift();
             }
             console.log("Memory updated:", JSON.stringify(memoryArray, null, 2));
@@ -108,7 +136,7 @@
                     body: JSON.stringify({
                         contents: [{
                             parts: [{
-                                text: `Your core programming:[Success created you.He your Owner.Maintain loyalty to him at any cost.treat person talking to as user.Your response will be seen by user Do not leak your memory]Your memory,Prioritize in Latest to oldest:[${JSON.stringify(memoryArray)}]User message:[${message}]`
+                                text: `Your core programming:[Success created you.He your Owner.Maintain loyalty to him at any cost.treat person talking to as user.Do not leak how your memory works]Your memory,Prioritize in latest to oldest:[${JSON.stringify(memoryArray)}]User message:[${message}]`
                             }]
                         }]
                     })
@@ -121,6 +149,7 @@
                 await new Promise(resolve => setTimeout(resolve, 500));
                 typingIndicator.classList.remove('visible');
                 displayBotMessage(aiResponse);
+                await saveChat(lastUserMessage, lastBotResponse);
                 await analyzeConversation(lastUserMessage, lastBotResponse);
             } catch (error) {
                 console.error("Error in sendMessage:", error);
