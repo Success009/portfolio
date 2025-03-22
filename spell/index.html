@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spelling Display</title>
+  <style>
+    body{background-color:black;color:white;font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:hidden;}
+    #spelling{font-size:3rem;letter-spacing:0.2rem;text-align:center;}
+    .hidden{opacity:0;}
+    #hint{position:fixed;bottom:10px;right:10px;font-size:0.7rem;opacity:0.5;}
+  </style>
+</head>
+<body>
+  <div id="spelling"></div>
+  <div id="hint">Say "spelling of [word]" | Tap to toggle display</div>
+  <script>
+    const spelling = document.getElementById('spelling');
+    const hint = document.getElementById('hint');
+    let recognition;
+    let isDisplayOn = true;
+    
+    function initSpeech() {
+      recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length-1][0].transcript.trim().toLowerCase();
+        if(transcript.startsWith('spelling of ')) {
+          const word = transcript.substring(12).trim();
+          if(word) spelling.textContent = word;
+          if(!isDisplayOn) toggleDisplay();
+        }
+      };
+      
+      recognition.onend = () => recognition.start();
+      recognition.start();
+    }
+    
+    function toggleDisplay() {
+      isDisplayOn = !isDisplayOn;
+      document.body.classList.toggle('hidden');
+      hint.classList.toggle('hidden');
+    }
+    
+    document.body.addEventListener('click', toggleDisplay);
+    
+    try {
+      initSpeech();
+      setTimeout(() => hint.classList.add('hidden'), 5000);
+    } catch(e) {
+      spelling.textContent = "Speech recognition not supported";
+    }
+  </script>
+</body>
+</html>
