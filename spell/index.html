@@ -1,55 +1,108 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spelling Display</title>
+  <title>Clock Display</title>
   <style>
-    body{background-color:black;color:white;font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:hidden;}
-    #spelling{font-size:3rem;letter-spacing:0.2rem;text-align:center;}
-    .hidden{opacity:0;}
-    #hint{position:fixed;bottom:10px;right:10px;font-size:0.7rem;opacity:0.5;}
+    body {
+      background-color: black;
+      color: white;
+      font-family: 'Digital-7', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    #spelling {
+      font-size: 3rem;
+      letter-spacing: 0.2rem;
+      text-align: center;
+      display: none; /* Initially hidden */
+    }
+    #clock {
+      font-size: 2rem;
+      text-align: center;
+      font-family: monospace;
+      background: #000;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+      border: 2px solid #0ff;
+      letter-spacing: 5px;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+    #hint {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 0.7rem;
+      opacity: 0.5;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div id="spelling"></div>
-  <div id="hint">Say "spelling of [word]" | Tap to toggle display</div>
+  <div id="clock"></div>
   <script>
     const spelling = document.getElementById('spelling');
+    const clock = document.getElementById('clock');
     const hint = document.getElementById('hint');
     let recognition;
-    let isDisplayOn = true;
-    
+    let wordDisplayed = false;
+
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', {
+        hour12: true,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      clock.textContent = time;
+    }
+
     function initSpeech() {
       recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : new SpeechRecognition();
       recognition.continuous = true;
       recognition.lang = 'en-US';
-      
+
       recognition.onresult = (event) => {
-        const transcript = event.results[event.results.length-1][0].transcript.trim().toLowerCase();
-        if(transcript.startsWith('spelling of ')) {
+        const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+        if (transcript.startsWith('spelling of ')) {
           const word = transcript.substring(12).trim();
-          if(word) spelling.textContent = word;
-          if(!isDisplayOn) toggleDisplay();
+          if (word) {
+            spelling.textContent = word;
+            spelling.style.display = 'block'; // Show the spelling
+            clock.style.display = 'none'; // Hide the clock
+            wordDisplayed = true;
+          }
         }
       };
-      
+
       recognition.onend = () => recognition.start();
       recognition.start();
     }
-    
-    function toggleDisplay() {
-      isDisplayOn = !isDisplayOn;
-      document.body.classList.toggle('hidden');
-      hint.classList.toggle('hidden');
-    }
-    
-    document.body.addEventListener('click', toggleDisplay);
-    
+
+    document.body.addEventListener('click', () => {
+      if (wordDisplayed) {
+        spelling.style.display = 'none'; // Hide the spelling
+        clock.style.display = 'block'; // Show the clock
+        wordDisplayed = false;
+      }
+    });
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
     try {
       initSpeech();
       setTimeout(() => hint.classList.add('hidden'), 5000);
-    } catch(e) {
+    } catch (e) {
       spelling.textContent = "Speech recognition not supported";
     }
   </script>
