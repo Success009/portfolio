@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clock Display</title>
+  <title>Clock Display with AI</title>
   <style>
     body {
       background-color: black;
@@ -13,13 +13,29 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      overflow: hidden;
+      overflow: auto;
     }
     #spelling {
-      font-size: 3rem;
+      font-size: 2rem; /* Reduced from 3rem to 2rem */
       letter-spacing: 0.2rem;
       text-align: center;
-      display: none; /* Initially hidden */
+      display: none;
+      position: absolute; /* Position absolutely */
+      top: 50%; /* Center vertically */
+      left: 50%; /* Center horizontally */
+      transform: translate(-50%, -50%); /* Adjust to true center */
+    }
+    #ai-response {
+      font-size: 1.5rem;
+      letter-spacing: 0.1rem;
+      text-align: center;
+      display: none;
+      opacity: 0.8;
+      position: absolute; /* Position absolutely */
+      top: 50%; /* Center vertically */
+      left: 50%; /* Center horizontally */
+      transform: translate(-50%, -50%); /* Adjust to true center */
+      width: 90%; /* Ensure text doesn't overflow */
     }
     #clock {
       font-size: 2rem;
@@ -44,14 +60,29 @@
       display: none;
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 </head>
 <body>
   <div id="spelling"></div>
+  <div id="ai-response"></div>
   <div id="clock"></div>
   <script>
+    // Firebase configuration from the AI chatbot
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+      authDomain: "community-canvas-255fa.firebaseapp.com",
+      databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+      projectId: "community-canvas-255fa",
+      storageBucket: "community-canvas-255fa.appspot.com",
+      messagingSenderId: "729445267995",
+      appId: "1:729445267995:web:05da6756d66c58b9ccd6be",
+      measurementId: "G-FW93CB5QL7"
+    };
+    firebase.initializeApp(firebaseConfig);
+
     const spelling = document.getElementById('spelling');
+    const aiResponse = document.getElementById('ai-response');
     const clock = document.getElementById('clock');
-    const hint = document.getElementById('hint');
     let recognition;
     let wordDisplayed = false;
 
@@ -66,19 +97,54 @@
       clock.textContent = time;
     }
 
+    async function getAIResponse(question) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyADlmcxsm5XjcO6xJVJGF2xHl84mFNnD0Y`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Respond to this query briefly and concisely: ${question}`
+              }]
+            }]
+          })
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text.trim();
+      } catch (error) {
+        console.error("Error getting AI response:", error);
+        return "Sorry, I couldn't process that request.";
+      }
+    }
+
     function initSpeech() {
       recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : new SpeechRecognition();
       recognition.continuous = true;
       recognition.lang = 'en-US';
 
-      recognition.onresult = (event) => {
+      recognition.onresult = async (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+
         if (transcript.startsWith('spelling of ')) {
           const word = transcript.substring(12).trim();
           if (word) {
             spelling.textContent = word;
-            spelling.style.display = 'block'; // Show the spelling
-            clock.style.display = 'none'; // Hide the clock
+            spelling.style.display = 'block';
+            aiResponse.style.display = 'none';
+            clock.style.display = 'none';
+            wordDisplayed = true;
+          }
+        } else if (transcript.startsWith('tell me ')) {
+          const question = transcript.substring(8).trim();
+          if (question) {
+            const answer = await getAIResponse(question);
+            aiResponse.textContent = answer;
+            spelling.style.display = 'none';
+            clock.style.display = 'none';
+            aiResponse.style.display = 'block';
             wordDisplayed = true;
           }
         }
@@ -90,8 +156,9 @@
 
     document.body.addEventListener('click', () => {
       if (wordDisplayed) {
-        spelling.style.display = 'none'; // Hide the spelling
-        clock.style.display = 'block'; // Show the clock
+        spelling.style.display = 'none';
+        aiResponse.style.display = 'none';
+        clock.style.display = 'block';
         wordDisplayed = false;
       }
     });
@@ -101,7 +168,6 @@
 
     try {
       initSpeech();
-      setTimeout(() => hint.classList.add('hidden'), 5000);
     } catch (e) {
       spelling.textContent = "Speech recognition not supported";
     }
