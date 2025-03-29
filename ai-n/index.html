@@ -112,6 +112,19 @@
       recognition.onresult = async (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
         
+        // Handle the "शुद्धमा" command for displaying text as-is
+        if (transcript.startsWith('शुद्धमा')) {
+          const displayText = transcript.substring(transcript.indexOf('शुद्धमा') + 'शुद्धमा'.length).trim();
+          if (displayText) {
+            aiResponse.textContent = displayText;
+            clock.style.display = 'none';
+            aiResponse.style.display = 'block';
+            mem.style.display = 'block';
+            wordDisplayed = true;
+          }
+          return;
+        }
+        
         // Handle memory storage command
         if (transcript.includes("याद राख")) {
           const memoryContent = transcript.replace("याद राख", "").trim();
