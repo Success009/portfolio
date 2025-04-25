@@ -980,19 +980,25 @@ document.getElementById('searchInput').addEventListener('keydown', function (eve
         }
         fetchMenuItems();
     </script>
-        <script>
-          fetch("https://api.ipify.org?format=json")
-            .then(res => res.json())
-            .then(data => {
-              console.log("Detected IP:", data.ip);
-              const allowedIP = "103.166.101.149";
-              if (data.ip !== allowedIP) {
-                document.body.innerHTML = '<div style="text-align:center; padding:50px; font-size:1.5em; color:red;">Only order when you are in hotel.</div>';
-              }
-            })
-            .catch(() => {
-              document.body.innerHTML = '<div style="text-align:center; padding:50px; font-size:1.5em; color:red;">Network check failed. Access denied.</div>';
-            });
-        </script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                fetch("https://api.ipify.org?format=json")
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log("Detected IP:", data.ip);
+                        const allowedIP = "103.166.101.149";
+                        if (data.ip !== allowedIP) {
+                            window.location.href = "https://success0.fr.to/hotel/access-denied";
+                        } else {
+                            document.getElementById('loading').style.display = 'none';
+                        }
+                    })
+                    .catch(() => {
+                        window.location.href = "https://success0.fr.to/hotel/access-denied";
+                    });
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
