@@ -1,0 +1,497 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Order Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --success: #38b000;
+            --danger: #d90429;
+            --warning: #ffaa00;
+            --info: #4cc9f0;
+            --secondary: #6c757d;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), #3a0ca3);
+            color: var(--white);
+            padding: 1.2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: #3051d3;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: var(--white);
+        }
+
+        .btn-success:hover {
+            background-color: #2d9200;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background-color: #b10022;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: var(--dark);
+        }
+
+        .btn-warning:hover {
+            background-color: #e69900;
+        }
+
+        .btn-info {
+            background-color: var(--info);
+            color: var(--dark);
+        }
+
+        .btn-info:hover {
+            background-color: #3cb2d9;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .order-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .order-card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .card-header {
+            padding: 1rem;
+            background-color: rgba(67, 97, 238, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .payment-cod {
+            background-color: #ffeeee;
+            color: #d90429;
+            border: 1px solid #ffcccc;
+        }
+
+        .payment-online {
+            background-color: #e6f8ff;
+            color: #0077b6;
+            border: 1px solid #ccf0ff;
+        }
+
+        .payment-verified {
+            background-color: #e6ffee;
+            color: #38b000;
+            border: 1px solid #ccffdd;
+        }
+        
+        .device-id {
+            font-size: 0.9rem;
+            color: var(--info);
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .order-items {
+            margin-bottom: 1rem;
+        }
+
+        .order-items h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .item-list {
+            list-style: none;
+            margin-left: 10px;
+        }
+
+        .item-list li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+        }
+
+        .price-info {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .total-price {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .card-footer {
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            background-color: rgba(240, 242, 245, 0.5);
+        }
+
+
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+            color: var(--secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-title">Staff Order Management</div>
+        <div class="header-actions">
+            <button class="btn btn-info" onclick="window.location.href='StaffMenu.html'">
+                <i class="fas fa-edit"></i> Edit Menu
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="order-container" id="orderSection">
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+            authDomain: "community-canvas-255fa.firebaseapp.com",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+            projectId: "community-canvas-255fa",
+            storageBucket: "community-canvas-255fa.appspot.com",
+            messagingSenderId: "729445267995",
+            appId: "1:729445267995:web:05da6756d66c58b9ccd6be",
+            measurementId: "G-FW93CB5QL7"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const ordersRef = firebase.database().ref('orders');
+        const menuRef = firebase.database().ref('menu');
+        const notificationsRef = firebase.database().ref('notifications');
+
+        function calculateTotalProfit(orderItems) {
+            let totalProfit = 0;
+            return Promise.all(orderItems.map(item => fetchMenuItemDetails(item.name)))
+                .then(menuItems => {
+                    menuItems.forEach((menuItem, index) => {
+                        const profitPerUnit = menuItem.profit / menuItem.startingValue;
+                        totalProfit += profitPerUnit * orderItems[index].quantity;
+                    });
+                    return totalProfit;
+                });
+        }
+        function fetchOrders() {
+            ordersRef.on('value', (snapshot) => {
+                const orderSection = document.getElementById('orderSection');
+                orderSection.innerHTML = '';
+
+                if (!snapshot.exists()) {
+                    orderSection.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>No Orders Yet</h3>
+                            <p>New orders will appear here.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                snapshot.forEach((childSnapshot) => {
+                    const order = childSnapshot.val();
+                    const orderId = childSnapshot.key;
+                    const orderItems = order.items;
+                    let totalItemPrice = 0;
+                    let totalItemProfit = 0;
+                    Promise.all(orderItems.map(item => fetchMenuItemDetails(item.name)))
+                        .then(menuItems => {
+                            const orderItemsHTML = orderItems.map((item, index) => {
+                                const menuItem = menuItems[index];
+                                const price = menuItem.price || 0;
+                                const profit = menuItem.profit || 0;
+                                const startingValue = menuItem.startingValue || 1;
+
+                                const pricePerUnit = price / startingValue;
+                                const profitPerUnit = profit / startingValue;
+
+                                const itemTotalPrice = pricePerUnit * item.quantity;
+                                const itemTotalProfit = profitPerUnit * item.quantity;
+
+                                totalItemPrice += itemTotalPrice;
+                                totalItemProfit += itemTotalProfit;
+
+                                return `<li>${item.name} - Rs ${(pricePerUnit).toFixed(2)} × ${item.quantity} (Profit: Rs ${(profitPerUnit).toFixed(2)})</li>`;
+                            }).join('');
+
+                            const totalProfit = totalItemProfit;
+                            const finalPrice = totalItemPrice;
+                            const orderHTML = `
+                                <div class="order-card" id="${orderId}">
+                                    <div class="card-header">
+                                        <div class="card-title">Order #${orderId.slice(-6)}</div>
+                                        <div class="timestamp" data-time="${order.timestamp}">
+                                            ${new Date(order.timestamp).toLocaleString()}
+                                        </div>
+                                        <div class="device-id">Device ID: ${order.deviceId || 'Not available'}</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="order-items">
+                                            <h4><i class="fas fa-shopping-basket"></i> Order Items</h4>
+                                            <ul class="item-list">
+                                                ${orderItemsHTML}
+                                            </ul>
+                                        </div>
+
+                                        <div class="price-info">
+                                            <div class="price-row">
+                                                <span>Item Total:</span>
+                                                <span>Rs ${totalItemPrice.toFixed(2)}</span>
+                                            </div>
+                                            <div class="price-row">
+                                                <span>Total Profit:</span>
+                                                <span>Rs ${totalProfit.toFixed(2)}</span>
+                                            </div>
+                                            <div class="price-row total-price">
+                                                <span>Total Price:</span>
+                                                <span>Rs ${finalPrice.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-footer">
+                                        ${!order.accepted ? 
+                                            `<button class="btn btn-primary" onclick="processOrder('${orderId}')">
+                                                <i class="fas fa-check-circle"></i> Accept Order
+                                            </button>` : 
+                                            `<button class="btn btn-success" onclick="completeOrder('${orderId}')">
+                                                <i class="fas fa-flag-checkered"></i> Complete
+                                            </button>`
+                                        }
+
+                                        <button class="btn btn-danger" onclick="cancelOrder('${orderId}')">
+                                            <i class="fas fa-times-circle"></i> Cancel
+                                        </button>
+                                    </div>
+
+                                </div>
+                            `;
+
+                            orderSection.insertAdjacentHTML('afterbegin', orderHTML);
+                        });
+                });
+
+                setInterval(updateTimeSinceOrder, 60000);
+                updateTimeSinceOrder();
+            });
+        }
+
+        function fetchMenuItemDetails(itemName) {
+            return new Promise((resolve, reject) => {
+                menuRef.once('value', (snapshot) => {
+                    let menuItem = null;
+                    snapshot.forEach(childSnapshot => {
+                        const menuEntry = childSnapshot.val();
+                        if (menuEntry.name === itemName) {
+                            menuItem = { 
+                                price: menuEntry.price || 0, 
+                                startingValue: menuEntry.startingValue || 1,
+                                profit: menuEntry.profit || 0
+                            };
+                        }
+                    });
+                    resolve(menuItem || { price: 0, startingValue: 1, profit: 0 });
+                }, (error) => {
+                    reject(error);
+                });
+            });
+        }
+        function updateTimeSinceOrder() {
+            const timestamps = document.querySelectorAll('.timestamp');
+            timestamps.forEach(element => {
+                const timestamp = new Date(element.dataset.time).getTime();
+                const now = Date.now();
+                const diff = Math.floor((now - timestamp) / 1000);
+
+                const days = Math.floor(diff / (24 * 3600));
+                const hours = Math.floor((diff % (24 * 3600)) / 3600);
+                const minutes = Math.floor((diff % 3600) / 60);
+
+                let timeAgo = '';
+
+                if (days > 0) {
+                    timeAgo = `${days}d ${hours}h ago`;
+                } else if (hours > 0) {
+                    timeAgo = `${hours}h ${minutes}m ago`;
+                } else {
+                    timeAgo = `${minutes}m ago`;
+                }
+
+                element.innerHTML = `${new Date(timestamp).toLocaleString()} <span style="color:#6c757d">(${timeAgo})</span>`;
+            });
+        }
+
+        function processOrder(orderId) {
+            if (confirm('Are you accepting this order?')) {
+                ordersRef.child(orderId).update({ accepted: true })
+                    .then(() => fetchOrders());
+            }
+        }
+
+        function completeOrder(orderId) {
+            if (confirm('Are you sure the order is completed?')) {
+                ordersRef.child(orderId).once('value').then(snapshot => {
+                    const order = snapshot.val();
+                    const totalOrdersRef = firebase.database().ref('totalorders');
+                    totalOrdersRef.child(orderId).set(order)
+                        .then(() => {
+                            ordersRef.child(orderId).remove()
+                                .then(() => {
+                                    const orderElement = document.getElementById(orderId);
+                                    if (orderElement) orderElement.remove();
+                                });
+                        });
+                });
+            }
+        }
+
+        function cancelOrder(orderId) {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                ordersRef.child(orderId).remove()
+                    .then(() => {
+                        const orderElement = document.getElementById(orderId);
+                        if (orderElement) orderElement.remove();
+                    });
+            }
+        }
+
+        window.onload = fetchOrders;
+    </script>
+</body>
+</html>
