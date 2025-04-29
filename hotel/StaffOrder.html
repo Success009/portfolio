@@ -263,13 +263,92 @@
             font-size: 3rem;
             margin-bottom: 1rem;
         }
+    /* Custom Modal Styles */
+    .custom-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        position: relative;
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .custom-modal.active .modal-content {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .modal-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+    }
+
+    .modal-icon.success { color: var(--success); }
+    .modal-icon.warning { color: var(--warning); }
+    .modal-icon.error { color: var(--danger); }
+
+    .modal-title {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+        color: var(--dark);
+    }
+
+    .modal-message {
+        margin-bottom: 20px;
+        color: var(--secondary);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .modal-btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .modal-btn-confirm {
+        background: var(--success);
+        color: white;
+    }
+
+    .modal-btn-cancel {
+        background: var(--danger);
+        color: white;
+    }
     </style>
 </head>
 <body>
     <header>
         <div class="header-title">Staff Order Management</div>
         <div class="header-actions">
-            <button class="btn btn-info" onclick="window.location.href='StaffMenu.html'">
+            <button class="btn btn-warning" onclick="calibrateIP()">
+                <i class="fas fa-network-wired"></i> Calibrate IP
+            </button>
+            <button class="btn btn-info" onclick="window.location.href='StaffMenu.html'" style="margin-left: 10px;">
                 <i class="fas fa-edit"></i> Edit Menu
             </button>
         </div>
@@ -277,6 +356,17 @@
 
     <div class="container">
         <div class="order-container" id="orderSection">
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div class="custom-modal" id="customModal">
+        <div class="modal-content">
+            <i class="modal-icon fas"></i>
+            <h3 class="modal-title"></h3>
+            <p class="modal-message"></p>
+            <div class="modal-actions">
+            </div>
         </div>
     </div>
 
@@ -359,7 +449,7 @@
                                         <div class="timestamp" data-time="${order.timestamp}">
                                             ${new Date(order.timestamp).toLocaleString()}
                                         </div>
-                                        <div class="device-id">Table No: ${order.device || 'Not available'}</div>
+                                        <div class="device-id">Device ID: ${order.device || 'Not available'}</div>
                                     </div>
                                     <div class="card-body">
                                         <div class="order-items">
@@ -489,6 +579,188 @@
                         if (orderElement) orderElement.remove();
                     });
             }
+        }
+
+        function showModal(title, message, icon, actions) {
+            const modal = document.getElementById('customModal');
+            const modalIcon = modal.querySelector('.modal-icon');
+            const modalTitle = modal.querySelector('.modal-title');
+            const modalMessage = modal.querySelector('.modal-message');
+            const modalActions = modal.querySelector('.modal-actions');
+
+            modalIcon.className = `modal-icon fas ${icon}`;
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalActions.innerHTML = actions.map(action => `
+                <button class="modal-btn ${action.class}" onclick="${action.onClick}">
+                    ${action.text}
+                </button>
+            `).join('');
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function hideModal() {
+            const modal = document.getElementById('customModal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function calibrateIP() {
+            showModal(
+                'Calibrate IP',
+                'Are you sure you want to update the allowed IP to your current IP?',
+                'fa-network-wired warning',
+                [
+                    {
+                        text: 'Yes, Update IP',
+                        class: 'modal-btn-confirm',
+                        onClick: 'performIPCalibration()'
+                    },
+                    {
+                        text: 'Cancel',
+                        class: 'modal-btn-cancel',
+                        onClick: 'hideModal()'
+                    }
+                ]
+            );
+        }
+
+        function performIPCalibration() {
+            fetch("https://api.ipify.org?format=json")
+                    .then(res => res.json())
+                    .then(data => {
+                        const ipRef = firebase.database().ref('allowed_ips');
+                        ipRef.set({
+                            current: data.ip
+                        }).then(() => {
+                            showModal(
+                                'Success',
+                                'IP successfully updated to: ' + data.ip,
+                                'fa-check-circle success',
+                                [{
+                                    text: 'OK',
+                                    class: 'modal-btn-confirm',
+                                    onClick: 'hideModal()'
+                                }]
+                            );
+                        }).catch(error => {
+                            showModal(
+                                'Error',
+                                'Error updating IP: ' + error.message,
+                                'fa-exclamation-circle error',
+                                [{
+                                    text: 'OK',
+                                    class: 'modal-btn-confirm',
+                                    onClick: 'hideModal()'
+                                }]
+                            );
+                        });
+                    })
+                    .catch(error => {
+                        showModal(
+                            'Error',
+                            'Error fetching IP: ' + error.message,
+                            'fa-exclamation-circle error',
+                            [{
+                                text: 'OK',
+                                class: 'modal-btn-confirm',
+                                onClick: 'hideModal()'
+                            }]
+                        );
+                    });
+            }
+
+        function processOrder(orderId) {
+            showModal(
+                'Accept Order',
+                'Are you sure you want to accept this order?',
+                'fa-question-circle warning',
+                [
+                    {
+                        text: 'Yes, Accept',
+                        class: 'modal-btn-confirm',
+                        onClick: `acceptOrder('${orderId}')`
+                    },
+                    {
+                        text: 'Cancel',
+                        class: 'modal-btn-cancel',
+                        onClick: 'hideModal()'
+                    }
+                ]
+            );
+        }
+
+        function acceptOrder(orderId) {
+            hideModal();
+            ordersRef.child(orderId).update({ accepted: true })
+                .then(() => fetchOrders());
+        }
+
+        function completeOrder(orderId) {
+            showModal(
+                'Complete Order',
+                'Are you sure this order is completed?',
+                'fa-check-circle warning',
+                [
+                    {
+                        text: 'Yes, Complete',
+                        class: 'modal-btn-confirm',
+                        onClick: `finishOrder('${orderId}')`
+                    },
+                    {
+                        text: 'Cancel',
+                        class: 'modal-btn-cancel',
+                        onClick: 'hideModal()'
+                    }
+                ]
+            );
+        }
+
+        function finishOrder(orderId) {
+            hideModal();
+            ordersRef.child(orderId).once('value').then(snapshot => {
+                const order = snapshot.val();
+                const totalOrdersRef = firebase.database().ref('totalorders');
+                totalOrdersRef.child(orderId).set(order)
+                    .then(() => {
+                        ordersRef.child(orderId).remove()
+                            .then(() => {
+                                const orderElement = document.getElementById(orderId);
+                                if (orderElement) orderElement.remove();
+                            });
+                    });
+            });
+        }
+
+        function cancelOrder(orderId) {
+            showModal(
+                'Cancel Order',
+                'Are you sure you want to cancel this order?',
+                'fa-times-circle warning',
+                [
+                    {
+                        text: 'Yes, Cancel Order',
+                        class: 'modal-btn-confirm',
+                        onClick: `removeOrder('${orderId}')`
+                    },
+                    {
+                        text: 'No, Keep Order',
+                        class: 'modal-btn-cancel',
+                        onClick: 'hideModal()'
+                    }
+                ]
+            );
+        }
+
+        function removeOrder(orderId) {
+            hideModal();
+            ordersRef.child(orderId).remove()
+                .then(() => {
+                    const orderElement = document.getElementById(orderId);
+                    if (orderElement) orderElement.remove();
+                });
         }
 
         window.onload = fetchOrders;
