@@ -1,0 +1,897 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>User Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --p: #6c5ce7;
+      --s: #a29bfe;
+      --g: #00cec9;
+      --e: #d63031;
+      --d1: #1e272e;
+      --d2: #2d3436;
+      --d3: #485460;
+      --light: #dfe6e9;
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --danger: #d63031;
+      --glow: 0 0 15px rgba(108,92,231,.5);
+      --br: 16px;
+      --bs: 0 10px 30px rgba(0,0,0,.25);
+      --t: .3s cubic-bezier(.25,.8,.25,1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #121212;
+      color: var(--light);
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 2rem;
+    }
+
+    .card {
+      background: var(--d1);
+      border-radius: var(--br);
+      box-shadow: var(--bs);
+      padding: 2rem;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .glow-border {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--br);
+      z-index: -1;
+      opacity: .3;
+      background: linear-gradient(135deg, var(--p), var(--s));
+      filter: blur(15px);
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 1.3rem;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 14px;
+      top: 16px;
+      color: var(--s);
+      transition: var(--t);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 15px 15px 15px 45px;
+      border: 1px solid var(--d3);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: var(--d2);
+      transition: var(--t);
+      outline: none;
+      color: #fff;
+    }
+
+    input::placeholder {
+      color: #7f8c8d;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--p);
+      box-shadow: 0 0 0 2px rgba(108,92,231,.2);
+    }
+
+    input:focus + i {
+      color: var(--p);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      color: white;
+      padding: 15px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: var(--glow);
+      transition: var(--t);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      z-index: -1;
+      transition: var(--t);
+    }
+
+    .btn:active {
+      transform: scale(.97);
+    }
+
+    .btn:hover:before {
+      opacity: 1;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, var(--p), var(--s));
+    }
+
+    .btn-primary:before {
+      background: linear-gradient(45deg, var(--s), var(--p));
+    }
+
+    .btn-success {
+      background: linear-gradient(45deg, var(--g), var(--success));
+    }
+
+    .btn-success:before {
+      background: linear-gradient(45deg, var(--success), var(--g));
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg, var(--e), var(--danger));
+    }
+
+    .btn-danger:before {
+      background: linear-gradient(45deg, var(--danger), var(--e));
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .full-width {
+      width: 100%;
+    }
+
+    .form-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      width: 100%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      color: var(--light);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid var(--d3);
+    }
+
+    th {
+      background-color: var(--d2);
+      color: var(--s);
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background-color: rgba(108, 92, 231, 0.1);
+    }
+
+    .action-cell {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-staff {
+      background-color: rgba(108, 92, 231, 0.2);
+      color: var(--s);
+    }
+
+    .search-bar {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      flex-grow: 1;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .search-bar button {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-content {
+      background: var(--d1);
+      border-radius: var(--br);
+      width: 90%;
+      max-width: 500px;
+      box-shadow: var(--bs);
+      animation: slideIn 0.3s;
+    }
+
+    .modal-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--d3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid var(--d3);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .close-btn {
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: var(--light);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 10px;
+      background: var(--d1);
+      color: #fff;
+      box-shadow: var(--bs);
+      max-width: 300px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s, fadeOut 0.3s 3s forwards;
+    }
+
+    .notification.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .notification.error {
+      border-left: 4px solid var(--danger);
+    }
+
+    .notification i {
+      font-size: 1.2rem;
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; visibility: hidden; }
+    }
+
+    .back-btn {
+      text-decoration: none;
+      color: var(--light);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 20px;
+      font-weight: 500;
+      transition: var(--t);
+    }
+
+    .back-btn:hover {
+      color: var(--s);
+    }
+
+    .loader {
+      display: none;
+      border: 3px solid rgba(255,255,255,.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      to {transform: rotate(360deg);}
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--d3);
+      color: var(--light);
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--t);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="main.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Back to Main
+    </a>
+
+    <div class="header">
+      <h1>User Management</h1>
+      <button id="logoutBtn" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="glow-border"></div>
+      <h2>Add New User</h2>
+      <form id="addUserForm">
+        <div class="input-group">
+          <input type="text" id="username" placeholder="Username" required>
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="input-group">
+          <input type="password" id="password" placeholder="Password" required>
+          <i class="fas fa-lock"></i>
+        </div>
+        <button type="submit" class="btn btn-primary full-width">
+          <span>Add User</span>
+          <div class="loader" id="addLoader"></div>
+        </button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="glow-border"></div>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search users...">
+        <button class="btn btn-primary" id="searchBtn">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Token</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- User rows will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit User</h2>
+        <span class="close-btn" id="closeEditModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="editUserForm">
+          <input type="hidden" id="editUserId">
+          <div class="input-group">
+            <input type="text" id="editUsername" placeholder="Username" required>
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="input-group">
+            <input type="password" id="editPassword" placeholder="New Password">
+            <i class="fas fa-lock"></i>
+          </div>
+          <small>Leave password blank to keep current password</small>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="cancelEditBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveEditBtn">
+          <span>Save Changes</span>
+          <div class="loader" id="editLoader"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Confirm Deletion</h2>
+        <span class="close-btn" id="closeDeleteModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete user <strong id="deleteUserName"></strong>?</p>
+        <p>This action cannot be undone.</p>
+        <input type="hidden" id="deleteUserId">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="cancelDeleteBtn">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">
+          <span>Delete User</span>
+          <div class="loader" id="deleteLoader"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script>
+    // Check authentication
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is logged in
+      const userToken = localStorage.getItem('userToken');
+      const userName = localStorage.getItem('userName');
+
+      if (!userToken || !userName) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Initialize Firebase
+      firebase.initializeApp({
+        apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+        authDomain:"community-canvas-255fa.firebaseapp.com",
+        databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",
+        projectId:"community-canvas-255fa",
+        storageBucket:"community-canvas-255fa.appspot.com",
+        messagingSenderId:"729445267995",
+        appId:"1:729445267995:web:05da6756d66c58b9ccd6be"
+      });
+
+      initApp();
+    });
+
+    function initApp() {
+      const db = firebase.database();
+
+      // DOM Elements
+      const addUserForm = document.getElementById('addUserForm');
+      const editUserForm = document.getElementById('editUserForm');
+      const usersTableBody = document.getElementById('usersTableBody');
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      // Modal Elements
+      const editModal = document.getElementById('editModal');
+      const closeEditModal = document.getElementById('closeEditModal');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+      const saveEditBtn = document.getElementById('saveEditBtn');
+
+      const deleteModal = document.getElementById('deleteModal');
+      const closeDeleteModal = document.getElementById('closeDeleteModal');
+      const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+      // Loaders
+      const addLoader = document.getElementById('addLoader');
+      const editLoader = document.getElementById('editLoader');
+      const deleteLoader = document.getElementById('deleteLoader');
+
+      // Load users on page load
+      loadUsers();
+
+      // Event Listeners
+      addUserForm.addEventListener('submit', handleAddUser);
+      searchBtn.addEventListener('click', handleSearch);
+      searchInput.addEventListener('keyup', e => {
+        if (e.key === 'Enter') handleSearch();
+      });
+      logoutBtn.addEventListener('click', handleLogout);
+
+      // Modal event listeners
+      closeEditModal.addEventListener('click', () => editModal.style.display = 'none');
+      cancelEditBtn.addEventListener('click', () => editModal.style.display = 'none');
+      saveEditBtn.addEventListener('click', handleEditUser);
+
+      closeDeleteModal.addEventListener('click', () => deleteModal.style.display = 'none');
+      cancelDeleteBtn.addEventListener('click', () => deleteModal.style.display = 'none');
+      confirmDeleteBtn.addEventListener('click', handleDeleteUser);
+
+      // Close modals when clicking outside
+      window.addEventListener('click', e => {
+        if (e.target === editModal) editModal.style.display = 'none';
+        if (e.target === deleteModal) deleteModal.style.display = 'none';
+      });
+
+      // Function to generate a random token
+      function generateToken() {
+        const timestamp = new Date().getTime().toString(36);
+        const randomStr = Math.random().toString(36).substring(2, 15);
+        return `staff_${timestamp}_${randomStr}`;
+      }
+
+      // Function to show notification
+      function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+
+        const icon = document.createElement('i');
+        icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+
+        const text = document.createElement('span');
+        text.textContent = message;
+
+        notification.appendChild(icon);
+        notification.appendChild(text);
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.remove();
+        }, 3500);
+      }
+
+      // Function to toggle loading state
+      function toggleLoading(element, isLoading) {
+        const loader = element.querySelector('.loader');
+        const text = element.querySelector('span');
+
+        if (isLoading) {
+          text.style.display = 'none';
+          loader.style.display = 'block';
+          element.disabled = true;
+        } else {
+          text.style.display = 'block';
+          loader.style.display = 'none';
+          element.disabled = false;
+        }
+      }
+
+      // Function to load users from Firebase
+      function loadUsers(searchTerm = '') {
+        usersTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Loading users...</td></tr>';
+
+        // Get users from Firebase
+        db.ref('staff').once('value')
+          .then(snapshot => {
+            usersTableBody.innerHTML = '';
+            const staffData = snapshot.val();
+
+            if (!staffData) {
+              usersTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No users found</td></tr>';
+              return;
+            }
+
+            // Convert Firebase object to array with keys
+            const staffArray = Object.entries(staffData).map(([key, value]) => ({
+              id: key,
+              ...value
+            }));
+
+            // Filter by search term if provided
+            const filteredUsers = searchTerm ? 
+              staffArray.filter(user => 
+                user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase())
+              ) : staffArray;
+
+            if (filteredUsers.length === 0) {
+              usersTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No users found</td></tr>';
+              return;
+            }
+
+            // Populate table
+            filteredUsers.forEach(user => {
+              const row = document.createElement('tr');
+
+              const usernameCell = document.createElement('td');
+              usernameCell.textContent = user.username || 'N/A';
+
+              const tokenCell = document.createElement('td');
+              tokenCell.textContent = user.token ? user.token.substring(0, 15) + '...' : 'N/A';
+
+              const actionsCell = document.createElement('td');
+              actionsCell.className = 'action-cell';
+
+              const editBtn = document.createElement('button');
+              editBtn.className = 'btn btn-primary btn-small';
+              editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+              editBtn.addEventListener('click', () => openEditModal(user));
+
+              const deleteBtn = document.createElement('button');
+              deleteBtn.className = 'btn btn-danger btn-small';
+              deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+              deleteBtn.addEventListener('click', () => openDeleteModal(user));
+
+              actionsCell.appendChild(editBtn);
+              actionsCell.appendChild(deleteBtn);
+
+              row.appendChild(usernameCell);
+              row.appendChild(tokenCell);
+              row.appendChild(actionsCell);
+
+              usersTableBody.appendChild(row);
+            });
+          })
+          .catch(error => {
+            console.error("Error loading users:", error);
+            usersTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Error loading users. Please try again.</td></tr>';
+            showNotification("Failed to load users. Please refresh the page.", "error");
+          });
+      }
+
+      // Function to handle adding a new user
+      function handleAddUser(e) {
+        e.preventDefault();
+
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!username || !password) {
+          showNotification("Username and password are required", "error");
+          return;
+        }
+
+        toggleLoading(addUserForm.querySelector('.btn'), true);
+
+        // Check if username already exists
+        db.ref('staff').once('value')
+          .then(snapshot => {
+            const staffData = snapshot.val();
+
+            if (staffData) {
+              const staffArray = Object.values(staffData);
+              const usernameExists = staffArray.some(user => 
+                user.username && user.username.toLowerCase() === username.toLowerCase()
+              );
+
+              if (usernameExists) {
+                toggleLoading(addUserForm.querySelector('.btn'), false);
+                showNotification("Username already exists", "error");
+                return;
+              }
+            }
+
+            // Add new user
+            const newUser = {
+              username: username,
+              password: password,
+              token: generateToken()
+            };
+
+            db.ref('staff').push(newUser)
+              .then(() => {
+                toggleLoading(addUserForm.querySelector('.btn'), false);
+                showNotification("User added successfully", "success");
+                addUserForm.reset();
+                loadUsers();
+              })
+              .catch(error => {
+                console.error("Error adding user:", error);
+                toggleLoading(addUserForm.querySelector('.btn'), false);
+                showNotification("Failed to add user", "error");
+              });
+          })
+          .catch(error => {
+            console.error("Error checking existing users:", error);
+            toggleLoading(addUserForm.querySelector('.btn'), false);
+            showNotification("An error occurred", "error");
+          });
+      }
+
+      // Function to open edit user modal
+      function openEditModal(user) {
+        document.getElementById('editUserId').value = user.id;
+        document.getElementById('editUsername').value = user.username || '';
+        document.getElementById('editPassword').value = '';
+
+        editModal.style.display = 'flex';
+      }
+
+      // Function to handle editing a user
+      function handleEditUser() {
+        const userId = document.getElementById('editUserId').value;
+        const username = document.getElementById('editUsername').value.trim();
+        const password = document.getElementById('editPassword').value.trim();
+
+        if (!username) {
+          showNotification("Username is required", "error");
+          return;
+        }
+
+        toggleLoading(saveEditBtn, true);
+
+        // Check if username already exists (excluding the current user)
+        db.ref('staff').once('value')
+          .then(snapshot => {
+            const staffData = snapshot.val();
+
+            if (staffData) {
+              const staffArray = Object.entries(staffData).map(([key, value]) => ({
+                id: key,
+                ...value
+              }));
+
+              const usernameExists = staffArray.some(user => 
+                user.id !== userId && 
+                user.username && 
+                user.username.toLowerCase() === username.toLowerCase()
+              );
+
+              if (usernameExists) {
+                toggleLoading(saveEditBtn, false);
+                showNotification("Username already exists", "error");
+                return;
+              }
+            }
+
+            // Update user with or without password
+            const updates = { username: username };
+
+            if (password) {
+              updates.password = password;
+            }
+
+            db.ref(`staff/${userId}`).update(updates)
+              .then(() => {
+                toggleLoading(saveEditBtn, false);
+                editModal.style.display = 'none';
+                showNotification("User updated successfully", "success");
+                loadUsers();
+              })
+              .catch(error => {
+                console.error("Error updating user:", error);
+                toggleLoading(saveEditBtn, false);
+                showNotification("Failed to update user", "error");
+              });
+          })
+          .catch(error => {
+            console.error("Error checking existing users:", error);
+            toggleLoading(saveEditBtn, false);
+            showNotification("An error occurred", "error");
+          });
+      }
+
+      // Function to open delete confirmation modal
+      function openDeleteModal(user) {
+        document.getElementById('deleteUserId').value = user.id;
+        document.getElementById('deleteUserName').textContent = user.username || 'this user';
+
+        deleteModal.style.display = 'flex';
+      }
+
+      // Function to handle deleting a user
+      function handleDeleteUser() {
+        const userId = document.getElementById('deleteUserId').value;
+
+        toggleLoading(confirmDeleteBtn, true);
+
+        db.ref(`staff/${userId}`).remove()
+          .then(() => {
+            toggleLoading(confirmDeleteBtn, false);
+            deleteModal.style.display = 'none';
+            showNotification("User deleted successfully", "success");
+            loadUsers();
+          })
+          .catch(error => {
+            console.error("Error deleting user:", error);
+            toggleLoading(confirmDeleteBtn, false);
+            showNotification("Failed to delete user", "error");
+          });
+      }
+
+      // Function to handle search
+      function handleSearch() {
+        const searchTerm = searchInput.value.trim();
+        loadUsers(searchTerm);
+      }
+
+      // Function to handle logout
+      function handleLogout() {
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userRole');
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1286 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Attendance</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #6c5ce7;
+      --secondary: #a29bfe;
+      --dark: #121212;
+      --dark2: #1e1e1e;
+      --dark3: #2d3436;
+      --text: #f5f5f5;
+      --text-secondary: #b2bec3;
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --danger: #d63031;
+      --glow: 0 0 10px rgba(108, 92, 231, 0.5);
+      --transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .header {
+      padding: 0.8rem 1rem;
+      background: var(--dark2);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .app-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow);
+    }
+
+    .logo i {
+      color: #fff;
+      font-size: 1.1rem;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .back-btn {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: 0 0 10px rgba(108, 92, 231, 0.3);
+      transition: var(--transition);
+    }
+
+    .main {
+      flex: 1;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      animation: fade-in 0.5s forwards;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--dark2);
+      border-radius: 16px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-icon i {
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .glow {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: 0.1;
+      filter: blur(30px);
+      z-index: 0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .form-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .form-control {
+      background: var(--dark3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
+    }
+
+    .btn {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 10px 15px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+
+    .tab-nav {
+      display: flex;
+      background: var(--dark3);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fade-in 0.3s forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .attendance-date {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .attendance-date-display {
+      background: var(--dark3);
+      border-radius: 8px;
+      padding: 10px 15px;
+      flex: 1;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .student-list {
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 5px;
+    }
+
+    .student-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .student-list::-webkit-scrollbar-track {
+      background: var(--dark3);
+      border-radius: 10px;
+    }
+
+    .student-list::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 10px;
+    }
+
+    .student-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: var(--dark3);
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+
+    .student-roll {
+      width: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .student-name {
+      flex: 1;
+    }
+
+    .attendance-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .attendance-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+    }
+
+    .btn-present {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-absent {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-late {
+      background: var(--warning);
+      color: var(--dark);
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--dark2);
+      color: #fff;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 85%;
+      max-width: 350px;
+      z-index: 1000;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .notification.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .notification-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+
+    .notification-message {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .statistics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .stat-card {
+      background: var(--dark3);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .statistics-chart {
+      height: 200px;
+      background: var(--dark3);
+      border-radius: 8px;
+      padding: 15px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      justify-content: space-around;
+    }
+
+    .chart-bar {
+      width: 30px;
+      background: linear-gradient(to top, var(--primary), var(--secondary));
+      border-radius: 3px 3px 0 0;
+      position: relative;
+    }
+
+    .chart-label {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .chart-value {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      color: var(--text);
+    }
+
+    .attendance-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: var(--dark3);
+      border-radius: 8px;
+    }
+
+    .summary-date {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .summary-status {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .status-present {
+      color: var(--success);
+    }
+
+    .status-absent {
+      color: var(--danger);
+    }
+
+    .status-late {
+      color: var(--warning);
+    }
+
+    .footer {
+      padding: 0.8rem;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      background: var(--dark2);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      padding: 30px 0;
+    }
+
+    .empty-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--dark3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-text {
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-present {
+      background: rgba(0, 184, 148, 0.2);
+      color: var(--success);
+    }
+
+    .badge-absent {
+      background: rgba(214, 48, 49, 0.2);
+      color: var(--danger);
+    }
+
+    .badge-late {
+      background: rgba(253, 203, 110, 0.2);
+      color: var(--warning);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="app-title">
+      <div class="logo">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <h1 class="title">Attendance</h1>
+    </div>
+    <button class="back-btn" id="backBtn">
+      <i class="fas fa-arrow-left"></i>
+      Back
+    </button>
+  </header>
+
+  <main class="main">
+    <!-- Class Setup Card -->
+    <div class="card" id="setupCard">
+      <div class="glow" style="top: -30px; right: -30px;"></div>
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon">
+            <i class="fas fa-chalkboard"></i>
+          </div>
+          <span>Class Setup</span>
+        </div>
+      </div>
+
+      <div id="classSetupForm">
+        <div class="form-group">
+          <label class="form-label">Class</label>
+          <input type="text" class="form-control" id="className" placeholder="e.g. 10" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Section</label>
+          <input type="text" class="form-control" id="sectionName" placeholder="e.g. A" required>
+        </div>
+        <button class="btn" id="createClassBtn">
+          <i class="fas fa-plus"></i>
+          Create Class
+        </button>
+      </div>
+
+      <div id="classDisplayInfo" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+          <div style="background: var(--dark3); padding: 10px; border-radius: 8px; flex: 1;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Class</div>
+            <div id="displayClassName" style="font-weight: 600; margin-top: 3px;"></div>
+          </div>
+          <div style="background: var(--dark3); padding: 10px; border-radius: 8px; flex: 1;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Section</div>
+            <div id="displaySectionName" style="font-weight: 600; margin-top: 3px;"></div>
+          </div>
+        </div>
+        <button class="btn" id="resetClassBtn" style="background: var(--danger);">
+          <i class="fas fa-trash-alt"></i>
+          Reset Class
+        </button>
+      </div>
+    </div>
+
+    <!-- Attendance Management Card -->
+    <div class="card" id="attendanceCard" style="display: none;">
+      <div class="glow" style="bottom: -30px; left: -30px;"></div>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="studentsTab">
+          <i class="fas fa-user-graduate"></i> Students
+        </button>
+        <button class="tab-btn" data-tab="attendanceTab">
+          <i class="fas fa-clipboard-list"></i> Attendance
+        </button>
+        <button class="tab-btn" data-tab="reportsTab">
+          <i class="fas fa-chart-bar"></i> Reports
+        </button>
+      </div>
+
+      <!-- Students Tab -->
+      <div class="tab-content active" id="studentsTab">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">
+              <i class="fas fa-user-graduate"></i>
+            </div>
+            <span>Manage Students</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Roll Number</label>
+          <input type="number" class="form-control" id="studentRoll" placeholder="e.g. 1" min="1" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student Name</label>
+          <input type="text" class="form-control" id="studentName" placeholder="e.g. Ram Sharma" required>
+        </div>
+        <button class="btn" id="addStudentBtn">
+          <i class="fas fa-plus"></i>
+          Add Student
+        </button>
+
+        <div style="margin-top: 20px;">
+          <h3 style="font-size: 1rem; margin-bottom: 10px;">Student List</h3>
+          <div class="student-list" id="studentsList">
+            <!-- Students will be added here -->
+            <div class="empty-state" id="emptyStudentState">
+              <div class="empty-icon">
+                <i class="fas fa-user-graduate"></i>
+              </div>
+              <div class="empty-text">No students added yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Tab -->
+      <div class="tab-content" id="attendanceTab">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">
+              <i class="fas fa-clipboard-list"></i>
+            </div>
+            <span>Mark Attendance</span>
+          </div>
+        </div>
+
+        <div class="attendance-date">
+          <div class="attendance-date-display" id="currentDate">
+            <!-- Current date will be displayed here -->
+          </div>
+          <button class="btn btn-sm" id="changeDateBtn">
+            <i class="fas fa-calendar-alt"></i>
+          </button>
+        </div>
+
+        <div class="student-list" id="attendanceList">
+          <!-- Attendance marking UI will appear here -->
+          <div class="empty-state" id="emptyAttendanceState">
+            <div class="empty-icon">
+              <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="empty-text">No students available for attendance</div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="saveAttendanceBtn" style="flex: 1;">
+            <i class="fas fa-save"></i>
+            Save Attendance
+          </button>
+        </div>
+      </div>
+
+      <!-- Reports Tab -->
+      <div class="tab-content" id="reportsTab">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <span>Attendance Reports</span>
+          </div>
+        </div>
+
+        <div class="statistics-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="totalDays">0</div>
+            <div class="stat-label">Days</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalStudents">0</div>
+            <div class="stat-label">Students</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="attendanceRate">0%</div>
+            <div class="stat-label">Attendance</div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+          <label class="form-label">Select Student</label>
+          <select class="form-control" id="studentSelect">
+            <option value="">All Students</option>
+            <!-- Students will be added here -->
+          </select>
+        </div>
+
+        <div id="studentReport" style="margin-top: 15px; display: none;">
+          <h3 style="font-size: 1rem; margin-bottom: 10px;">Student Attendance Summary</h3>
+          <div class="attendance-summary" id="attendanceSummary">
+            <!-- Attendance summary will be displayed here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>Student MS | Attendance v1.0</p>
+  </footer>
+
+  <div class="notification" id="notification">
+    <div class="notification-icon">
+      <i class="fas fa-info"></i>
+    </div>
+    <div class="notification-content">
+      <div class="notification-title">Notification</div>
+      <div id="notification-message">Welcome!</div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script>
+    // Firebase initialization
+    firebase.initializeApp({
+      apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+      authDomain:"community-canvas-255fa.firebaseapp.com",
+      databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",
+      projectId:"community-canvas-255fa",
+      storageBucket:"community-canvas-255fa.appspot.com",
+      messagingSenderId:"729445267995",
+      appId:"1:729445267995:web:05da6756d66c58b9ccd6be"
+    });
+
+    const db = firebase.database();
+
+    // DOM Elements
+    const backBtn = document.getElementById('backBtn');
+    const notification = document.getElementById('notification');
+    const notificationMsg = document.getElementById('notification-message');
+
+    // Class Setup Elements
+    const setupCard = document.getElementById('setupCard');
+    const classSetupForm = document.getElementById('classSetupForm');
+    const classDisplayInfo = document.getElementById('classDisplayInfo');
+    const className = document.getElementById('className');
+    const sectionName = document.getElementById('sectionName');
+    const createClassBtn = document.getElementById('createClassBtn');
+    const resetClassBtn = document.getElementById('resetClassBtn');
+    const displayClassName = document.getElementById('displayClassName');
+    const displaySectionName = document.getElementById('displaySectionName');
+
+    // Attendance Card
+    const attendanceCard = document.getElementById('attendanceCard');
+
+    // Students Tab Elements
+    const studentRoll = document.getElementById('studentRoll');
+    const studentName = document.getElementById('studentName');
+    const addStudentBtn = document.getElementById('addStudentBtn');
+    const studentsList = document.getElementById('studentsList');
+    const emptyStudentState = document.getElementById('emptyStudentState');
+
+    // Attendance Tab Elements
+    const currentDate = document.getElementById('currentDate');
+    const changeDateBtn = document.getElementById('changeDateBtn');
+    const attendanceList = document.getElementById('attendanceList');
+    const emptyAttendanceState = document.getElementById('emptyAttendanceState');
+    const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
+
+    // Reports Tab Elements
+    const totalDays = document.getElementById('totalDays');
+    const totalStudents = document.getElementById('totalStudents');
+    const attendanceRate = document.getElementById('attendanceRate');
+    const studentSelect = document.getElementById('studentSelect');
+    const studentReport = document.getElementById('studentReport');
+    const attendanceSummary = document.getElementById('attendanceSummary');
+
+    // Tab Navigation
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Global Variables
+    let currentUser = null;
+    let classData = null;
+    let students = [];
+    let attendanceData = {};
+    let selectedDate = getNepaliToday();
+
+    // Authentication Check
+    document.addEventListener('DOMContentLoaded', () => {
+      const userToken = localStorage.getItem('userToken');
+
+      if (!userToken) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      currentUser = localStorage.getItem('userName');
+      checkClassSetup();
+    });
+
+    // Back Button
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'main.html';
+    });
+
+    // Tab Navigation
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active class from all tabs
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+
+        // Add active class to clicked tab
+        button.classList.add('active');
+        document.getElementById(button.dataset.tab).classList.add('active');
+
+        // Update UI based on selected tab
+        if (button.dataset.tab === 'reportsTab') {
+          loadReports();
+        } else if (button.dataset.tab === 'attendanceTab') {
+          loadAttendanceUI();
+        }
+      });
+    });
+
+    // Nepali Date Conversion (simplified based on offset)
+    function getNepaliToday() {
+      const today = new Date();
+
+      // Add 57 years, 8 months, and 16 days to get Nepali date
+      const nepaliDate = new Date(today);
+      nepaliDate.setFullYear(today.getFullYear() + 57);
+      nepaliDate.setMonth(today.getMonth() + 8);
+      nepaliDate.setDate(today.getDate() + 16);
+
+      return formatDate(nepaliDate);
+    }
+
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    }
+
+    // Show notification
+    function showNotification(message) {
+      notificationMsg.textContent = message;
+      notification.classList.add('show');
+
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+    function checkClassSetup() {
+          db.ref(`classes/${currentUser}`).once('value', snapshot => {
+            if (snapshot.exists()) {
+              classData = snapshot.val();
+              displayClassName.textContent = classData.className;
+              displaySectionName.textContent = classData.section;
+
+              classSetupForm.style.display = 'none';
+              classDisplayInfo.style.display = 'block';
+              attendanceCard.style.display = 'block';
+
+              loadStudents();
+            } else {
+              classSetupForm.style.display = 'block';
+              classDisplayInfo.style.display = 'none';
+              attendanceCard.style.display = 'none';
+            }
+          });
+        }
+
+        // Class Setup
+        createClassBtn.addEventListener('click', () => {
+          const classVal = className.value.trim();
+          const sectionVal = sectionName.value.trim();
+
+          if (!classVal || !sectionVal) {
+            showNotification('Please enter both class and section');
+            return;
+          }
+
+          const classObj = {
+            className: classVal,
+            section: sectionVal,
+            createdAt: new Date().toISOString()
+          };
+
+          db.ref(`classes/${currentUser}`).set(classObj)
+            .then(() => {
+              classData = classObj;
+              displayClassName.textContent = classData.className;
+              displaySectionName.textContent = classData.section;
+
+              classSetupForm.style.display = 'none';
+              classDisplayInfo.style.display = 'block';
+              attendanceCard.style.display = 'block';
+
+              showNotification('Class created successfully');
+            })
+            .catch(error => {
+              showNotification('Error creating class');
+            });
+        });
+
+        // Reset Class
+        resetClassBtn.addEventListener('click', () => {
+          if (confirm('Are you sure you want to reset this class? All student and attendance data will be lost.')) {
+            db.ref(`classes/${currentUser}`).remove()
+              .then(() => {
+                db.ref(`students/${currentUser}`).remove();
+                db.ref(`attendance/${currentUser}`).remove();
+
+                classData = null;
+                students = [];
+
+                classSetupForm.style.display = 'block';
+                classDisplayInfo.style.display = 'none';
+                attendanceCard.style.display = 'none';
+
+                showNotification('Class reset successfully');
+              })
+              .catch(error => {
+                showNotification('Error resetting class');
+              });
+          }
+        });
+
+        // Add Student
+        addStudentBtn.addEventListener('click', () => {
+          const roll = studentRoll.value.trim();
+          const name = studentName.value.trim();
+
+          if (!roll || !name) {
+            showNotification('Please enter both roll number and name');
+            return;
+          }
+
+          const rollNum = parseInt(roll);
+
+          // Check if roll number already exists
+          const existingStudent = students.find(s => s.roll === rollNum);
+          if (existingStudent) {
+            showNotification('Roll number already exists');
+            return;
+          }
+
+          const studentObj = {
+            roll: rollNum,
+            name: name,
+            addedAt: new Date().toISOString()
+          };
+
+          db.ref(`students/${currentUser}/${rollNum}`).set(studentObj)
+            .then(() => {
+              studentRoll.value = '';
+              studentName.value = '';
+
+              students.push(studentObj);
+              students.sort((a, b) => a.roll - b.roll);
+
+              renderStudentsList();
+              showNotification('Student added successfully');
+              updateStudentSelect();
+            })
+            .catch(error => {
+              showNotification('Error adding student');
+            });
+        });
+
+        // Load Students
+        function loadStudents() {
+          db.ref(`students/${currentUser}`).once('value', snapshot => {
+            students = [];
+
+            if (snapshot.exists()) {
+              snapshot.forEach(childSnapshot => {
+                students.push(childSnapshot.val());
+              });
+
+              students.sort((a, b) => a.roll - b.roll);
+            }
+
+            renderStudentsList();
+            updateStudentSelect();
+          });
+        }
+
+        // Render Students List
+        function renderStudentsList() {
+          if (students.length === 0) {
+            emptyStudentState.style.display = 'flex';
+            studentsList.innerHTML = '';
+            studentsList.appendChild(emptyStudentState);
+            return;
+          }
+
+          emptyStudentState.style.display = 'none';
+          studentsList.innerHTML = '';
+
+          students.forEach(student => {
+            const studentItem = document.createElement('div');
+            studentItem.className = 'student-item';
+
+            studentItem.innerHTML = `
+              <div class="student-roll">#${student.roll}</div>
+              <div class="student-name">${student.name}</div>
+              <button class="btn btn-sm" style="background: var(--danger);" data-roll="${student.roll}">
+                <i class="fas fa-trash"></i>
+              </button>
+            `;
+
+            const deleteBtn = studentItem.querySelector('button');
+            deleteBtn.addEventListener('click', () => {
+              if (confirm(`Delete student ${student.name}?`)) {
+                db.ref(`students/${currentUser}/${student.roll}`).remove()
+                  .then(() => {
+                    students = students.filter(s => s.roll !== student.roll);
+                    renderStudentsList();
+                    showNotification('Student removed');
+                    updateStudentSelect();
+                  })
+                  .catch(error => {
+                    showNotification('Error removing student');
+                  });
+              }
+            });
+
+            studentsList.appendChild(studentItem);
+          });
+        }
+
+        // Initialize Current Date Display
+        function initializeDate() {
+          currentDate.textContent = `Date: ${selectedDate}`;
+        }
+
+        // Change Date Button
+        changeDateBtn.addEventListener('click', () => {
+          const newDate = prompt('Enter date (YYYY-MM-DD):', selectedDate);
+          if (newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+            selectedDate = newDate;
+            currentDate.textContent = `Date: ${selectedDate}`;
+            loadAttendanceUI();
+          } else if (newDate) {
+            showNotification('Invalid date format. Use YYYY-MM-DD');
+          }
+        });
+
+        // Load Attendance UI
+        function loadAttendanceUI() {
+          if (students.length === 0) {
+            emptyAttendanceState.style.display = 'flex';
+            attendanceList.innerHTML = '';
+            attendanceList.appendChild(emptyAttendanceState);
+            saveAttendanceBtn.style.display = 'none';
+            return;
+          }
+
+          emptyAttendanceState.style.display = 'none';
+          attendanceList.innerHTML = '';
+          saveAttendanceBtn.style.display = 'block';
+
+          // Fetch existing attendance for the selected date
+          db.ref(`attendance/${currentUser}/${selectedDate}`).once('value', snapshot => {
+            const existingAttendance = snapshot.exists() ? snapshot.val() : {};
+
+            students.forEach(student => {
+              const attendanceItem = document.createElement('div');
+              attendanceItem.className = 'student-item';
+
+              const status = existingAttendance[student.roll] || '';
+
+              attendanceItem.innerHTML = `
+                <div class="student-roll">#${student.roll}</div>
+                <div class="student-name">${student.name}</div>
+                <div class="attendance-controls">
+                  <button class="attendance-btn btn-present ${status === 'present' ? 'active' : ''}" 
+                    data-roll="${student.roll}" data-status="present">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button class="attendance-btn btn-absent ${status === 'absent' ? 'active' : ''}" 
+                    data-roll="${student.roll}" data-status="absent">
+                    <i class="fas fa-times"></i>
+                  </button>
+                  <button class="attendance-btn btn-late ${status === 'late' ? 'active' : ''}" 
+                    data-roll="${student.roll}" data-status="late">
+                    <i class="fas fa-clock"></i>
+                  </button>
+                </div>
+              `;
+
+              const buttons = attendanceItem.querySelectorAll('.attendance-btn');
+              buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                  // Remove 'active' class from all buttons in this control group
+                  attendanceItem.querySelectorAll('.attendance-btn').forEach(b => b.classList.remove('active'));
+
+                  // Add 'active' class to the clicked button
+                  btn.classList.add('active');
+
+                  const roll = btn.dataset.roll;
+                  const status = btn.dataset.status;
+
+                  // Update attendance data in memory
+                  attendanceData[roll] = status;
+                });
+              });
+
+              attendanceList.appendChild(attendanceItem);
+            });
+          });
+        }
+
+        // Save Attendance
+        saveAttendanceBtn.addEventListener('click', () => {
+          if (Object.keys(attendanceData).length === 0) {
+            showNotification('No attendance data to save');
+            return;
+          }
+
+          db.ref(`attendance/${currentUser}/${selectedDate}`).update(attendanceData)
+            .then(() => {
+              showNotification('Attendance saved successfully');
+            })
+            .catch(error => {
+              showNotification('Error saving attendance');
+            });
+        });
+
+        // Load Reports
+        function loadReports() {
+          // Reset attendance data for reporting
+          attendanceData = {};
+
+          // Set student select options
+          updateStudentSelect();
+
+          // Load attendance dates
+          db.ref(`attendance/${currentUser}`).once('value', snapshot => {
+            const dates = snapshot.exists() ? Object.keys(snapshot.val()) : [];
+            totalDays.textContent = dates.length;
+
+            if (dates.length > 0 && students.length > 0) {
+              calculateAttendanceStats(snapshot.val(), dates);
+            } else {
+              attendanceRate.textContent = '0%';
+              studentReport.style.display = 'none';
+            }
+          });
+        }
+
+        // Update Student Select
+        function updateStudentSelect() {
+          studentSelect.innerHTML = '<option value="">All Students</option>';
+
+          students.forEach(student => {
+            const option = document.createElement('option');
+            option.value = student.roll;
+            option.textContent = `${student.roll} - ${student.name}`;
+            studentSelect.appendChild(option);
+          });
+
+          // Add event listener for student selection
+          studentSelect.addEventListener('change', () => {
+            const selectedRoll = studentSelect.value;
+            if (selectedRoll) {
+              showStudentReport(parseInt(selectedRoll));
+            } else {
+              studentReport.style.display = 'none';
+            }
+          });
+        }
+
+        // Calculate Attendance Statistics
+        function calculateAttendanceStats(attendanceRecords, dates) {
+          let totalPresent = 0;
+          let totalEntries = 0;
+
+          dates.forEach(date => {
+            const dayRecord = attendanceRecords[date];
+
+            for (const roll in dayRecord) {
+              totalEntries++;
+              if (dayRecord[roll] === 'present') {
+                totalPresent++;
+              }
+            }
+          });
+
+          const rate = totalEntries > 0 ? Math.round((totalPresent / totalEntries) * 100) : 0;
+          attendanceRate.textContent = `${rate}%`;
+
+          totalStudents.textContent = students.length;
+        }
+
+        // Show Individual Student Report
+        function showStudentReport(roll) {
+          studentReport.style.display = 'block';
+          attendanceSummary.innerHTML = '';
+
+          db.ref(`attendance/${currentUser}`).once('value', snapshot => {
+            if (!snapshot.exists()) {
+              attendanceSummary.innerHTML = '<div class="empty-state">No attendance records found</div>';
+              return;
+            }
+
+            const allRecords = snapshot.val();
+            const dates = Object.keys(allRecords).sort().reverse();
+
+            if (dates.length === 0) {
+              attendanceSummary.innerHTML = '<div class="empty-state">No attendance records found</div>';
+              return;
+            }
+            dates.forEach(date => {
+              const dayRecord = allRecords[date];
+              const status = dayRecord[roll] || 'N/A';
+
+              const summaryItem = document.createElement('div');
+              summaryItem.className = 'summary-item';
+
+              summaryItem.innerHTML = `
+                <div class="summary-date">${date}</div>
+                <div class="summary-status status-${status}">${status.toUpperCase()}</div>
+              `;
+
+              attendanceSummary.appendChild(summaryItem);
+            });
+          });
+        }
+
+        // Initialize the page
+        initializeDate();
+    </script>
+    </body>
+    </html>

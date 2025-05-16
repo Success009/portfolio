@@ -1,0 +1,309 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {--p:#6c5ce7;--s:#a29bfe;--g:#00cec9;--e:#d63031;--d1:#1e272e;--d2:#2d3436;--d3:#485460;--glow:0 0 15px rgba(108,92,231,.5);--br:16px;--bs:0 10px 30px rgba(0,0,0,.25);--t:.3s cubic-bezier(.25,.8,.25,1)}
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+    body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;background:#121212;overflow:hidden;color:#dfe6e9}
+    .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none}
+    .star{position:absolute;background:#fff;border-radius:50%;opacity:0;animation:twinkle var(--d) infinite ease-in-out}
+    @keyframes twinkle{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:.6;transform:scale(1)}}
+    .meteor{position:absolute;width:2px;height:90px;background:linear-gradient(to bottom,transparent,#6c5ce7);transform:rotate(-45deg);animation:meteor var(--d) var(--delay) infinite}
+    @keyframes meteor{0%{transform:rotate(-45deg) translateX(0);opacity:1}70%{opacity:1}100%{transform:rotate(-45deg) translateX(-500px);opacity:0}}
+    .container{width:90%;max-width:340px;position:relative;transform:translateY(20px);opacity:0;animation:f-in .8s forwards}
+    @keyframes f-in{to{transform:translateY(0);opacity:1}}
+    .card{background:var(--d1);border-radius:var(--br);box-shadow:var(--bs);padding:2rem 1.8rem;overflow:hidden;position:relative}
+    .glow-border{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:var(--br);z-index:-1;opacity:.3;background:linear-gradient(135deg,var(--p),var(--s));filter:blur(15px)}
+    .logo{width:70px;height:70px;margin:0 auto 1.8rem;background:linear-gradient(45deg,var(--p),var(--s));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:var(--glow)}
+    .logo i{color:#fff;font-size:2rem}
+    h1{color:#fff;margin-bottom:1rem;text-align:center;font-size:1.8rem;font-weight:700}
+    .input-group{position:relative;margin-bottom:1.3rem}
+    .input-group i{position:absolute;left:14px;top:16px;color:var(--s);transition:var(--t)}
+    input{width:100%;padding:15px 15px 15px 45px;border:1px solid var(--d3);border-radius:10px;font-size:1rem;background:var(--d2);transition:var(--t);outline:none;color:#fff}
+    input::placeholder{color:#7f8c8d}
+    input:focus{border-color:var(--p);box-shadow:0 0 0 2px rgba(108,92,231,.2)}
+    input:focus + i{color:var(--p)}
+    .btn{width:100%;border:none;border-radius:10px;background:linear-gradient(45deg,var(--p),var(--s));color:white;padding:15px;font-size:1rem;font-weight:600;cursor:pointer;display:flex;justify-content:center;align-items:center;box-shadow:var(--glow);transition:var(--t);overflow:hidden;position:relative;z-index:1}
+    .btn:before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,var(--s),var(--p));opacity:0;z-index:-1;transition:var(--t)}
+    .btn:active{transform:scale(.97)}
+    .btn:hover:before{opacity:1}
+    .loader{display:none;border:3px solid rgba(255,255,255,.3);border-top:3px solid white;border-radius:50%;width:25px;height:25px;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--p);opacity:.6;animation:float 4s infinite ease-in-out}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+    .feedback{display:none;margin-top:15px;padding:12px;text-align:center;border-radius:10px;font-size:.9rem;font-weight:500;transform:translateY(-10px);animation:slideUp .3s forwards}
+    @keyframes slideUp{to{transform:translateY(0)}}
+    .error{background:rgba(214,48,49,.15);color:#ff7675;border:1px solid rgba(214,48,49,.2)}
+    .success{background:rgba(0,206,201,.15);color:#55efc4;border:1px solid rgba(0,206,201,.2)}
+    .pulse{animation:subtle-pulse 2s infinite}
+    @keyframes subtle-pulse{0%{box-shadow:0 0 0 0 rgba(108,92,231,.7)}70%{box-shadow:0 0 0 10px rgba(108,92,231,0)}100%{box-shadow:0 0 0 0 rgba(108,92,231,0)}}
+    .versionTag{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:#7f8c8d;font-size:.7rem;opacity:.7}
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  
+  <div class="container">
+    <div class="card">
+      <div class="glow-border"></div>
+      <div id="particles"></div>
+      <div class="logo pulse">
+        <i class="fas fa-user-shield"></i>
+      </div>
+      <h1>Welcome Back</h1>
+      <form id="loginForm">
+        <div class="input-group">
+          <input type="text" id="username" placeholder="Username" autocomplete="off" required>
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="input-group">
+          <input type="password" id="password" placeholder="Password" required>
+          <i class="fas fa-lock"></i>
+        </div>
+        <button type="submit" class="btn" id="loginBtn">
+          <span id="btnText">Log In</span>
+          <div class="loader" id="loader"></div>
+        </button>
+      </form>
+      <div id="feedback" class="feedback"></div>
+    </div>
+    <div class="versionTag">v1.2</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script>
+    // Create stars in the background
+    function createStars() {
+      const stars = document.getElementById('stars');
+      const count = 50;
+      
+      for(let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
+        const size = Math.random() * 2;
+        const duration = 3 + Math.random() * 4;
+        
+        star.style.left = `${x}px`;
+        star.style.top = `${y}px`;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.setProperty('--d', `${duration}s`);
+        
+        stars.appendChild(star);
+      }
+      
+      // Add meteors
+      for(let i = 0; i < 3; i++) {
+        const meteor = document.createElement('div');
+        meteor.className = 'meteor';
+        
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * 100;
+        const duration = 6 + Math.random() * 6;
+        const delay = Math.random() * 15;
+        
+        meteor.style.left = `${x}px`;
+        meteor.style.top = `${y}px`;
+        meteor.style.setProperty('--d', `${duration}s`);
+        meteor.style.setProperty('--delay', `${delay}s`);
+        
+        stars.appendChild(meteor);
+      }
+    }
+    
+    // Create floating particles
+    function createParticles() {
+      const particles = document.getElementById('particles');
+      const count = 15;
+      
+      for(let i = 0; i < count; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        const x = Math.random() * 340;
+        const y = Math.random() * 400;
+        const delay = Math.random() * 4;
+        
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        particle.style.animationDelay = `${delay}s`;
+        
+        particles.appendChild(particle);
+      }
+    }
+    
+    // Firebase configuration
+    firebase.initializeApp({
+      apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+      authDomain:"community-canvas-255fa.firebaseapp.com",
+      databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",
+      projectId:"community-canvas-255fa",
+      storageBucket:"community-canvas-255fa.appspot.com",
+      messagingSenderId:"729445267995",
+      appId:"1:729445267995:web:05da6756d66c58b9ccd6be"
+    });
+    
+    const db = firebase.database();
+    const form = document.getElementById('loginForm');
+    const btnText = document.getElementById('btnText');
+    const loader = document.getElementById('loader');
+    const feedback = document.getElementById('feedback');
+    
+    // Default users to add if staff directory doesn't exist
+    const defaultStaffUser = {
+      username: "admin",
+      password: "admin",
+      token: "admin_secure_token_" + Math.random().toString(36).substring(2, 15)
+    };
+    
+    function showFeedback(msg, type) {
+      feedback.textContent = msg;
+      feedback.className = `feedback ${type}`;
+      feedback.style.display = 'block';
+    }
+    
+    function toggleLoading(isLoading) {
+      if(isLoading) {
+        btnText.style.display = 'none';
+        loader.style.display = 'block';
+      } else {
+        btnText.style.display = 'block';
+        loader.style.display = 'none';
+      }
+    }
+    
+    // Check if staff directory exists, if not create it
+    function initializeStaffDirectory() {
+      return new Promise((resolve, reject) => {
+        db.ref('staff').once('value')
+          .then(snapshot => {
+            if(!snapshot.exists()) {
+              console.log("Staff directory not found. Creating default admin user...");
+              return db.ref('staff').push(defaultStaffUser)
+                .then(() => {
+                  console.log("Default admin user created successfully");
+                  resolve();
+                })
+                .catch(error => {
+                  console.error("Error creating default admin user:", error);
+                  reject(error);
+                });
+            } else {
+              console.log("Staff directory already exists");
+              resolve();
+            }
+          })
+          .catch(error => {
+            console.error("Error checking staff directory:", error);
+            reject(error);
+          });
+      });
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      createStars();
+      createParticles();
+      
+      // Check if user is already logged in
+      if(localStorage.getItem('userToken')) {
+        window.location.href = 'main.html';
+        return;
+      }
+      
+      // Initialize staff directory if it doesn't exist
+      initializeStaffDirectory()
+        .then(() => {
+          console.log("Staff directory initialization complete");
+        })
+        .catch(error => {
+          console.error("Error during initialization:", error);
+        });
+    });
+    
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      
+      toggleLoading(true);
+      feedback.style.display = 'none';
+      
+      // First check in the staff directory
+      db.ref('staff').once('value')
+        .then(snapshot => {
+          const staffData = snapshot.val();
+          let authenticated = false;
+          let userData = null;
+          
+          if (staffData) {
+            // Convert Firebase object to array
+            const staffArray = Object.values(staffData);
+            
+            // Check if user exists in staff directory
+            userData = staffArray.find(user => 
+              user.username && user.username.toLowerCase() === username.toLowerCase() && 
+              user.password === password
+            );
+            
+            if (userData) {
+              authenticated = true;
+            }
+          }
+          
+          // If authenticated in staff directory
+          if (authenticated && userData) {
+            localStorage.setItem('userToken', userData.token);
+            localStorage.setItem('userName', userData.username);
+            localStorage.setItem('userRole', 'staff');
+            
+            showFeedback('Staff login successful!', 'success');
+            setTimeout(() => window.location.href = 'main.html', 1000);
+            return;
+          }
+          
+          // If not in staff directory, check regular users
+          return db.ref('users').once('value')
+            .then(usersSnapshot => {
+              const usersData = usersSnapshot.val();
+              let regularUserData = null;
+              
+              if (usersData) {
+                // Handle both array and object format
+                const usersArray = Array.isArray(usersData) ? usersData : Object.values(usersData);
+                
+                regularUserData = usersArray.find(user => 
+                  user.username && user.username.toLowerCase() === username.toLowerCase() && 
+                  user.password === password
+                );
+              }
+              
+              if (regularUserData) {
+                localStorage.setItem('userToken', regularUserData.token);
+                localStorage.setItem('userName', regularUserData.username);
+                localStorage.setItem('userRole', 'user');
+                
+                showFeedback('Login successful!', 'success');
+                setTimeout(() => window.location.href = 'main.html', 1000);
+              } else {
+                showFeedback('Invalid username or password', 'error');
+                toggleLoading(false);
+              }
+            });
+        })
+        .catch(error => {
+          console.error("Authentication error:", error);
+          showFeedback('Connection error. Please try again.', 'error');
+          toggleLoading(false);
+        });
+    });
+  </script>
+</body>
+</html>
