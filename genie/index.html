@@ -533,7 +533,12 @@
             setupEvents() {
                 this.wishBtn.onclick = () => this.makeWish();
                 this.resetBtn.onclick = () => this.resetGame();
-                this.wishInput.onkeypress = (e) => e.key === 'Enter' && this.makeWish();
+                this.wishInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.makeWish();
+                    }
+                });
             }
 
             async loadData() {
