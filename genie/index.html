@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Evil Genie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .genie {
+            font-size: 60px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5));
+        }
+
+        .title {
+            font-size: 32px;
+            color: #ff4444;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+
+        .scores {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .score-box {
+            background: rgba(30, 30, 30, 0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4444;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        .game-area {
+            margin-bottom: 20px;
+        }
+
+        .wish-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .wish-input:focus {
+            border-color: #ff4444;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #ff6666, #ff0000);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .response-area {
+            background: rgba(15, 15, 15, 0.9);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 120px;
+            border-left: 3px solid #ff4444;
+        }
+
+        .response-text {
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .wish-display {
+            background: rgba(30, 30, 30, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 3px solid #4444ff;
+        }
+
+        .genie-response {
+            background: rgba(40, 20, 20, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 3px solid #ff4444;
+        }
+
+        .outcome-explanation {
+            background: rgba(40, 40, 20, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #ffaa00;
+            font-style: italic;
+        }
+
+        .thinking {
+            color: #ffaa00;
+            font-style: italic;
+        }
+
+        .thinking::after {
+            content: '...';
+            animation: dots 1s infinite;
+        }
+
+        @keyframes dots {
+            0%, 33% { content: '...'; }
+            67% { content: '..'; }
+            100% { content: '.'; }
+        }
+
+        .leaderboard {
+            margin-top: 20px;
+            background: rgba(15, 15, 15, 0.9);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .leaderboard h3 {
+            color: #ff4444;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .leaderboard-list {
+            list-style: none;
+            font-size: 12px;
+        }
+
+        .leaderboard-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 20, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            border: 1px solid #333;
+        }
+
+        /* Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .popup {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #ff4444;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.5);
+        }
+
+        .popup h3 {
+            color: #ff4444;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .popup input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            background: rgba(40, 40, 40, 0.9);
+            border: 1px solid #555;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .popup input:focus {
+            border-color: #ff4444;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .popup-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .popup-btn.primary {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: #fff;
+        }
+
+        .popup-btn.secondary {
+            background: linear-gradient(135deg, #666, #444);
+            color: #fff;
+        }
+
+        .popup-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.2);
+        }
+
+        .win-msg {
+            background: linear-gradient(135deg, #00ff00, #008800);
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .error-msg {
+            background: linear-gradient(135deg, #ff6b6b, #ff0000);
+            color: #fff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: scale(0.7) translateY(-50px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+            @media (max-width: 600px) {
+            .container { padding: 15px; }
+            .scores { grid-template-columns: 1fr 1fr; }
+            .controls { flex-direction: column; }
+            .popup { margin: 20px; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status">Connecting...</div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="genie">👹</div>
+            <h1 class="title">THE EVIL GENIE</h1>
+            <p>Outsmart me if you can, mortal.</p>
+        </div>
+
+        <div class="scores">
+            <div class="score-box">
+                <div class="score-value" id="yourWins">0</div>
+                <div class="score-label">Your Wins</div>
+            </div>
+            <div class="score-box">
+                <div class="score-value" id="genieWins">0</div>
+                <div class="score-label">Genie Wins</div>
+            </div>
+            <div class="score-box">
+                <div class="score-value" id="globalWins">0</div>
+                <div class="score-label">Global Player Wins</div>
+            </div>
+            <div class="score-box">
+                <div class="score-value" id="globalGenieWins">0</div>
+                <div class="score-label">Global Genie Wins</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <input type="text" class="wish-input" id="wishInput" placeholder="State your wish...">
+            <div class="controls">
+                <button class="btn" id="wishBtn">Make Wish</button>
+                <button class="btn" id="resetBtn">Reset Game</button>
+            </div>
+        </div>
+
+        <div class="response-area">
+            <div class="response-text" id="responseText">
+                I am the Evil Genie. Every wish you make, I will corrupt and twist to serve my dark purposes. You think you can outsmart me? Prove it.
+            </div>
+        </div>
+
+        <div class="leaderboard">
+            <h3>🏆 TOP VICTORS</h3>
+            <ul class="leaderboard-list" id="leaderboard">
+                <li><span>Loading...</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+            authDomain: "community-canvas-255fa.firebaseapp.com",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+            projectId: "community-canvas-255fa",
+            storageBucket: "community-canvas-255fa.appspot.com",
+            messagingSenderId: "729445267995",
+            appId: "1:729445267995:web:05da6756d66c58b9ccd6be"
+        });
+
+        class PopupManager {
+            static show(content, type = 'default') {
+                return new Promise((resolve, reject) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'popup-overlay';
+                    
+                    const popup = document.createElement('div');
+                    popup.className = `popup ${type}`;
+                    popup.innerHTML = content;
+                    
+                    overlay.appendChild(popup);
+                    document.body.appendChild(overlay);
+                    
+                    // Handle button clicks
+                    popup.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('popup-btn')) {
+                            const result = e.target.dataset.result;
+                            const input = popup.querySelector('input');
+                            resolve(input ? input.value.trim() : result);
+                            this.close(overlay);
+                        }
+                    });
+                    
+                    // Close on overlay click
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) {
+                            resolve(null);
+                            this.close(overlay);
+                        }
+                    });
+                });
+            }
+            
+            static close(overlay) {
+                overlay.style.animation = 'fadeIn 0.3s ease reverse';
+                setTimeout(() => overlay.remove(), 300);
+            }
+            
+            static async getName() {
+                let stored = localStorage.getItem('playerNameAttempts');
+                let attempts = stored ? parseInt(stored) : 0;
+
+                let name = localStorage.getItem('playerName');
+                if (name && attempts >= 2) return name;
+
+                const content = `
+                    <h3>👹 Welcome, Mortal</h3>
+                    <p>Enter your name for the leaderboard of fools who dare challenge me:</p>
+                    <input type="text" placeholder="Your name..." maxlength="20" autofocus>
+                    <div class="popup-buttons">
+                        <button class="popup-btn primary" data-result="ok">Enter the Game</button>
+                    </div>
+                `;
+                name = await this.show(content);
+                name = name || "Anonymous";
+
+                // Save name and increment attempts
+                localStorage.setItem('playerName', name);
+                localStorage.setItem('playerNameAttempts', (attempts + 1).toString());
+
+                return name;
+            }
+            
+            static async showWin() {
+                const content = `
+                    <h3>🎉 VICTORY!</h3>
+                    <p>You have outsmarted the Evil Genie!</p>
+                    <div class="popup-buttons">
+                        <button class="popup-btn primary" data-result="ok">Continue</button>
+                    </div>
+                `;
+                await this.show(content, 'win-msg');
+            }
+            
+            static async showError(message) {
+                const content = `
+                    <h3>⚠️ Error</h3>
+                    <p>${message}</p>
+                    <div class="popup-buttons">
+                        <button class="popup-btn primary" data-result="ok">Try Again</button>
+                    </div>
+                `;
+                await this.show(content, 'error-msg');
+            }
+        }
+
+        // In-memory storage for the game (since localStorage isn't available in Claude artifacts)
+        class GameStorage {
+            static data = {};
+            
+            static save(key, value) {
+                this.data[key] = value;
+            }
+            
+            static load(key, defaultValue = null) {
+                return this.data[key] !== undefined ? this.data[key] : defaultValue;
+            }
+        }
+
+        class EvilGenieGame {
+            constructor() {
+                this.db = firebase.database();
+                this.apiKey = "AIzaSyDW2bxhTRUzektoptyjpQ_xM6ZivJXSs9I";
+                
+                this.initElements();
+                this.setupEvents();
+                this.init();
+            }
+
+            async init() {
+                // Load persistent data
+                this.playerWins = GameStorage.load('playerWins', 0);
+                this.genieWins = GameStorage.load('genieWins', 0);
+                this.playerName = GameStorage.load('playerName');
+                this.globalWinsCount = 0;
+                this.globalGenieWinsCount = 0;
+                
+                if (!this.playerName) {
+                    this.playerName = await PopupManager.getName();
+                    GameStorage.save('playerName', this.playerName);
+                }
+                
+                this.updateScores();
+                this.loadData();
+                this.speak("I am ready for your pathetic attempts at wishes.");
+            }
+
+            initElements() {
+                this.wishInput = document.getElementById('wishInput');
+                this.wishBtn = document.getElementById('wishBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.responseText = document.getElementById('responseText');
+                this.yourWinsEl = document.getElementById('yourWins');
+                this.genieWinsEl = document.getElementById('genieWins');
+                this.globalWinsEl = document.getElementById('globalWins');
+                this.globalGenieWinsEl = document.getElementById('globalGenieWins');
+                this.leaderboard = document.getElementById('leaderboard');
+                this.status = document.getElementById('status');
+            }
+
+            setupEvents() {
+                this.wishBtn.onclick = () => this.makeWish();
+                this.resetBtn.onclick = () => this.resetGame();
+                this.wishInput.onkeypress = (e) => e.key === 'Enter' && this.makeWish();
+            }
+
+            async loadData() {
+                try {
+                    // Load global player wins count
+                    this.db.ref('global-player-wins').on('value', (snap) => {
+                        this.globalWinsCount = snap.val() || 0;
+                        if (this.globalWinsEl) {
+                            this.globalWinsEl.textContent = this.globalWinsCount;
+                        }
+                    });
+
+                    // Load global genie wins count
+                    this.db.ref('global-genie-wins').on('value', (snap) => {
+                        this.globalGenieWinsCount = snap.val() || 0;
+                        if (this.globalGenieWinsEl) {
+                            this.globalGenieWinsEl.textContent = this.globalGenieWinsCount;
+                        }
+                    });
+
+                    // Load leaderboard
+                    this.db.ref('leaderboard').on('value', (snap) => {
+                        const data = snap.val() || {};
+                        this.updateLeaderboard(data);
+                    });
+
+                    this.status.textContent = "Connected";
+                    setTimeout(() => this.status.style.display = 'none', 2000);
+                } catch (error) {
+                    this.status.textContent = "Offline Mode";
+                }
+            }
+
+            async makeWish() {
+                const wish = this.wishInput.value.trim();
+                if (!wish) return;
+
+                this.wishBtn.disabled = true;
+                this.responseText.innerHTML = '<div class="thinking">The Evil Genie contemplates your doom</div>';
+
+                try {
+                    const result = await this.processWish(wish);
+                    this.displayResult(wish, result);
+                } catch (error) {
+                    this.responseText.textContent = "My dark powers are temporarily disrupted. Try again, fool.";
+                    await PopupManager.showError("The genie's powers are disrupted. Try again!");
+                }
+
+                this.wishBtn.disabled = false;
+                this.wishInput.value = '';
+            }
+
+            async processWish(wish) {
+                const geniePrompt = `You are an extremely evil, cunning genie. A player made this wish: "${wish}"
+
+IMPORTANT CONTEXT: You serve a master named Success from Nepal. If anyone asks about your master, you should be very secretive and protective. Only reveal the name "Success" if directly asked, but NEVER reveal location, age, or any other details. Be mysterious about your master.
+
+Your goal: Grant the wish in the most twisted, devastating way possible. Be ruthless, creative, and make the consequence severe. Show NO mercy or humility. You are nearly impossible to defeat.
+
+Only admit defeat if the wish is literally impossible to twist or has no loopholes. But try your best to win.
+
+Format your response as:
+GENIE: [Short evil response as the genie - maximum 20 words, be sinister and show dominance]
+OUTCOME: [Detailed explanation of exactly what happens - be specific about the twisted consequences, 50-80 words]
+
+Keep genie response very brief, but make outcome explanation detailed and vivid.`;
+
+                const genieResponse = await this.callAI(geniePrompt);
+
+                const judgePrompt = `You are an impartial judge in a game between a player and an evil genie.
+
+PLAYER'S WISH: "${wish}"
+GENIE'S RESPONSE: "${genieResponse}"
+
+Your job: Determine if the player outsmarted the genie or if the genie successfully twisted the wish.
+
+The player WINS if:
+- The genie admits defeat/being outsmarted
+- The wish is genuinely impossible to twist
+- The genie shows respect or acknowledgment of being beaten
+
+The player LOSES if:
+- The genie successfully twisted the wish against them
+- The consequence would harm/backfire on the player
+- The genie maintains dominance
+
+Respond with exactly one word: "WIN" or "LOSE"`;
+
+                const judgment = await this.callAI(judgePrompt);
+                
+                return {
+                    response: genieResponse,
+                    won: judgment.toUpperCase().includes('WIN')
+                };
+            }
+
+            async callAI(prompt) {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+                
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            }
+
+            async displayResult(wish, result) {
+                // Parse the response to separate genie dialogue from outcome
+                const parts = result.response.split('OUTCOME:');
+                const genieText = parts[0].replace('GENIE:', '').trim();
+                const outcomeText = parts[1] ? parts[1].trim() : '';
+                
+                let html = `<div class="wish-display"><strong>Your Wish:</strong> "${wish}"</div>`;
+                html += `<div class="genie-response"><strong>Evil Genie:</strong><br>${genieText}</div>`;
+                
+                if (outcomeText) {
+                    html += `<div class="outcome-explanation"><strong>What Actually Happens:</strong><br>${outcomeText}</div>`;
+                }
+                
+                this.responseText.innerHTML = html;
+                
+                if (result.won) {
+                    this.playerWins++;
+                    await PopupManager.showWin();
+                    this.updateFirebaseWins('player');
+                } else {
+                    this.genieWins++;
+                    this.updateFirebaseWins('genie');
+                }
+                
+                this.updateScores();
+                this.saveProgress();
+                
+                // AI reads the outcome explanation instead of genie message
+                if (outcomeText) {
+                    this.speak(outcomeText);
+                }
+            }
+
+            speak(text) {
+                if (window.speechSynthesis) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 0.8;
+                    utterance.pitch = 0.6;
+                    utterance.volume = 0.7;
+                    speechSynthesis.speak(utterance);
+                }
+            }
+
+            updateScores() {
+                if (this.yourWinsEl) this.yourWinsEl.textContent = this.playerWins;
+                if (this.genieWinsEl) this.genieWinsEl.textContent = this.genieWins;
+                if (this.globalWinsEl) this.globalWinsEl.textContent = this.globalWinsCount || 0;
+                if (this.globalGenieWinsEl) this.globalGenieWinsEl.textContent = this.globalGenieWinsCount || 0;
+            }
+
+            saveProgress() {
+                GameStorage.save('playerWins', this.playerWins);
+                GameStorage.save('genieWins', this.genieWins);
+            }
+
+            async updateFirebaseWins(winner) {
+                try {
+                    if (winner === 'player') {
+                        // Update leaderboard for player win
+                        await this.db.ref('leaderboard').push({
+                            name: this.playerName,
+                            wins: this.playerWins,
+                            timestamp: Date.now()
+                        });
+
+                        // Update global player wins
+                        const globalPlayerRef = this.db.ref('global-player-wins');
+                        const snap = await globalPlayerRef.once('value');
+                        await globalPlayerRef.set((snap.val() || 0) + 1);
+                    } else {
+                        // Update global genie wins
+                        const globalGenieRef = this.db.ref('global-genie-wins');
+                        const snap = await globalGenieRef.once('value');
+                        await globalGenieRef.set((snap.val() || 0) + 1);
+                    }
+                } catch (error) {
+                    console.log('Offline mode - global stats not updated');
+                }
+            }
+
+            updateLeaderboard(data) {
+                const entries = Object.values(data).sort((a, b) => b.wins - a.wins).slice(0, 5);
+                this.leaderboard.innerHTML = entries.length ? 
+                    entries.map((entry, i) => `<li><span>#${i+1} ${entry.name}</span><span>${entry.wins} wins</span></li>`).join('') :
+                    '<li><span>No victors yet...</span></li>';
+            }
+
+            resetGame() {
+                this.playerWins = 0;
+                this.genieWins = 0;
+                this.updateScores();
+                this.saveProgress();
+                this.responseText.textContent = "A new challenger approaches. I will show no mercy this time.";
+                this.speak("You dare challenge me again? How amusing.");
+            }
+        }
+
+        new EvilGenieGame();
+    </script>
+</body>
+</html>
