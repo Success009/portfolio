@@ -1,52 +1,56 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> My grand portfolio </title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script><!--i don't "really understand" this stuff to be honest :) -->
+    <title>Success - Full Stack Web Developer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <style>
-        /* defining vars*/
-        :root {
-            --primary: #2563eb;
-            --secondary: #4f46e5; /* kind of useless ngl*/
-            --bg: #0f172a; /* main background color */
-            --text: #f8fafc;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --secondary: #4f46e5;
+            --bg: #0f172a;
+            --text: #f8fafc;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --gradient: linear-gradient(135deg, var(--primary), var(--accent));
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            background-color: var(--bg); /* im prb only going to use this here Idk why i made that var */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
             color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
         }
 
-        .foot {
-            background-color: black;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
 
         .nav {
             position: fixed;
             top: 0;
             width: 100%;
-            padding: 1.5rem;
-            background: rgba(15, 23, 42, 0.8); /* semi-transparent background */
-            backdrop-filter: blur(10px); /* recently knew this */
-            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -55,16 +59,26 @@
         .nav-logo {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(to right, var(--primary), var(--accent));
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
         }
 
         .nav-links a {
             color: var(--text);
             text-decoration: none;
-            margin-left: 2rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
             position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
         }
 
         .nav-links a::after {
@@ -86,12 +100,12 @@
             min-height: 100vh;
             display: flex;
             align-items: center;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
+            padding: 8rem 2rem 4rem;
+            background: radial-gradient(circle at 20% 80%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.15) 0%, transparent 50%);
         }
 
-        .hero-content {
+        .hero-container {
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
@@ -101,51 +115,163 @@
         }
 
         .hero-text h1 {
-            font-size: 3.5rem;
-            line-height: 1.2;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text .subtitle {
+            font-size: 1.5rem;
+            color: var(--accent);
             margin-bottom: 1.5rem;
+            font-weight: 600;
         }
 
         .hero-text p {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             color: #94a3b8;
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
             margin-bottom: 2rem;
         }
 
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            padding: 1rem 2rem;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         .hero-image {
+            display: flex;
+            justify-content: center;
             position: relative;
         }
 
         .profile-img {
-            width: 400px;
-            height: 400px;
+            width: 350px;
+            height: 350px;
             border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
             object-fit: cover;
-            box-shadow: 0 0 50px rgba(56, 189, 248, 0.3);
-            animation: morph 10s ease-in-out infinite; 
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.3);
+            animation: morph 8s ease-in-out infinite;
         }
 
-        @keyframes morph { /* pretty easy stuff ;) */
-            0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+        @keyframes morph {
+            0%, 100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
             25% { border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%; }
             50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
             75% { border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%; }
-            100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
         }
 
         .section {
-            padding: 8rem 2rem;
+            padding: 5rem 2rem;
             max-width: 1200px;
             margin: 0 auto;
         }
 
         .section-title {
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
             text-align: center;
-            background: linear-gradient(to right, var(--primary), var(--accent));
+            margin-bottom: 3rem;
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            line-height: 1.8;
+        }
+
+        .about-highlights {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .highlight-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        .highlight-icon {
+            font-size: 1.5rem;
+            color: var(--accent);
         }
 
         .skills-grid {
@@ -158,12 +284,14 @@
             background: var(--card-bg);
             padding: 2rem;
             border-radius: 1rem;
+            border: 1px solid var(--border);
             text-align: center;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .skill-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-5px);
+            border-color: var(--accent);
         }
 
         .skill-icon {
@@ -172,283 +300,510 @@
             color: var(--accent);
         }
 
-        .projs-grid {
+        .skill-card h3 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .skill-card p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .projects-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
         }
 
-        .proj-card {
+        .project-card {
             background: var(--card-bg);
             border-radius: 1rem;
             overflow: hidden;
-            transition: transform 0.3s ease;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
         }
 
-        .proj-card:hover {
+        .project-card:hover {
             transform: translateY(-10px);
+            border-color: var(--accent);
         }
 
-        .proj-content {
+        .project-image {
+            height: 200px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+
+        .project-content {
             padding: 2rem;
         }
 
-        .proj-title {
+        .project-title {
             font-size: 1.5rem;
             margin-bottom: 1rem;
             color: var(--accent);
         }
 
-        .proj-link {
-            display: inline-block;
-            margin-top: 1rem;
-            padding: 0.75rem 1.5rem;
-            background: var(--primary);
-            color: var(--text);
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent);
             text-decoration: none;
-            border-radius: 0.5rem;
-            transition: background 0.3s ease;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
         }
 
-        .proj-link:hover {
-            background: var(--secondary);
+        .project-link:hover {
+            background: var(--accent);
+            color: var(--bg);
         }
 
-        .exp-timeline {
+        .experience-timeline {
             position: relative;
             padding: 2rem 0;
         }
 
-        .timeline-item {
-            margin-bottom: 4rem;
-            position: relative;
-            padding-left: 3rem;
-        }
-
-        .timeline-item::before {
-            content: '';
+        .timeline-line {
             position: absolute;
-            left: 0;
+            left: 2rem;
             top: 0;
+            bottom: 0;
             width: 2px;
-            height: 100%;
             background: var(--accent);
         }
 
-        .timeline-item::after {
-            content: '';
+        .timeline-item {
+            position: relative;
+            padding-left: 5rem;
+            margin-bottom: 3rem;
+        }
+
+        .timeline-dot {
             position: absolute;
-            left: -8px;
-            top: 0;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
+            left: 1.2rem;
+            top: 0.5rem;
+            width: 1.5rem;
+            height: 1.5rem;
             background: var(--accent);
+            border-radius: 50%;
+            border: 3px solid var(--bg);
         }
 
-        .contact {
-            text-align: center;
+        .timeline-content {
             background: var(--card-bg);
-            padding: 4rem 2rem;
+            padding: 2rem;
             border-radius: 1rem;
-            margin-top: 4rem;
+            border: 1px solid var(--border);
         }
 
-        .contact-email {
+        .timeline-date {
             color: var(--accent);
-            text-decoration: none;
-            font-size: 1.25rem;
-            display: inline-block;
-            margin-top: 1rem;
-            transition: color 0.3s ease;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
         }
 
-        .contact-email:hover {
-            color: var(--primary);
+        .timeline-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
         }
 
-        @media (max-width: 768px) { /* responsive design stuff Based on device*/
-            .hero-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .profile-img {
-                width: 300px;
-                height: 300px;
-                margin: 0 auto;
-            }
-
-            .nav-links {
-                display: none;
-            }
+        .timeline-company {
+            color: #94a3b8;
+            margin-bottom: 1rem;
         }
 
-        .nav-logo {
-            height: 80px;
-            display: flex;
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
             align-items: center;
         }
 
-        .nav-logo img {
-            height: 100%;
-            width: auto;
-            object-fit: contain;
+        .contact-text {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            line-height: 1.8;
+        }
+
+        .contact-details {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        .contact-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-icon {
+            font-size: 1.5rem;
+            color: var(--accent);
+            min-width: 2rem;
+        }
+
+        .contact-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .contact-link:hover {
+            color: var(--primary);
+        }
+
+        .footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-container,
+            .about-content,
+            .contact-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .profile-img {
+                width: 280px;
+                height: 280px;
+            }
+
+            .timeline-item {
+                padding-left: 3rem;
+            }
+
+            .timeline-line {
+                left: 1rem;
+            }
+
+            .timeline-dot {
+                left: 0.2rem;
+            }
         }
     </style>
 </head>
-
 <body>
-    <!-- navigation bar -->
     <nav class="nav">
-        <div class="nav-logo">
-            <img src="logo.png" alt="Success Logo">
-        </div>
-        <div class="nav-links">
-            <a href="#abt">About</a>
-            <a href="#skills">Skills</a>
-            <a href="#projs">Projects</a>
-            <a href="#exp">Experience</a>
+        <div class="nav-container">
+            <div class="nav-logo">Success</div>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#experience">Experience</a>
+                <a href="#contact">Contact</a>
+            </div>
         </div>
     </nav>
-     <!-- hero sect -->
-    <section class="hero" id="abt">
-        <div class="hero-content">
+
+    <section class="hero" id="home">
+        <div class="hero-container">
             <div class="hero-text">
                 <h1>Hello, I'm Success</h1>
-                <p>A 17-year-old developer passionate about creating innovative solutions through code. Currently
-                    studying at Narendra Model Secondary School, I specialize in Python, JavaScript, and web
-                    development.</p>
+                <div class="subtitle">Full Stack Web Developer</div>
+                <p>A passionate 17-year-old developer from Nepal, specializing in JavaScript, Python, and modern web technologies. I love building scalable web applications and solving complex problems through code.</p>
+
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">7+</div>
+                        <div class="stat-label">Years Coding</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">146+</div>
+                        <div class="stat-label">Projects Built</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">+41</div>
+                        <div class="stat-label">Happy Clients</div>
+                    </div>
+                </div>
+
+                <div class="hero-buttons">
+                    <a href="#projects" class="btn-primary">
+                        View My Work
+                        <span>→</span>
+                    </a>
+                    <a href="#contact" class="btn-secondary">Get In Touch</a>
+                </div>
             </div>
+
             <div class="hero-image">
-                <img src="success.jpg" alt="Success's Profile" class="profile-img">
+                <img src="success.jpg" alt="Success - Web Developer" class="profile-img">
             </div>
         </div>
     </section>
-    <!-- my skill -->
-    <section class="section" id="skills">
-        <h2 class="section-title">Technical Skills</h2>
-        <div class="skills-grid">
-            <div class="skill-card">
-                <div class="skill-icon">🐍</div>
-                <h3>Python</h3>
-                <p>Advanced programming and automation</p>
+
+    <section class="section" id="about">
+        <h2 class="section-title">About Me</h2>
+        <div class="about-content">
+            <div class="about-text">
+                <p>I'm a dedicated web developer currently studying at Narendra Model Secondary School in Nepal. My journey into programming started when I was 15, and since then, I've been passionate about creating digital solutions that make a difference.</p>
+
+                <p>I specialize in both frontend and backend development, with a strong focus on JavaScript ecosystem. I enjoy working with modern frameworks and libraries to build responsive, user-friendly applications that solve real-world problems.</p>
+
+                <p>When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or helping fellow developers in online communities.</p>
             </div>
-            <div class="skill-card">
-                <div class="skill-icon">⚡</div>
-                <h3>JavaScript</h3>
-                <p>Expert in advanced JavaScript</p>
-            </div>
-            <div class="skill-card">
-                <div class="skill-icon">🎨</div>
-                <h3>HTML & CSS</h3>
-                <p>Good in creating Responsive web designs with transitions and animations</p>
-            </div>
-            <div class="skill-card">
-                <div class="skill-icon">🚀</div>
-                <h3>Node.js</h3>
-                <p>Skilled in backend development and API</p>
-            </div>
-        </div>
-    </section>
-     <!-- projects section -->
-    <section class="section" id="projs">
-        <h2 class="section-title">Featured Projects</h2>
-        <div class="projs-grid">
-            <div class="proj-card">
-                <div class="proj-content">
-                    <h3 class="proj-title">Bharatpur Bazar</h3>
-                    <p>An online marketplace platform connecting local vendors with customers</p>
-                    <a href="http://bharatpurbazar.shop/" class="proj-link" target="_blank">View Project</a>
+
+            <div class="about-highlights">
+                <div class="highlight-item">
+                    <div class="highlight-icon">🎓</div>
+                    <div>
+                        <strong>Student at Narendra Model Secondary School</strong>
+                        <br>Balancing academics with professional development
+                    </div>
                 </div>
-            </div>
-            <div class="proj-card">
-                <div class="proj-content">
-                    <h3 class="proj-title">Chat Bot</h3>
-                    <p>A simple clean Chatbot made to show my abilities.</p>
-                    <a href="https://success0.fr.to/ai" class="proj-link" target="_blank">View Project</a>
+                <div class="highlight-item">
+                    <div class="highlight-icon">💼</div>
+                    <div>
+                        <strong>Freelance Developer</strong>
+                        <br>Building custom solutions for various clients
+                    </div>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-icon">🌟</div>
+                    <div>
+                        <strong>Problem Solver</strong>
+                        <br>Love tackling complex challenges with creative solutions
+                    </div>
                 </div>
             </div>
         </div>
     </section>
-     <!-- Experience section -->
-    <section class="section" id="exp">
-        <h2 class="section-title">Experience</h2>
-        <div class="exp-timeline">
+    <section class="section" id="experience">
+        <h2 class="section-title">Experience & Journey</h2>
+        <div class="experience-timeline">
+            <div class="timeline-line"></div>
+
             <div class="timeline-item">
-                <h3>Freelance Developer</h3>
-                <p>Building custom web applications and solutions for various clients, focusing on creating efficient
-                    and scalable solutions.</p>
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2025 - Present</div>
+                    <h3 class="timeline-title">Freelance Web Developer</h3>
+                    <div class="timeline-company">Self-Employed</div>
+                    <p>Building custom web applications and e-commerce solutions for various clients. Specializing in full-stack development with modern JavaScript frameworks and backend development.</p>
+                </div>
             </div>
+
             <div class="timeline-item">
-                <h3>High School</h3>
-                <p>Current</p>
-                <p>Pursuing computer science education while working on personal projs and expanding technical skills.
-                </p>
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2021</div>
+                    <h3 class="timeline-title">Computer Science Student</h3>
+                    <div class="timeline-company">Narendra Model Secondary School</div>
+                    <p>Pursuing secondary education with a focus on computer science and mathematics. Actively participating in coding competitions and tech-related extracurricular activities.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2018</div>
+                    <h3 class="timeline-title">Started Programming Journey</h3>
+                    <div class="timeline-company">Self-Learning</div>
+                    <p>Began learning programming with Python and quickly expanded to web development. Started with basic HTML/CSS and progressed to full-stack development with JavaScript.</p>
+                </div>
             </div>
         </div>
     </section>
-     <!--contacting-->
-    <div class="contact">
-        <h2 class="section-title">Get in Touch</h2>
-        <h3>Email:</h3>
-        <a href="mailto:s@0.hs.vc" class="contact-email">s@bharatpurbazar.shop</a>
-    </div>
+
+    <section class="section" id="contact">
+        <h2 class="section-title">Get In Touch</h2>
+        <div class="contact-content">
+            <div class="contact-text">
+                <p>I'm always excited to connect with fellow developers, potential clients, and tech enthusiasts. Whether you have a project in mind, want to collaborate, or just want to chat about the latest in web development, I'd love to hear from you.</p>
+
+                <p>I'm currently available for freelance projects and open to discussing new opportunities. My goal is to create meaningful digital experiences that solve real problems and make a positive impact.</p>
+
+                <p>Let's build something amazing together! I typically respond to messages within 24 hours and I'm always eager to discuss new ideas and challenges.</p>
+            </div>
+
+            <div class="contact-details">
+                <div class="contact-item">
+                    <div class="contact-icon">📧</div>
+                    <div>
+                        <strong>Email</strong>
+                        <br><a href="mailto:s@bharatpurbazar.shop" class="contact-link">s@bharatpurbazar.shop</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div>
+                        <strong>Location</strong>
+                        <br>Bharatpur, Nepal
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">⚡</div>
+                    <div>
+                        <strong>Response Time</strong>
+                        <br>Usually within 24 hours
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">💼</div>
+                    <div>
+                        <strong>Availability</strong>
+                        <br>Open for freelance projects
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <p>&copy; 2025 Success. All rights reserved. | Built with passion  by only using HTML, CSS, and JavaScript</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="mailto:s@bharatpurbazar.shop" style="color: var(--accent); text-decoration: none;">Email</a>
+                    <a href="http://success0.fr.to/" style="color: var(--accent); text-decoration: none;" target="_blank">Portfolio</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
     <script>
         gsap.registerPlugin(ScrollTrigger);
+
         gsap.to('.nav', {
             scrollTrigger: {
                 start: 'top top',
-                end: '+=50',
+                end: '+=100',
                 toggleActions: 'play none none reverse'
             },
-            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            backgroundColor: 'rgba(15, 23, 42, 0.98)',
             duration: 0.3
         });
-        gsap.from('.hero-text', {
-            opacity: 0,
-            x: -100,
-            duration: 1,
-            delay: 0.5
-        });
 
-        gsap.from('.profile-img', {
-            opacity: 0,
-            x: 100,
-            duration: 1,
-            delay: 0.5
-        });
-        gsap.from('.skill-card', {
+        gsap.timeline()
+            .from('.hero-text h1', { opacity: 0, y: 50, duration: 1, delay: 0.3 })
+            .from('.hero-text .subtitle', { opacity: 0, y: 30, duration: 0.8 }, '-=0.5')
+            .from('.hero-text p', { opacity: 0, y: 30, duration: 0.8 }, '-=0.4')
+            .from('.hero-stats', { opacity: 0, scale: 0.8, duration: 0.8 }, '-=0.3')
+            .from('.hero-buttons', { opacity: 0, y: 30, duration: 0.8 }, '-=0.3')
+            .from('.profile-img', { opacity: 0, scale: 0.8, duration: 1 }, '-=0.8');
+
+        gsap.from('.about-text', {
             scrollTrigger: {
-                trigger: '.skills-grid',
-                start: 'top center'
-            },
-            opacity: 0,
-            y: 50,
-            duration: 0.6,
-            stagger: 0.2
-        });
-        gsap.from('.proj-card', {
-            scrollTrigger: {
-                trigger: '.projs-grid',
-                start: 'top center'
-            },
-            opacity: 0,
-            y: 50,
-            duration: 0.6,
-            stagger: 0.2
-        });
-        gsap.from('.timeline-item', {
-            scrollTrigger: {
-                trigger: '.exp-timeline',
-                start: 'top center'
+                trigger: '.about-content',
+                start: 'top 80%'
             },
             opacity: 0,
             x: -50,
-            duration: 0.6,
-            stagger: 0.2
+            duration: 1
+        });
+
+        gsap.from('.about-highlights', {
+            scrollTrigger: {
+                trigger: '.about-content',
+                start: 'top 80%'
+            },
+            opacity: 0,
+            x: 50,
+            duration: 1,
+            delay: 0.2
+        });
+
+        gsap.from('.timeline-item', {
+            scrollTrigger: {
+                trigger: '.experience-timeline',
+                start: 'top 80%'
+            },
+            opacity: 0,
+            x: -50,
+            duration: 0.8,
+            stagger: 0.3
+        });
+
+        gsap.from('.contact-text', {
+            scrollTrigger: {
+                trigger: '.contact-content',
+                start: 'top 80%'
+            },
+            opacity: 0,
+            x: -50,
+            duration: 1
+        });
+
+        gsap.from('.contact-details', {
+            scrollTrigger: {
+                trigger: '.contact-content',
+                start: 'top 80%'
+            },
+            opacity: 0,
+            x: 50,
+            duration: 1,
+            delay: 0.2
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        
+
+        const scrollProgress = document.createElement('div');
+        scrollProgress.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: var(--accent);
+            z-index: 9999;
+            transition: width 0.1s ease;
+        `;
+        document.body.appendChild(scrollProgress);
+
+        window.addEventListener('scroll', () => {
+            const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            scrollProgress.style.width = scrolled + '%';
         });
     </script>
-    <footer class="foot">© Copyright 2025 | Permitted by Success</footer>
 </body>
 </html>
