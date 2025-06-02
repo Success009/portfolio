@@ -57,11 +57,20 @@
         }
 
         .nav-logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-logo img {
+            height: 100%;
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-logo img:hover {
+            transform: scale(1.05);
         }
 
         .nav-links {
@@ -520,7 +529,9 @@
 <body>
     <nav class="nav">
         <div class="nav-container">
-            <div class="nav-logo">Success</div>
+            <div class="nav-logo">
+                <img src="logo.png" alt="Success Logo">
+            </div>
             <div class="nav-links">
                 <a href="#home">Home</a>
                 <a href="#about">About</a>
