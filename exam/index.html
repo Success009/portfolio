@@ -5,170 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Watch</title>
     <style>
-        body {
-            background: #000;
-            color: white;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: auto;
-            user-select: none;
-        }
-
-        .watch-container {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-            border-radius: 25px;
-            border: 3px solid #333;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            box-shadow: 
-                0 0 20px rgba(0, 0, 0, 0.8),
-                inset 0 1px 2px rgba(255, 255, 255, 0.1);
-        }
-
-        #clock {
-            font-size: 2.8rem;
-            font-family: 'Courier New', monospace;
-            text-align: center;
-            letter-spacing: 2px;
-            color: #00ff88;
-            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-            margin-bottom: 8px;
-            font-weight: 300;
-            transition: all 0.3s ease;
-        }
-
-        #date {
-            font-size: 1.1rem;
-            opacity: 0.8;
-            color: #888;
-            margin-bottom: 15px;
-            font-weight: 300;
-            transition: all 0.3s ease;
-        }
-
-        #battery {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 0.8rem;
-            color: #00ff88;
-            opacity: 0.7;
-        }
-
-        #ai-response {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85%;
-            text-align: center;
-            font-size: 1rem;
-            line-height: 1.3;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            word-wrap: break-word;
-            max-height: 220px;
-            overflow-y: auto;
-            color: #fff;
-            z-index: 10;
-        }
-
-        #ai-response.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .status-dot {
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            width: 8px;
-            height: 8px;
-            background: #00ff88;
-            border-radius: 50%;
-            opacity: 0.6;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.listening {
-            background: #ff6600;
-            animation: pulse 0.8s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-
-        /* Scrollbar for AI response */
-        #ai-response::-webkit-scrollbar {
-            width: 2px;
-        }
-
-        #ai-response::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-        }
-
-        #ai-response::-webkit-scrollbar-thumb {
-            background: rgba(0, 255, 136, 0.5);
-            border-radius: 2px;
-        }
-
-        /* Watch face details */
-        .watch-bezel {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            border: 1px solid #444;
-            border-radius: 20px;
-            pointer-events: none;
-        }
-
-        .time-markers {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        .marker {
-            position: absolute;
-            background: #333;
-            opacity: 0.5;
-        }
-
-        .marker.hour {
-            width: 2px;
-            height: 12px;
-        }
-
-        .marker.minute {
-            width: 1px;
-            height: 8px;
-        }
-
-        /* Position markers around the watch face */
-        .marker:nth-child(1) { top: 8px; left: 50%; transform: translateX(-50%); }
-        .marker:nth-child(2) { top: 50%; right: 8px; transform: translateY(-50%); }
-        .marker:nth-child(3) { bottom: 8px; left: 50%; transform: translateX(-50%); }
-        .marker:nth-child(4) { top: 50%; left: 8px; transform: translateY(-50%); }
-
-        .hidden {
-            opacity: 0 !important;
-            visibility: hidden !important;
-        }
+        body{background:#000;color:white;font-family:'Segoe UI',Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:auto;user-select:none}
+        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1)}
+        #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);margin-bottom:8px;font-weight:300;transition:all 0.3s ease}
+        #date{font-size:1.1rem;opacity:0.8;color:#888;margin-bottom:15px;font-weight:300;transition:all 0.3s ease}
+        #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7}
+        #ai-response{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all 0.3s ease;word-wrap:break-word;max-height:220px;overflow-y:auto;color:#fff;z-index:10}
+        #ai-response.visible{opacity:1;visibility:visible}
+        .status-dot{position:absolute;top:15px;left:20px;width:8px;height:8px;background:#888;border-radius:50%;transition:all 0.3s ease}
+        .status-dot.active{background:#00ff88;animation:pulse 2s infinite}
+        .status-dot.listening{background:#0066ff;animation:pulse 0.5s infinite}
+        .status-dot.processing{background:#ff9900;animation:pulse 0.3s infinite}
+        .status-dot.mode-change{background:#ff0000;animation:flash 0.3s 2}
+        @keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
+        @keyframes flash{0%,100%{opacity:0.3}50%{opacity:1}}
+        #ai-response::-webkit-scrollbar{width:2px}
+        #ai-response::-webkit-scrollbar-track{background:rgba(255,255,255,0.1);border-radius:2px}
+        #ai-response::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.5);border-radius:2px}
+        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none}
+        .time-markers{position:absolute;width:100%;height:100%}
+        .marker{position:absolute;background:#333;opacity:0.5}
+        .marker.hour{width:2px;height:12px}
+        .marker:nth-child(1){top:8px;left:50%;transform:translateX(-50%)}
+        .marker:nth-child(2){top:50%;right:8px;transform:translateY(-50%)}
+        .marker:nth-child(3){bottom:8px;left:50%;transform:translateX(-50%)}
+        .marker:nth-child(4){top:50%;left:8px;transform:translateY(-50%)}
+        .hidden{opacity:0!important;visibility:hidden!important}
     </style>
 </head>
 <body>
@@ -188,376 +50,205 @@
     </div>
 
     <script>
-        // Global variables
-        let currentMode = 'english';
-        let sharedMemory = [];
-        let recognition;
-        let isHolding = false;
-        let holdTimeout;
-        let isResponseVisible = false;
-        let batteryLevel = 85;
-        let isListening = false;
-        let lastSpeechTime = 0;
-        let silenceTimer;
-        let restartTimer;
+        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,batteryLevel=85,micActive=false,isProcessing=false;
+        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot');
 
-        // DOM elements
-        const clock = document.getElementById('clock');
-        const date = document.getElementById('date');
-        const aiResponse = document.getElementById('ai-response');
-        const battery = document.getElementById('battery');
-        const watchContainer = document.getElementById('watchContainer');
-        const statusDot = document.getElementById('statusDot');
-
-        console.log('🎙️ AI Watch Assistant Starting...');
-        console.log('📱 Current Mode:', currentMode);
-
-        // Update clock, date and battery
-        function updateTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            const dateStr = now.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric'
-            });
-            
-            clock.textContent = timeStr;
-            date.textContent = dateStr;
-            
-            // Simulate battery drain (very slow)
-            if (Math.random() < 0.001) {
-                batteryLevel = Math.max(20, batteryLevel - 1);
-                battery.textContent = `${batteryLevel}%`;
+        function updateTime(){
+            const now=new Date();
+            clock.textContent=now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+            date.textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+            if(Math.random()<0.001){
+                batteryLevel=Math.max(20,batteryLevel-1);
+                battery.textContent=`${batteryLevel}%`;
             }
         }
 
-        // Switch between modes silently
-        function switchMode() {
-            currentMode = currentMode === 'english' ? 'nepali' : 'english';
-            console.log('🔄 Mode switched to:', currentMode);
-            
-            // Restart speech recognition with new language
-            if (recognition) {
-                console.log('🛑 Stopping recognition for mode switch');
-                recognition.stop();
-                setTimeout(() => {
-                    console.log('🎯 Restarting recognition in new mode');
-                    initSpeechRecognition();
-                }, 500);
-            }
+        function switchMode(){
+            currentMode=currentMode==='english'?'nepali':'english';
+            statusDot.className='status-dot mode-change';
+            setTimeout(()=>{
+                statusDot.className=micActive?'status-dot active':'status-dot';
+                if(recognition){
+                    recognition.stop();
+                    setTimeout(()=>{if(micActive)initSpeechRecognition()},500);
+                }
+            },600);
         }
 
-        // Get AI response
-        async function getAIResponse(question, language) {
-            console.log('🤖 Getting AI response for:', question, 'in', language);
-            try {
-                const memoryContext = sharedMemory.length > 0 
-                    ? `Context from previous conversations: [${sharedMemory.join(", ")}]. ` 
-                    : "";
-                
-                const languageInstruction = language === 'nepali' 
-                    ? "Respond only in Nepali language."
-                    : "Respond only in English language.";
-                
-                console.log('📤 Sending request to AI API...');
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDW2bxhTRUzektoptyjpQ_xM6ZivJXSs9I`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: ` Here is your memory:"${memoryContext}" Language:"${languageInstruction}" this is the question asked by the user You're helping a student in a exam answer the question as you are the class 10 student of nepal: ${question}`
-                            }]
-                        }]
+        async function getAIResponse(question,language){
+            try{
+                const memoryContext=sharedMemory.length>0?`Context: [${sharedMemory.join(", ")}]. `:"";
+                const languageInstruction=language==='nepali'?"Respond only in Nepali language.":"Respond only in English language.";
+                const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDW2bxhTRUzektoptyjpQ_xM6ZivJXSs9I`,{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({
+                        contents:[{parts:[{text:`${memoryContext}${languageInstruction} You're a class 10 student answering: ${question}`}]}]
                     })
                 });
-
-                if (!response.ok) {
-                    console.error('❌ API Error:', response.status, response.statusText);
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                const aiText = data.candidates[0].content.parts[0].text.trim();
-                console.log('✅ AI Response received:', aiText);
-                return aiText;
-            } catch (error) {
-                console.error('💥 Error getting AI response:', error);
-                return language === 'nepali' 
-                    ? "सेवा उपलब्ध छैन।"
-                    : "Service unavailable.";
+                if(!response.ok)throw new Error(`HTTP error! status: ${response.status}`);
+                const data=await response.json();
+                return data.candidates[0].content.parts[0].text.trim();
+            }catch(error){
+                return language==='nepali'?"सेवा उपलब्ध छैन।":"Service unavailable.";
             }
         }
 
-        // Display AI response
-        function displayResponse(text) {
-            console.log('📺 Displaying response:', text);
-            aiResponse.textContent = text;
+        function displayResponse(text){
+            aiResponse.textContent=text;
             aiResponse.classList.add('visible');
             clock.classList.add('hidden');
             date.classList.add('hidden');
-            isResponseVisible = true;
-            console.log('👁️ Response now visible');
+            isResponseVisible=true;
         }
 
-        // Hide AI response and show clock
-        function hideResponse() {
-            console.log('🙈 Hiding response, showing clock');
+        function hideResponse(){
             aiResponse.classList.remove('visible');
             clock.classList.remove('hidden');
             date.classList.remove('hidden');
-            isResponseVisible = false;
+            isResponseVisible=false;
         }
 
-        // Update listening status
-        function updateListeningStatus(listening) {
-            isListening = listening;
-            if (listening) {
-                statusDot.classList.add('listening');
-                console.log('👂 Listening active');
-            } else {
-                statusDot.classList.remove('listening');
-                console.log('🔇 Listening inactive');
-            }
+        function updateStatus(status){
+            statusDot.className=`status-dot ${status}`;
         }
 
-        // Restart speech recognition
-        function restartRecognition() {
-            console.log('🔄 Restarting speech recognition...');
-            if (recognition) {
-                recognition.stop();
-            }
-            setTimeout(() => {
+        function toggleMic(){
+            if(isProcessing)return;
+            micActive=!micActive;
+            if(micActive){
+                updateStatus('active');
                 initSpeechRecognition();
-            }, 1000);
+            }else{
+                updateStatus('');
+                if(recognition)recognition.stop();
+            }
         }
 
-        // Initialize speech recognition
-        function initSpeechRecognition() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                console.error('❌ Speech recognition not supported');
-                return;
-            }
+        function initSpeechRecognition(){
+            if(!micActive||!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;
+            recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+            recognition.continuous=true;
+            recognition.interimResults=false;
+            recognition.lang=currentMode==='nepali'?'ne-NP':'en-US';
 
-            console.log('🎤 Initializing speech recognition for mode:', currentMode);
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.continuous = true;
-            recognition.interimResults = false;
-            recognition.lang = currentMode === 'nepali' ? 'ne-NP' : 'en-US';
-            console.log('🌐 Language set to:', recognition.lang);
+            recognition.onstart=()=>updateStatus('listening');
+            recognition.onresult=async(event)=>{
+                const transcript=event.results[event.results.length-1][0].transcript.trim().toLowerCase();
+                updateStatus('processing');
+                isProcessing=true;
 
-            recognition.onstart = () => {
-                console.log('▶️ Speech recognition started');
-                updateListeningStatus(true);
-                lastSpeechTime = Date.now();
-                
-                // Clear any existing timers
-                if (silenceTimer) clearTimeout(silenceTimer);
-                if (restartTimer) clearTimeout(restartTimer);
-            };
-
-            recognition.onresult = async (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-                console.log('🗣️ Speech detected:', transcript);
-                console.log('🎯 Current mode:', currentMode);
-                
-                lastSpeechTime = Date.now();
-                
-                if (currentMode === 'nepali') {
-                    console.log('🇳🇵 Processing Nepali command');
-                    
-                    // Memory commands in Nepali
-                    if (transcript.includes("याद राख")) {
-                        console.log('💾 Nepali memory save command detected');
-                        const memoryContent = transcript.replace("याद राख", "").trim();
-                        if (memoryContent) {
+                if(currentMode==='nepali'){
+                    if(transcript.includes("याद राख")){
+                        const memoryContent=transcript.replace("याद राख","").trim();
+                        if(memoryContent){
                             sharedMemory.push(memoryContent);
-                            if (sharedMemory.length > 15) sharedMemory.shift();
-                            console.log('💾 Memory saved:', memoryContent);
-                            console.log('🧠 Total memory items:', sharedMemory.length);
+                            if(sharedMemory.length>15)sharedMemory.shift();
                             displayResponse(`याद राखेँ।`);
                         }
+                        isProcessing=false;
+                        updateStatus(micActive?'active':'');
                         return;
                     }
-                    
-                    if (transcript.includes("मेमोरी खाली गर")) {
-                        console.log('🗑️ Nepali memory clear command detected');
-                        sharedMemory = [];
-                        console.log('🧠 Memory cleared');
+                    if(transcript.includes("मेमोरी खाली गर")){
+                        sharedMemory=[];
                         displayResponse("मेमोरी खाली गरियो।");
+                        isProcessing=false;
+                        updateStatus(micActive?'active':'');
                         return;
                     }
-                    
-                    // Activation phrase for Nepali
-                    if (transcript.includes('मलाई भन')) {
-                        console.log('✅ Nepali activation phrase detected');
-                        const question = transcript.replace('मलाई भन', '').trim();
-                        if (question) {
-                            console.log('❓ Nepali question:', question);
-                            const answer = await getAIResponse(question, 'nepali');
+                    if(transcript.includes('मलाई भन')){
+                        const question=transcript.replace('मलाई भन','').trim();
+                        if(question){
+                            const answer=await getAIResponse(question,'nepali');
                             displayResponse(answer);
                         }
                     }
-                } else {
-                    console.log('🇺🇸 Processing English command');
-                    
-                    // Memory commands in English
-                    if (transcript.includes("remember this") || transcript.includes("save this")) {
-                        console.log('💾 English memory save command detected');
-                        const memoryContent = transcript.replace(/remember this|save this/g, "").trim();
-                        if (memoryContent) {
+                }else{
+                    if(transcript.includes("remember this")||transcript.includes("save this")){
+                        const memoryContent=transcript.replace(/remember this|save this/g,"").trim();
+                        if(memoryContent){
                             sharedMemory.push(memoryContent);
-                            if (sharedMemory.length > 15) sharedMemory.shift();
-                            console.log('💾 Memory saved:', memoryContent);
-                            console.log('🧠 Total memory items:', sharedMemory.length);
+                            if(sharedMemory.length>15)sharedMemory.shift();
                             displayResponse("Noted.");
                         }
+                        isProcessing=false;
+                        updateStatus(micActive?'active':'');
                         return;
                     }
-                    
-                    if (transcript.includes("clear memory") || transcript.includes("forget all")) {
-                        console.log('🗑️ English memory clear command detected');
-                        sharedMemory = [];
-                        console.log('🧠 Memory cleared');
+                    if(transcript.includes("clear memory")||transcript.includes("forget all")){
+                        sharedMemory=[];
                         displayResponse("Memory cleared.");
+                        isProcessing=false;
+                        updateStatus(micActive?'active':'');
                         return;
                     }
-                    
-                    // Activation phrase for English
-                    if (transcript.includes('tell me')) {
-                        console.log('✅ English activation phrase detected');
-                        const question = transcript.replace('tell me', '').trim();
-                        if (question) {
-                            console.log('❓ English question:', question);
-                            const answer = await getAIResponse(question, 'english');
+                    if(transcript.includes('tell me')){
+                        const question=transcript.replace('tell me','').trim();
+                        if(question){
+                            const answer=await getAIResponse(question,'english');
                             displayResponse(answer);
                         }
                     }
                 }
+                isProcessing=false;
+                updateStatus(micActive?'active':'');
             };
 
-            recognition.onerror = (event) => {
-                console.error('❌ Speech recognition error:', event.error);
-                updateListeningStatus(false);
-                
-                if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    console.log('🔄 Will restart recognition after error');
-                    setTimeout(() => {
-                        if (!isHolding) {
-                            restartRecognition();
-                        }
-                    }, 2000);
+            recognition.onerror=()=>{
+                updateStatus(micActive?'active':'');
+                isProcessing=false;
+            };
+
+            recognition.onend=()=>{
+                if(micActive&&!isHolding){
+                    setTimeout(()=>{
+                        if(micActive)try{recognition.start()}catch(e){setTimeout(initSpeechRecognition,1000)}
+                    },500);
+                }else{
+                    updateStatus(micActive?'active':'');
                 }
             };
 
-            recognition.onend = () => {
-                console.log('⏹️ Speech recognition ended');
-                updateListeningStatus(false);
-                
-                if (!isHolding) {
-                    console.log('🔄 Auto-restarting recognition');
-                    setTimeout(() => {
-                        if (recognition) {
-                            try {
-                                recognition.start();
-                            } catch (error) {
-                                console.error('❌ Error restarting recognition:', error);
-                                setTimeout(restartRecognition, 1000);
-                            }
-                        }
-                    }, 500);
-                }
-            };
-
-            try {
-                recognition.start();
-                console.log('🎯 Recognition start attempted');
-            } catch (error) {
-                console.error('❌ Error starting recognition:', error);
-                setTimeout(restartRecognition, 2000);
-            }
+            try{recognition.start()}catch(e){setTimeout(initSpeechRecognition,1000)}
         }
 
-        // Monitor for silence and restart if needed
-        function monitorSilence() {
-            setInterval(() => {
-                const now = Date.now();
-                const timeSinceLastSpeech = now - lastSpeechTime;
-                
-                if (timeSinceLastSpeech > 10000 && !isHolding) { // 10 seconds of silence
-                    console.log('🔇 10 seconds of silence detected, restarting recognition');
-                    restartRecognition();
-                    lastSpeechTime = now;
-                }
-            }, 5000); // Check every 5 seconds
-        }
-
-        // Touch/mouse event handlers for mode switching (silent)
-        let touchStartTime = 0;
-
-        function startHold(e) {
+        let touchStartTime=0;
+        function startHold(e){
             e.preventDefault();
-            isHolding = true;
-            touchStartTime = Date.now();
-            console.log('👆 Hold gesture started');
-            
-            holdTimeout = setTimeout(() => {
-                if (isHolding) {
-                    console.log('🔄 6-second hold completed, switching mode');
-                    switchMode();
-                }
-            }, 6000);
+            isHolding=true;
+            touchStartTime=Date.now();
+            holdTimeout=setTimeout(()=>{
+                if(isHolding)switchMode();
+            },5000);
         }
 
-        function endHold(e) {
+        function endHold(e){
             e.preventDefault();
-            isHolding = false;
-            
-            if (holdTimeout) {
-                clearTimeout(holdTimeout);
-            }
-            
-            // If it was a quick tap and response is visible, hide it
-            const holdDuration = Date.now() - touchStartTime;
-            console.log('👆 Hold gesture ended, duration:', holdDuration + 'ms');
-            
-            if (holdDuration < 500 && isResponseVisible) {
-                console.log('👆 Quick tap detected, hiding response');
-                hideResponse();
+            isHolding=false;
+            if(holdTimeout)clearTimeout(holdTimeout);
+            const holdDuration=Date.now()-touchStartTime;
+            if(holdDuration<500){
+                if(isResponseVisible){
+                    hideResponse();
+                }else{
+                    toggleMic();
+                }
             }
         }
 
-        // Event listeners
-        watchContainer.addEventListener('touchstart', startHold, { passive: false });
-        watchContainer.addEventListener('touchend', endHold, { passive: false });
-        watchContainer.addEventListener('touchcancel', endHold, { passive: false });
-        watchContainer.addEventListener('mousedown', startHold);
-        watchContainer.addEventListener('mouseup', endHold);
-        watchContainer.addEventListener('mouseleave', endHold);
-        watchContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+        watchContainer.addEventListener('touchstart',startHold,{passive:false});
+        watchContainer.addEventListener('touchend',endHold,{passive:false});
+        watchContainer.addEventListener('touchcancel',endHold,{passive:false});
+        watchContainer.addEventListener('mousedown',startHold);
+        watchContainer.addEventListener('mouseup',endHold);
+        watchContainer.addEventListener('mouseleave',endHold);
+        watchContainer.addEventListener('contextmenu',e=>e.preventDefault());
 
-        // Initialize
-        function init() {
-            console.log('🚀 Initializing AI Watch Assistant');
+        function init(){
             updateTime();
-            setInterval(updateTime, 1000);
-            
-            // Start speech recognition after a short delay
-            setTimeout(() => {
-                console.log('🎤 Starting speech recognition system');
-                initSpeechRecognition();
-                monitorSilence();
-            }, 1000);
-            
-            console.log('✅ Initialization complete');
+            setInterval(updateTime,1000);
         }
-
-        // Start the application
         init();
     </script>
 </body>
