@@ -50,7 +50,7 @@
     </div>
 
     <script>
-        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,batteryLevel=85,micActive=false,isProcessing=false;
+        let currentMode='english',sharedMemory=[],recognition,universalRecognition,isHolding=false,holdTimeout,isResponseVisible=false,batteryLevel=85,micActive=false,isProcessing=false,lastAnswer='';
         const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot');
 
         function updateTime(){
@@ -71,6 +71,10 @@
                 if(recognition){
                     recognition.stop();
                     setTimeout(()=>{if(micActive)initSpeechRecognition()},500);
+                }
+                if(universalRecognition){
+                    universalRecognition.stop();
+                    setTimeout(()=>{if(micActive)initUniversalRecognition()},500);
                 }
             },600);
         }
@@ -95,11 +99,13 @@
         }
 
         function displayResponse(text){
+            lastAnswer=text;
             aiResponse.textContent=text;
             aiResponse.classList.add('visible');
             clock.classList.add('hidden');
             date.classList.add('hidden');
             isResponseVisible=true;
+            aiResponse.scrollTop=0;
         }
 
         function hideResponse(){
@@ -107,6 +113,27 @@
             clock.classList.remove('hidden');
             date.classList.remove('hidden');
             isResponseVisible=false;
+        }
+
+        function redisplayLastAnswer(){
+            if(lastAnswer){
+                aiResponse.textContent=lastAnswer;
+                aiResponse.classList.add('visible');
+                clock.classList.add('hidden');
+                date.classList.add('hidden');
+                isResponseVisible=true;
+            }
+        }
+
+        function scrollResponse(direction){
+            if(!isResponseVisible||!lastAnswer)return;
+            const lineHeight=parseInt(window.getComputedStyle(aiResponse).lineHeight)||20;
+            const scrollAmount=lineHeight*3;
+            if(direction==='down'){
+                aiResponse.scrollTop+=scrollAmount;
+            }else if(direction==='up'){
+                aiResponse.scrollTop-=scrollAmount;
+            }
         }
 
         function updateStatus(status){
@@ -119,10 +146,54 @@
             if(micActive){
                 updateStatus('active');
                 initSpeechRecognition();
+                initUniversalRecognition();
             }else{
                 updateStatus('');
                 if(recognition)recognition.stop();
+                if(universalRecognition)universalRecognition.stop();
             }
+        }
+
+        function initUniversalRecognition(){
+            if(!micActive||!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;
+            universalRecognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+            universalRecognition.continuous=true;
+            universalRecognition.interimResults=false;
+            universalRecognition.lang='en-US'; // Always English for universal commands
+
+            universalRecognition.onresult=async(event)=>{
+                const transcript=event.results[event.results.length-1][0].transcript.trim().toLowerCase();
+                
+                // Universal commands that work in both modes
+                if(transcript.includes("display answered")){
+                    redisplayLastAnswer();
+                    return;
+                }
+
+                if(transcript.includes("scroll down")){
+                    scrollResponse('down');
+                    return;
+                }
+
+                if(transcript.includes("scroll up")){
+                    scrollResponse('up');
+                    return;
+                }
+            };
+
+            universalRecognition.onerror=()=>{
+                // Silent error handling for universal recognition
+            };
+
+            universalRecognition.onend=()=>{
+                if(micActive&&!isHolding){
+                    setTimeout(()=>{
+                        if(micActive)try{universalRecognition.start()}catch(e){setTimeout(initUniversalRecognition,1000)}
+                    },500);
+                }
+            };
+
+            try{universalRecognition.start()}catch(e){setTimeout(initUniversalRecognition,1000)}
         }
 
         function initSpeechRecognition(){
