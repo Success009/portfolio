@@ -50,7 +50,7 @@
     </div>
 
     <script>
-        let currentMode='english',sharedMemory=[],recognition,universalRecognition,isHolding=false,holdTimeout,isResponseVisible=false,batteryLevel=85,micActive=false,isProcessing=false,lastAnswer='';
+        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,batteryLevel=85,micActive=false,isProcessing=false,lastAnswer='';
         const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot');
 
         function updateTime(){
@@ -72,10 +72,6 @@
                     recognition.stop();
                     setTimeout(()=>{if(micActive)initSpeechRecognition()},500);
                 }
-                if(universalRecognition){
-                    universalRecognition.stop();
-                    setTimeout(()=>{if(micActive)initUniversalRecognition()},500);
-                }
             },600);
         }
 
@@ -83,18 +79,27 @@
             try{
                 const memoryContext=sharedMemory.length>0?`Context: [${sharedMemory.join(", ")}]. `:"";
                 const languageInstruction=language==='nepali'?"Respond only in Nepali language.":"Respond only in English language.";
-                const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDW2bxhTRUzektoptyjpQ_xM6ZivJXSs9I`,{
+                const fullQuery=`${memoryContext}${languageInstruction} This is your core programming and this tells how to respond:" If a formula is asked to you respond by just providing the formula and nothing else.If a date is asked You must find the Exact date out by searching and providing a matching answer Also provide confidence level of how confident you are that date is correct.Question asked you are mostly from class 10 book of Sangam publication."): ${question}`;
+                
+                console.log(`🤖 AI Request (${language}):`, question);
+                
+                const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAioo23YXTQAxFZ9J5OGlzd3WrjPYW9IEY`,{
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
                     body:JSON.stringify({
-                        contents:[{parts:[{text:`${memoryContext}${languageInstruction} You're a class 10 student answering: ${question}`}]}]
+                        contents:[{parts:[{text:fullQuery}]}]
                     })
                 });
                 if(!response.ok)throw new Error(`HTTP error! status: ${response.status}`);
                 const data=await response.json();
-                return data.candidates[0].content.parts[0].text.trim();
+                const aiAnswer=data.candidates[0].content.parts[0].text.trim();
+                
+                console.log(`🤖 AI Response:`, aiAnswer);
+                return aiAnswer;
             }catch(error){
-                return language==='nepali'?"सेवा उपलब्ध छैन।":"Service unavailable.";
+                const errorMsg=language==='nepali'?"सेवा उपलब्ध छैन।":"Service unavailable.";
+                console.log(`🤖 AI Error:`, errorMsg);
+                return errorMsg;
             }
         }
 
@@ -146,56 +151,51 @@
             if(micActive){
                 updateStatus('active');
                 initSpeechRecognition();
-                initUniversalRecognition();
             }else{
                 updateStatus('');
                 if(recognition)recognition.stop();
-                if(universalRecognition)universalRecognition.stop();
             }
         }
 
-        function initUniversalRecognition(){
-            if(!micActive||!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;
-            universalRecognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
-            universalRecognition.continuous=true;
-            universalRecognition.interimResults=false;
-            universalRecognition.lang='en-US'; // Always English for universal commands
-
-            universalRecognition.onresult=async(event)=>{
-                const transcript=event.results[event.results.length-1][0].transcript.trim().toLowerCase();
-                
-                // Universal commands that work in both modes
-                if(transcript.includes("display answered")){
-                    redisplayLastAnswer();
-                    return;
+        function checkVoiceCommands(transcript){
+            const lowerTranscript=transcript.toLowerCase();
+            
+            // Universal commands that work in both modes (English only)
+            if(lowerTranscript.includes("display answer")){
+                console.log("🎤 Voice Command: Display Answer");
+                redisplayLastAnswer();
+                return true;
+            }
+            
+            if(lowerTranscript.includes("scroll down")){
+                console.log("🎤 Voice Command: Scroll Down");
+                scrollResponse('down');
+                return true;
+            }
+            
+            if(lowerTranscript.includes("scroll up")){
+                console.log("🎤 Voice Command: Scroll Up");
+                scrollResponse('up');
+                return true;
+            }
+            if(lowerTranscript.includes("remember ")){
+                const memoryContent=transcript.replace(/remember\s+/i,"").trim();
+                if(memoryContent){
+                    sharedMemory.push(memoryContent);
+                    if(sharedMemory.length>15)sharedMemory.shift();
+                    console.log("🧠 Memory Added:", memoryContent);
+                    displayResponse(`Remembered: "${memoryContent}"`);
                 }
-
-                if(transcript.includes("scroll down")){
-                    scrollResponse('down');
-                    return;
-                }
-
-                if(transcript.includes("scroll up")){
-                    scrollResponse('up');
-                    return;
-                }
-            };
-
-            universalRecognition.onerror=()=>{
-                // Silent error handling for universal recognition
-            };
-
-            universalRecognition.onend=()=>{
-                if(micActive&&!isHolding){
-                    setTimeout(()=>{
-                        if(micActive)try{universalRecognition.start()}catch(e){setTimeout(initUniversalRecognition,1000)}
-                    },500);
-                }
-            };
-
-            try{universalRecognition.start()}catch(e){setTimeout(initUniversalRecognition,1000)}
+                return true;
+            }  
+            if(lowerTranscript.includes("clear memory")){
+                sharedMemory=[];
+                console.log("🧠 Memory Cleared");
+                displayResponse("Memory cleared.");
+                return true;
+            }
+            return false;
         }
-
         function initSpeechRecognition(){
             if(!micActive||!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;
             recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
@@ -205,63 +205,36 @@
 
             recognition.onstart=()=>updateStatus('listening');
             recognition.onresult=async(event)=>{
-                const transcript=event.results[event.results.length-1][0].transcript.trim().toLowerCase();
+                const transcript=event.results[event.results.length-1][0].transcript.trim();
                 updateStatus('processing');
                 isProcessing=true;
 
+                // Check voice commands first (independent of mode)
+                if(checkVoiceCommands(transcript)){
+                    isProcessing=false;
+                    updateStatus(micActive?'active':'');
+                    return;
+                }
+
+                // Mode-specific question handling
                 if(currentMode==='nepali'){
-                    if(transcript.includes("याद राख")){
-                        const memoryContent=transcript.replace("याद राख","").trim();
-                        if(memoryContent){
-                            sharedMemory.push(memoryContent);
-                            if(sharedMemory.length>15)sharedMemory.shift();
-                            displayResponse(`याद राखेँ।`);
-                        }
-                        isProcessing=false;
-                        updateStatus(micActive?'active':'');
-                        return;
-                    }
-                    if(transcript.includes("मेमोरी खाली गर")){
-                        sharedMemory=[];
-                        displayResponse("मेमोरी खाली गरियो।");
-                        isProcessing=false;
-                        updateStatus(micActive?'active':'');
-                        return;
-                    }
-                    if(transcript.includes('मलाई भन')){
-                        const question=transcript.replace('मलाई भन','').trim();
+                    if(transcript.toLowerCase().includes('मलाई भन')){
+                        const question=transcript.replace(/मलाई भन/gi,'').trim();
                         if(question){
                             const answer=await getAIResponse(question,'nepali');
                             displayResponse(answer);
                         }
                     }
                 }else{
-                    if(transcript.includes("remember this")||transcript.includes("save this")){
-                        const memoryContent=transcript.replace(/remember this|save this/g,"").trim();
-                        if(memoryContent){
-                            sharedMemory.push(memoryContent);
-                            if(sharedMemory.length>15)sharedMemory.shift();
-                            displayResponse("Noted.");
-                        }
-                        isProcessing=false;
-                        updateStatus(micActive?'active':'');
-                        return;
-                    }
-                    if(transcript.includes("clear memory")||transcript.includes("forget all")){
-                        sharedMemory=[];
-                        displayResponse("Memory cleared.");
-                        isProcessing=false;
-                        updateStatus(micActive?'active':'');
-                        return;
-                    }
-                    if(transcript.includes('tell me')){
-                        const question=transcript.replace('tell me','').trim();
+                    if(transcript.toLowerCase().includes('tell me')){
+                        const question=transcript.replace(/tell me/gi,'').trim();
                         if(question){
                             const answer=await getAIResponse(question,'english');
                             displayResponse(answer);
                         }
                     }
                 }
+                
                 isProcessing=false;
                 updateStatus(micActive?'active':'');
             };
