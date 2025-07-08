@@ -12,6 +12,9 @@
         #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7}
         #ai-response{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all 0.3s ease;word-wrap:break-word;max-height:220px;overflow-y:auto;color:#fff;z-index:10}
         #ai-response.visible{opacity:1;visibility:visible}
+        #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all 0.3s ease;z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
+        #map-display.visible{opacity:1;visibility:visible}
+        #map-display img{width:100%;height:100%;object-fit:contain;border-radius:15px}
         .status-dot{position:absolute;top:15px;left:20px;width:8px;height:8px;background:#888;border-radius:50%;transition:all 0.3s ease}
         .status-dot.active{background:#00ff88;animation:pulse 2s infinite}
         .status-dot.listening{background:#0066ff;animation:pulse 0.5s infinite}
@@ -52,11 +55,14 @@
         <div id="clock"></div>
         <div id="date"></div>
         <div id="ai-response"></div>
+        <div id="map-display">
+            <img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Nepal Political Map">
+        </div>
     </div>
 
     <script>
-        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,batteryLevel=85,micActive=false,isProcessing=false,lastAnswer='',currentModelIndex=3;
-        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator');
+        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,isMapVisible=false,batteryLevel=85,micActive=false,isProcessing=false,lastAnswer='',currentModelIndex=3;
+        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator');
 
         // API Keys array with failover system
         const apiKeys = [
@@ -264,6 +270,7 @@
         }
 
         function displayResponse(text){
+            hideMap(); // Hide map if visible
             lastAnswer=text;
             aiResponse.innerHTML=text;
             aiResponse.classList.add('visible');
@@ -280,8 +287,27 @@
             isResponseVisible=false;
         }
 
+        function displayMap(){
+            hideResponse(); // Hide text response if visible
+            mapDisplay.classList.add('visible');
+            clock.classList.add('hidden');
+            date.classList.add('hidden');
+            isMapVisible=true;
+            console.log('🗺️ Map displayed');
+        }
+
+        function hideMap(){
+            mapDisplay.classList.remove('visible');
+            if(!isResponseVisible){
+                clock.classList.remove('hidden');
+                date.classList.remove('hidden');
+            }
+            isMapVisible=false;
+        }
+
         function redisplayLastAnswer(){
             if(lastAnswer){
+                hideMap(); // Hide map if visible
                 aiResponse.innerHTML=lastAnswer;
                 aiResponse.classList.add('visible');
                 clock.classList.add('hidden');
@@ -324,6 +350,12 @@
             if(lowerTranscript.includes("display answer")){
                 console.log("🎤 Voice Command: Display Answer");
                 redisplayLastAnswer();
+                return true;
+            }
+            
+            if(lowerTranscript.includes("display map")){
+                console.log("🎤 Voice Command: Display Map");
+                displayMap();
                 return true;
             }
             
@@ -439,6 +471,11 @@
             try{recognition.start()}catch(e){setTimeout(initSpeechRecognition,1000)}
         }
 
+        // Add click event listener to map to hide it
+        mapDisplay.addEventListener('click', function() {
+            hideMap();
+        });
+
         let touchStartTime=0;
         function startHold(e){
             e.preventDefault();
@@ -457,6 +494,8 @@
             if(holdDuration<500){
                 if(isResponseVisible){
                     hideResponse();
+                }else if(isMapVisible){
+                    hideMap();
                 }else{
                     toggleMic();
                 }
@@ -479,6 +518,7 @@
             console.log(`🔑 Starting with API Key Index: ${currentApiKeyIndex + 1}/${apiKeys.length}`);
             console.log(`🤖 Starting with Model: ${aiModels[currentModelIndex].displayName} (${aiModels[currentModelIndex].indicator})`);
             console.log(`🚀 Default model set to: gemini-1.5-flash (Model 4)`);
+            console.log(`🗺️ Map display feature enabled`);
         }
         init();
     </script>
