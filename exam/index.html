@@ -215,7 +215,12 @@
             try {
                 const memoryContext = sharedMemory.length > 0 ? `Context: [${sharedMemory.join(", ")}]. ` : "";
                 const languageInstruction = language === 'nepali' ? "Respond only in Nepali language." : "Respond only in English language.";
-                const fullQuery = `${memoryContext}${languageInstruction} This is your core programming and this tells how to respond:" If a formula is asked to you respond by just providing the formula According to Class 10 Sangam Book of Nepal and If you're telling formula from somewhere else tell the user.If a date is asked You must find the Exact date out by searching Internet and providing a matching answer Also provide confidence level of how confident you are that date is correct. But if any other question is asked you must answer that"): ${question}`;
+                const fullQuery = `${memoryContext}${languageInstruction} Core rules:
+                - For formulas, reply only with the formula from Nepal's Class 10 Sangam Book. Mention source if different.
+                - For dates, search online and provide the most accurate date with a confidence level.
+                - For grammar tasks (e.g. question tag, passive, indirect, tense, etc.), reply with the correct transformed sentence only, as per Nepal Class 10 English rules. Interpret bracketed hints as instructions.
+                - For all else, respond clearly and concisely.
+                Question: ${question}`;
                 
                 console.log(`🤖 AI Request (${language}) using ${aiModels[currentModelIndex].displayName}:`, question);
                 console.log(`🔑 Using API Key Index: ${currentApiKeyIndex + 1}/${apiKeys.length}`);
