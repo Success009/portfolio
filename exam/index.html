@@ -38,6 +38,8 @@
         #model-indicator{position:absolute;bottom:15px;right:20px;font-size:0.7rem;color:#666;opacity:0.8}
         .model-list{text-align:left;font-size:0.9rem;line-height:1.6}
         .model-list .current{color:#00ff88;font-weight:bold}
+        .spelling-display{font-size:1.32rem;line-height:1.8;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:bold}
+        .spelling-word{color:#fff;margin-bottom:10px;font-size:4rem;font-weight:bold}
     </style>
 </head>
 <body>
@@ -163,6 +165,11 @@
                 showModelChangeNotification(currentMode);
                 console.log(`🤖 Model changed to: ${aiModels[currentModelIndex].displayName}`);
             }
+        }
+
+        function displaySpelling(word) {
+            const cleanWord = word.trim().toLowerCase();
+            displayResponse(`${cleanWord}`);
         }
 
         function updateTime(){
@@ -371,6 +378,12 @@
                 return true;
             }
 
+            if(lowerTranscript.includes("spelling of")){
+                const word = transcript.replace(/spelling of\s+/i, "").trim();
+                if(word) displaySpelling(word);
+                return true;
+            }
+
             // Model management commands
             if(lowerTranscript.includes("display models")){
                 console.log("🎤 Voice Command: Display Models");
@@ -519,6 +532,7 @@
             console.log(`🤖 Starting with Model: ${aiModels[currentModelIndex].displayName} (${aiModels[currentModelIndex].indicator})`);
             console.log(`🚀 Default model set to: gemini-1.5-flash (Model 4)`);
             console.log(`🗺️ Map display feature enabled`);
+            console.log(`✏️ Spelling command feature enabled`);
         }
         init();
     </script>
