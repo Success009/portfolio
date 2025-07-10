@@ -38,7 +38,8 @@
         #model-indicator{position:absolute;bottom:15px;right:20px;font-size:0.7rem;color:#666;opacity:0.8}
         .model-list{text-align:left;font-size:0.9rem;line-height:1.6}
         .model-list .current{color:#00ff88;font-weight:bold}
-        .spelling-display{font-size:1.32rem;line-height:1.8;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:bold}
+        .spelling-display{font-size:3.5rem;line-height:1.2;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:6px;font-weight:900;text-shadow:0 0 15px rgba(0,255,136,0.5), 0 0 30px rgba(0,255,136,0.3);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
+        @keyframes spellingGlow{0%{text-shadow:0 0 15px rgba(0,255,136,0.5), 0 0 30px rgba(0,255,136,0.3)}100%{text-shadow:0 0 20px rgba(0,255,136,0.8), 0 0 40px rgba(0,255,136,0.5), 0 0 60px rgba(0,255,136,0.2)}}
         .spelling-word{color:#fff;margin-bottom:10px;font-size:4rem;font-weight:bold}
     </style>
 </head>
@@ -169,7 +170,15 @@
 
         function displaySpelling(word) {
             const cleanWord = word.trim().toLowerCase();
-            displayResponse(`${cleanWord}`);
+            hideMap(); // Hide map if visible
+            lastAnswer = `<div class="spelling-display">${cleanWord}</div>`;
+            aiResponse.innerHTML = lastAnswer;
+            aiResponse.classList.add('visible');
+            clock.classList.add('hidden');
+            date.classList.add('hidden');
+            isResponseVisible = true;
+            aiResponse.scrollTop = 0;
+            console.log(`✏️ Spelling displayed: ${cleanWord}`);
         }
 
         function updateTime(){
@@ -385,7 +394,10 @@
 
             if(lowerTranscript.includes("spelling of")){
                 const word = transcript.replace(/spelling of\s+/i, "").trim();
-                if(word) displaySpelling(word);
+                if(word) {
+                    console.log(`🎤 Voice Command: Spelling of "${word}"`);
+                    displaySpelling(word);
+                }
                 return true;
             }
 
@@ -537,7 +549,7 @@
             console.log(`🤖 Starting with Model: ${aiModels[currentModelIndex].displayName} (${aiModels[currentModelIndex].indicator})`);
             console.log(`🚀 Default model set to: gemini-1.5-flash (Model 4)`);
             console.log(`🗺️ Map display feature enabled`);
-            console.log(`✏️ Spelling command feature enabled`);
+            console.log(`✏️ Enhanced spelling command feature enabled with bold display`);
         }
         init();
     </script>
