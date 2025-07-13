@@ -15,6 +15,9 @@
         #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all 0.3s ease;z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display.visible{opacity:1;visibility:visible}
         #map-display img{width:100%;height:100%;object-fit:contain;border-radius:15px}
+        #honey-bee-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all 0.3s ease;z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
+        #honey-bee-display.visible{opacity:1;visibility:visible}
+        #honey-bee-display img{width:100%;height:100%;object-fit:contain;border-radius:15px}
         .status-dot{position:absolute;top:15px;left:20px;width:8px;height:8px;background:#888;border-radius:50%;transition:all 0.3s ease}
         .status-dot.active{background:#00ff88;animation:pulse 2s infinite}
         .status-dot.listening{background:#0066ff;animation:pulse 0.5s infinite}
@@ -61,11 +64,14 @@
         <div id="map-display">
             <img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Nepal Political Map">
         </div>
+        <div id="honey-bee-display">
+            <img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/Life-Cycle-of-a-Honey-Bee.jpg" alt="Life Cycle of a Honey Bee">
+        </div>
     </div>
 
     <script>
-        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,isMapVisible=false,batteryLevel=85,micActive=false,isProcessing=false,lastAnswer='',currentModelIndex=3;
-        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator');
+        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,isMapVisible=false,isHoneyBeeVisible=false,batteryLevel=85,micActive=false,isProcessing=false,lastAnswer='',currentModelIndex=3;
+        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),honeyBeeDisplay=document.getElementById('honey-bee-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator');
 
         // API Keys array with failover system
         const apiKeys = [
@@ -171,6 +177,7 @@
         function displaySpelling(word) {
             const cleanWord = word.trim().toLowerCase();
             hideMap(); // Hide map if visible
+            hideHoneyBee(); // Hide honey bee if visible
             lastAnswer = `<div class="spelling-display">${cleanWord}</div>`;
             aiResponse.innerHTML = lastAnswer;
             aiResponse.classList.add('visible');
@@ -293,6 +300,7 @@
 
         function displayResponse(text){
             hideMap(); // Hide map if visible
+            hideHoneyBee(); // Hide honey bee if visible
             lastAnswer=text;
             aiResponse.innerHTML=text;
             aiResponse.classList.add('visible');
@@ -311,6 +319,7 @@
 
         function displayMap(){
             hideResponse(); // Hide text response if visible
+            hideHoneyBee(); // Hide honey bee if visible
             mapDisplay.classList.add('visible');
             clock.classList.add('hidden');
             date.classList.add('hidden');
@@ -320,16 +329,36 @@
 
         function hideMap(){
             mapDisplay.classList.remove('visible');
-            if(!isResponseVisible){
+            if(!isResponseVisible && !isHoneyBeeVisible){
                 clock.classList.remove('hidden');
                 date.classList.remove('hidden');
             }
             isMapVisible=false;
         }
 
+        function displayHoneyBee(){
+            hideResponse(); // Hide text response if visible
+            hideMap(); // Hide map if visible
+            honeyBeeDisplay.classList.add('visible');
+            clock.classList.add('hidden');
+            date.classList.add('hidden');
+            isHoneyBeeVisible=true;
+            console.log('🐝 Honey bee life cycle displayed');
+        }
+
+        function hideHoneyBee(){
+            honeyBeeDisplay.classList.remove('visible');
+            if(!isResponseVisible && !isMapVisible){
+                clock.classList.remove('hidden');
+                date.classList.remove('hidden');
+            }
+            isHoneyBeeVisible=false;
+        }
+
         function redisplayLastAnswer(){
             if(lastAnswer){
                 hideMap(); // Hide map if visible
+                hideHoneyBee(); // Hide honey bee if visible
                 aiResponse.innerHTML=lastAnswer;
                 aiResponse.classList.add('visible');
                 clock.classList.add('hidden');
@@ -378,6 +407,12 @@
             if(lowerTranscript.includes("display map")){
                 console.log("🎤 Voice Command: Display Map");
                 displayMap();
+                return true;
+            }
+            
+            if(lowerTranscript.includes("display honey bee")){
+                console.log("🎤 Voice Command: Display Honey Bee");
+                displayHoneyBee();
                 return true;
             }
             
@@ -502,9 +537,13 @@
             try{recognition.start()}catch(e){setTimeout(initSpeechRecognition,1000)}
         }
 
-        // Add click event listener to map to hide it
+        // Add click event listeners to hide displays
         mapDisplay.addEventListener('click', function() {
             hideMap();
+        });
+
+        honeyBeeDisplay.addEventListener('click', function() {
+            hideHoneyBee();
         });
 
         let touchStartTime=0;
@@ -527,6 +566,8 @@
                     hideResponse();
                 }else if(isMapVisible){
                     hideMap();
+                }else if(isHoneyBeeVisible){
+                    hideHoneyBee();
                 }else{
                     toggleMic();
                 }
@@ -550,6 +591,7 @@
             console.log(`🤖 Starting with Model: ${aiModels[currentModelIndex].displayName} (${aiModels[currentModelIndex].indicator})`);
             console.log(`🚀 Default model set to: gemini-1.5-flash (Model 4)`);
             console.log(`🗺️ Map display feature enabled`);
+            console.log(`🐝 Honey bee life cycle display feature enabled`);
             console.log(`✏️ Enhanced spelling command feature enabled with bold display`);
         }
         init();
