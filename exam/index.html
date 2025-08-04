@@ -444,13 +444,25 @@
                 return true;
             }
 
-            const selectModelMatch = lowerTranscript.match(/select model (\d+)/);
-            if(selectModelMatch){
-                const modelNumber = parseInt(selectModelMatch[1]);
-                console.log(`🎤 Voice Command: Select Model ${modelNumber}`);
-                selectModel(modelNumber);
-                return true;
+            // --- MODIFICATION START ---
+            // Updated logic to select model by ordinal word or number
+            const selectModelMatch = lowerTranscript.match(/select model (first|second|third|fourth|fifth|\d+)/);
+            if (selectModelMatch) {
+                const identifier = selectModelMatch[1]; // This will be "first", "second", "3", etc.
+                const ordinals = { 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5 };
+                
+                // Convert the identified word/number to a numeric model number
+                let modelNumber = ordinals[identifier] || parseInt(identifier);
+
+                // Ensure we got a valid number before proceeding
+                if (!isNaN(modelNumber)) {
+                    console.log(`🎤 Voice Command: Select Model ${modelNumber} (from "${identifier}")`);
+                    selectModel(modelNumber);
+                    return true;
+                }
             }
+            // --- MODIFICATION END ---
+
 
             // Memory commands (English only)
             if(lowerTranscript.includes("remember ")){
