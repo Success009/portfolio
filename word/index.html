@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Imposter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .main-screen {
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .instruction {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .tap-counter {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .status {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            min-height: 40px;
+        }
+
+        .word-display {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .imposter-display {
+            background: rgba(220,53,69,0.9);
+            color: white;
+        }
+
+        .player-count {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .config-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            color: #333;
+            display: none;
+            z-index: 1000;
+            max-width: 90vw;
+            width: 400px;
+        }
+
+        .config-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .config-item {
+            margin-bottom: 15px;
+        }
+
+        .config-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .close-config {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .loading {
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .word-display {
+                font-size: 1.8rem;
+                padding: 30px 20px;
+            }
+            
+            .tap-counter {
+                font-size: 3rem;
+            }
+        }
+
+        .heartbeat {
+            animation: heartbeat 2s infinite;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="gameContainer">
+        <div class="main-screen" id="mainScreen">
+            <h1 class="title">Word Imposter</h1>
+            <p class="instruction">Tap 5 times quickly to start!</p>
+            <div class="tap-counter" id="tapCounter">0</div>
+            <div class="status" id="status"></div>
+            <div class="player-count" id="playerCount"></div>
+        </div>
+
+        <div class="config-panel" id="configPanel">
+            <h3 class="config-title">Game Settings</h3>
+            
+            <div class="config-item">
+                <label class="config-label">Word Categories:</label>
+                <select class="config-input" id="wordCategory">
+                    <option value="all">All Categories</option>
+                    <option value="animals">Animals Only</option>
+                    <option value="countries">Countries Only</option>
+                </select>
+            </div>
+
+            <div class="config-item">
+                <label class="config-label">Word Difficulty:</label>
+                <select class="config-input" id="wordDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <div class="config-item">
+                <label class="config-label">Number of Imposters:</label>
+                <select class="config-input" id="imposterCount">
+                    <option value="1">1 Imposter</option>
+                    <option value="2">2 Imposters</option>
+                    <option value="3">3 Imposters</option>
+                </select>
+            </div>
+
+            <button class="close-config" onclick="closeConfig()">Close Settings</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, get, push } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+            authDomain: "community-canvas-255fa.firebaseapp.com",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+            projectId: "community-canvas-255fa",
+            storageBucket: "community-canvas-255fa.appspot.com",
+            messagingSenderId: "729445267995",
+            appId: "1:729445267995:web:05da6756d66c58b9ccd6be"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        
+        // Generate unique device ID
+        const deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+        
+        // Game state
+        let tapCount = 0;
+        let isGameActive = false;
+        let longPressTimer = null;
+        let heartbeatInterval = null;
+        let gameConfig = {
+            category: 'all',
+            difficulty: 'easy',
+            imposterCount: 1
+        };
+
+        // DOM elements
+        const tapCounter = document.getElementById('tapCounter');
+        const status = document.getElementById('status');
+        const playerCount = document.getElementById('playerCount');
+        const mainScreen = document.getElementById('mainScreen');
+        const configPanel = document.getElementById('configPanel');
+        const gameContainer = document.getElementById('gameContainer');
+
+        // Word lists
+        const wordLists = {
+            animals: {
+                easy: ['cat', 'dog', 'bird', 'fish', 'cow', 'pig', 'duck', 'bear', 'lion', 'tiger'],
+                medium: ['elephant', 'giraffe', 'penguin', 'dolphin', 'monkey', 'rabbit', 'turtle', 'eagle', 'whale', 'shark'],
+                hard: ['rhinoceros', 'hippopotamus', 'chimpanzee', 'crocodile', 'kangaroo', 'flamingo', 'octopus', 'chameleon', 'porcupine', 'armadillo']
+            },
+            countries: {
+                easy: ['USA', 'China', 'India', 'Japan', 'Brazil', 'France', 'Italy', 'Spain', 'Canada', 'Mexico'],
+                medium: ['Germany', 'Australia', 'Russia', 'Argentina', 'Thailand', 'Egypt', 'Turkey', 'Poland', 'Sweden', 'Greece'],
+                hard: ['Switzerland', 'Netherlands', 'Bangladesh', 'Philippines', 'Kazakhstan', 'Madagascar', 'Luxembourg', 'Montenegro', 'Azerbaijan', 'Lithuania']
+            }
+        };
+
+        // Initialize heartbeat
+        function startHeartbeat() {
+            const interval = Math.random() * 4000 + 6000; // 6-10 seconds
+            heartbeatInterval = setInterval(() => {
+                const timestamp = Date.now();
+                set(ref(database, `players/${deviceId}`), {
+                    timestamp: timestamp,
+                    active: true
+                });
+            }, interval);
+
+            // Initial heartbeat
+            set(ref(database, `players/${deviceId}`), {
+                timestamp: Date.now(),
+                active: true
+            });
+        }
+
+        // Get word from AI
+        async function getWordFromAI() {
+            const categories = gameConfig.category === 'all' ? 'animals or countries' : gameConfig.category;
+            const prompt = `Generate a single ${gameConfig.difficulty} ${categories} word suitable for a guessing game. Only respond with the word, nothing else.`;
+            
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAioo23YXTQAxFZ9J5OGlzd3WrjPYW9IEY`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const word = data.candidates[0].content.parts[0].text.trim().toLowerCase();
+                return word;
+            } catch (error) {
+                console.error('AI API error:', error);
+                // Fallback to local word list
+                const category = gameConfig.category === 'all' ? 
+                    (Math.random() < 0.5 ? 'animals' : 'countries') : 
+                    gameConfig.category;
+                const words = wordLists[category][gameConfig.difficulty];
+                return words[Math.floor(Math.random() * words.length)];
+            }
+        }
+
+        // Get active players
+        async function getActivePlayers() {
+            const snapshot = await get(ref(database, 'players'));
+            const players = snapshot.val() || {};
+            const currentTime = Date.now();
+            const activePlayers = [];
+
+            for (const [playerId, playerData] of Object.entries(players)) {
+                if (currentTime - playerData.timestamp < 15000) { // 15 seconds
+                    activePlayers.push(playerId);
+                }
+            }
+
+            return activePlayers;
+        }
+
+        // Start game
+        async function startGame() {
+            try {
+                status.textContent = 'Getting word from AI...';
+                mainScreen.classList.add('loading');
+
+                const word = await getWordFromAI();
+                const activePlayers = await getActivePlayers();
+                
+                if (activePlayers.length < 2) {
+                    status.textContent = 'Need at least 2 players to start!';
+                    mainScreen.classList.remove('loading');
+                    setTimeout(() => {
+                        status.textContent = '';
+                        tapCount = 0;
+                        tapCounter.textContent = '0';
+                    }, 3000);
+                    return;
+                }
+
+                // Select imposters
+                const shuffledPlayers = [...activePlayers].sort(() => Math.random() - 0.5);
+                const numImposters = Math.min(parseInt(gameConfig.imposterCount), Math.floor(activePlayers.length / 2));
+                const imposters = shuffledPlayers.slice(0, numImposters);
+
+                // Store game data
+                const gameData = {
+                    word: word,
+                    players: activePlayers,
+                    imposters: imposters,
+                    timestamp: Date.now()
+                };
+
+                await set(ref(database, 'currentGame'), gameData);
+                
+                // Display result for this player
+                displayGameResult(word, imposters.includes(deviceId));
+                
+            } catch (error) {
+                console.error('Game start error:', error);
+                status.textContent = 'Error starting game. Try again!';
+                mainScreen.classList.remove('loading');
+                setTimeout(() => {
+                    status.textContent = '';
+                    tapCount = 0;
+                    tapCounter.textContent = '0';
+                }, 3000);
+            }
+        }
+
+        // Display game result
+        function displayGameResult(word, isImposter) {
+            mainScreen.innerHTML = '';
+            
+            const wordDisplay = document.createElement('div');
+            wordDisplay.className = `word-display ${isImposter ? 'imposter-display' : ''}`;
+            
+            if (isImposter) {
+                wordDisplay.innerHTML = `
+                    <div>
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🕵️</div>
+                        <div>YOU ARE THE</div>
+                        <div style="font-size: 3.5rem; margin-top: 10px;">IMPOSTER</div>
+                        <div style="font-size: 1.2rem; margin-top: 15px; opacity: 0.8;">Blend in without knowing the word!</div>
+                    </div>
+                `;
+            } else {
+                wordDisplay.innerHTML = `
+                    <div>
+                        <div style="font-size: 1.5rem; margin-bottom: 15px;">Your word is:</div>
+                        <div style="font-size: 4rem; text-transform: uppercase;">${word}</div>
+                        <div style="font-size: 1.2rem; margin-top: 15px; opacity: 0.8;">Find the imposter!</div>
+                    </div>
+                `;
+            }
+            
+            mainScreen.appendChild(wordDisplay);
+            
+            // Reset button
+            const resetButton = document.createElement('button');
+            resetButton.textContent = 'New Game';
+            resetButton.style.cssText = `
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 2px solid white;
+                padding: 15px 30px;
+                border-radius: 25px;
+                font-size: 1.2rem;
+                cursor: pointer;
+                margin-top: 30px;
+                transition: all 0.3s ease;
+            `;
+            resetButton.onmouseover = () => {
+                resetButton.style.background = 'rgba(255,255,255,0.3)';
+            };
+            resetButton.onmouseout = () => {
+                resetButton.style.background = 'rgba(255,255,255,0.2)';
+            };
+            resetButton.onclick = () => location.reload();
+            
+            mainScreen.appendChild(resetButton);
+            isGameActive = false;
+        }
+
+        // Listen for game updates
+        onValue(ref(database, 'currentGame'), (snapshot) => {
+            const gameData = snapshot.val();
+            if (gameData && !isGameActive && Date.now() - gameData.timestamp < 30000) {
+                if (gameData.players.includes(deviceId)) {
+                    displayGameResult(gameData.word, gameData.imposters.includes(deviceId));
+                }
+            }
+        });
+
+        // Update player count display
+        function updatePlayerCount() {
+            onValue(ref(database, 'players'), (snapshot) => {
+                const players = snapshot.val() || {};
+                const currentTime = Date.now();
+                let activeCount = 0;
+
+                for (const playerData of Object.values(players)) {
+                    if (currentTime - playerData.timestamp < 15000) {
+                        activeCount++;
+                    }
+                }
+
+                playerCount.textContent = `Active players: ${activeCount}`;
+            });
+        }
+
+        // Touch/click handlers
+        gameContainer.addEventListener('touchstart', handleInteraction, { passive: false });
+        gameContainer.addEventListener('mousedown', handleInteraction);
+        gameContainer.addEventListener('touchend', handleInteractionEnd, { passive: false });
+        gameContainer.addEventListener('mouseup', handleInteractionEnd);
+
+        function handleInteraction(e) {
+            e.preventDefault();
+            
+            // Start long press timer for config
+            longPressTimer = setTimeout(() => {
+                if (!isGameActive) {
+                    showConfig();
+                }
+            }, 6000);
+
+            // Handle tap counting
+            if (!isGameActive && tapCount < 5) {
+                tapCount++;
+                tapCounter.textContent = tapCount;
+                tapCounter.classList.add('heartbeat');
+                
+                setTimeout(() => {
+                    tapCounter.classList.remove('heartbeat');
+                }, 500);
+
+                if (tapCount === 5) {
+                    isGameActive = true;
+                    status.textContent = 'Starting game...';
+                    setTimeout(startGame, 500);
+                }
+            }
+        }
+
+        function handleInteractionEnd(e) {
+            e.preventDefault();
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+
+        function showConfig() {
+            configPanel.style.display = 'block';
+            
+            // Load current settings
+            document.getElementById('wordCategory').value = gameConfig.category;
+            document.getElementById('wordDifficulty').value = gameConfig.difficulty;
+            document.getElementById('imposterCount').value = gameConfig.imposterCount;
+        }
+
+        window.closeConfig = function() {
+            // Save settings
+            gameConfig.category = document.getElementById('wordCategory').value;
+            gameConfig.difficulty = document.getElementById('wordDifficulty').value;
+            gameConfig.imposterCount = document.getElementById('imposterCount').value;
+            
+            configPanel.style.display = 'none';
+        };
+
+        // Initialize
+        startHeartbeat();
+        updatePlayerCount();
+        
+        // Reset tap counter after 10 seconds of inactivity
+        let tapResetTimer;
+        function resetTapCounter() {
+            clearTimeout(tapResetTimer);
+            tapResetTimer = setTimeout(() => {
+                if (!isGameActive && tapCount > 0 && tapCount < 5) {
+                    tapCount = 0;
+                    tapCounter.textContent = '0';
+                }
+            }, 10000);
+        }
+
+        // Reset timer on each tap
+        gameContainer.addEventListener('click', resetTapCounter);
+        gameContainer.addEventListener('touchstart', resetTapCounter);
+    </script>
+</body>
+</html>
