@@ -12,81 +12,155 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 200vh;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .game-container {
             width: 100vw;
-            height: 100vh;
+            min-height: 200vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             position: relative;
+            padding: 20px 0;
+        }
+
+        .spacer-top {
+            height: 50vh;
         }
 
         .main-screen {
             text-align: center;
-            color: white;
             padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .title {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .instruction {
-            font-size: 1.2rem;
+            font-size: 2.5rem;
             margin-bottom: 30px;
-            opacity: 0.9;
+            background: linear-gradient(45deg, #8B5CF6, #06B6D4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
         }
 
-        .tap-counter {
-            font-size: 4rem;
-            font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        .waiting-animation {
+            width: 120px;
+            height: 120px;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .orbit {
+            position: absolute;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            animation: rotate 4s linear infinite;
+        }
+
+        .orbit:nth-child(1) {
+            width: 40px;
+            height: 40px;
+            top: 40px;
+            left: 40px;
+        }
+
+        .orbit:nth-child(2) {
+            width: 80px;
+            height: 80px;
+            top: 20px;
+            left: 20px;
+            animation-duration: 6s;
+            animation-direction: reverse;
+        }
+
+        .orbit:nth-child(3) {
+            width: 120px;
+            height: 120px;
+            top: 0;
+            left: 0;
+            animation-duration: 8s;
+        }
+
+        .orbit::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #8B5CF6;
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #8B5CF6;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .status {
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             margin: 20px 0;
-            min-height: 40px;
+            min-height: 30px;
+            opacity: 0.9;
+            font-weight: 500;
         }
 
         .word-display {
-            background: rgba(255,255,255,0.9);
-            color: #333;
-            padding: 40px;
-            border-radius: 15px;
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            min-height: 150px;
+            background: rgba(15, 15, 15, 0.95);
+            border: 2px solid #8B5CF6;
+            color: #fff;
+            padding: 50px 30px;
+            border-radius: 20px;
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 30px 0;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+            min-height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
+            word-break: break-word;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
         .imposter-display {
-            background: rgba(220,53,69,0.9);
-            color: white;
+            background: rgba(20, 5, 15, 0.95);
+            border: 2px solid #EC4899;
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.4);
+        }
+
+        .word-display.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            background: rgba(5, 5, 5, 0.8);
+            border-color: #333;
+            box-shadow: none;
         }
 
         .player-count {
-            font-size: 1rem;
-            opacity: 0.8;
-            margin-top: 10px;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin: 10px 0;
+            color: #06B6D4;
         }
 
         .config-panel {
@@ -94,55 +168,162 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95);
+            background: rgba(10, 10, 10, 0.98);
+            border: 2px solid #8B5CF6;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            color: #333;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.6);
+            color: #fff;
             display: none;
             z-index: 1000;
             max-width: 90vw;
             width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
         }
 
         .config-title {
             font-size: 1.5rem;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: center;
+            background: linear-gradient(45deg, #8B5CF6, #06B6D4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
         }
 
         .config-item {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .config-label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #8B5CF6;
+            font-size: 0.9rem;
         }
 
-        .config-input {
+        .config-input, .config-select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 12px;
+            border: 2px solid #333;
+            border-radius: 12px;
             font-size: 1rem;
+            background: rgba(20, 20, 20, 0.8);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .config-input:focus, .config-select:focus {
+            outline: none;
+            border-color: #8B5CF6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .config-select option {
+            background: #1a1a1a;
+            color: #fff;
         }
 
         .close-config {
-            background: #007bff;
+            background: linear-gradient(45deg, #8B5CF6, #06B6D4);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 15px 25px;
+            border-radius: 12px;
             cursor: pointer;
             width: 100%;
             font-size: 1rem;
-            margin-top: 10px;
+            margin-top: 20px;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
 
-        .loading {
-            opacity: 0.7;
+        .close-config:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .spacer-bottom {
+            height: 50vh;
+        }
+
+        .loading-dots {
+            display: inline-block;
+            color: #8B5CF6;
+        }
+
+        .loading-dots:after {
+            content: '';
+            animation: dots 2s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .config-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .config-row .config-item {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #8B5CF6;
+        }
+
+        .range-input {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #8B5CF6;
+            cursor: pointer;
+        }
+
+        .range-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #8B5CF6;
+            cursor: pointer;
+            border: none;
+        }
+
+        .range-display {
+            text-align: center;
+            margin-top: 5px;
+            color: #06B6D4;
+            font-weight: 500;
         }
 
         @media (max-width: 768px) {
@@ -151,73 +332,167 @@
             }
             
             .word-display {
-                font-size: 1.8rem;
-                padding: 30px 20px;
+                font-size: 2.2rem;
+                padding: 40px 20px;
+                min-height: 180px;
             }
             
-            .tap-counter {
-                font-size: 3rem;
+            .config-panel {
+                width: 95vw;
+                padding: 20px;
             }
         }
 
-        .heartbeat {
-            animation: heartbeat 2s infinite;
-        }
-
-        @keyframes heartbeat {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        @media (max-width: 400px) {
+            .word-display {
+                font-size: 1.8rem;
+                padding: 30px 15px;
+                min-height: 160px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="game-container" id="gameContainer">
+        <div class="spacer-top"></div>
+        
         <div class="main-screen" id="mainScreen">
             <h1 class="title">Word Imposter</h1>
-            <p class="instruction">Tap 5 times quickly to start!</p>
-            <div class="tap-counter" id="tapCounter">0</div>
-            <div class="status" id="status"></div>
+            <div class="waiting-animation" id="waitingAnimation">
+                <div class="orbit"></div>
+                <div class="orbit"></div>
+                <div class="orbit"></div>
+            </div>
+            <div class="status" id="status">Tap to start game</div>
             <div class="player-count" id="playerCount"></div>
         </div>
 
         <div class="config-panel" id="configPanel">
-            <h3 class="config-title">Game Settings</h3>
+            <h3 class="config-title">Game Configuration</h3>
             
             <div class="config-item">
-                <label class="config-label">Word Categories:</label>
-                <select class="config-input" id="wordCategory">
-                    <option value="all">All Categories</option>
-                    <option value="animals">Animals Only</option>
-                    <option value="countries">Countries Only</option>
-                </select>
-            </div>
-
-            <div class="config-item">
-                <label class="config-label">Word Difficulty:</label>
-                <select class="config-input" id="wordDifficulty">
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-            </div>
-
-            <div class="config-item">
                 <label class="config-label">Number of Imposters:</label>
-                <select class="config-input" id="imposterCount">
-                    <option value="1">1 Imposter</option>
-                    <option value="2">2 Imposters</option>
-                    <option value="3">3 Imposters</option>
+                <input type="range" class="range-input" id="imposterCount" min="0" max="10" value="1">
+                <div class="range-display" id="imposterCountDisplay">1</div>
+            </div>
+
+            <div class="config-row">
+                <div class="config-item">
+                    <label class="config-label">Word Categories:</label>
+                    <select class="config-select" id="wordCategory">
+                        <option value="mixed">Mixed Categories</option>
+                        <option value="animals">Animals Only</option>
+                        <option value="countries">Countries Only</option>
+                        <option value="objects">Objects Only</option>
+                        <option value="food">Food Only</option>
+                        <option value="professions">Professions Only</option>
+                        <option value="actions">Actions/Verbs</option>
+                        <option value="emotions">Emotions</option>
+                        <option value="places">Places</option>
+                        <option value="technology">Technology</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label class="config-label">Difficulty:</label>
+                    <select class="config-select" id="wordDifficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                        <option value="expert">Expert</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <label class="config-label">Word Length Preference:</label>
+                <select class="config-select" id="wordLength">
+                    <option value="any">Any Length</option>
+                    <option value="short">Short Words (3-6 letters)</option>
+                    <option value="medium">Medium Words (5-8 letters)</option>
+                    <option value="long">Long Words (7+ letters)</option>
                 </select>
             </div>
 
-            <button class="close-config" onclick="closeConfig()">Close Settings</button>
+            <div class="config-item">
+                <label class="config-label">Game Settings:</label>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="allowProperNouns">
+                    <label>Allow Proper Nouns</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="allowPlurals">
+                    <label>Allow Plural Words</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="allowCompounds">
+                    <label>Allow Compound Words</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="allowAbbreviations">
+                    <label>Allow Abbreviations</label>
+                </div>
+            </div>
+
+            <div class="config-row">
+                <div class="config-item">
+                    <label class="config-label">Min Players:</label>
+                    <input type="number" class="config-input" id="minPlayers" min="2" max="20" value="3">
+                </div>
+                <div class="config-item">
+                    <label class="config-label">Max Players:</label>
+                    <input type="number" class="config-input" id="maxPlayers" min="2" max="50" value="15">
+                </div>
+            </div>
+
+            <div class="config-item">
+                <label class="config-label">Round Duration (minutes):</label>
+                <input type="range" class="range-input" id="roundDuration" min="1" max="30" value="8">
+                <div class="range-display" id="roundDurationDisplay">8 minutes</div>
+            </div>
+
+            <div class="config-item">
+                <label class="config-label">Language/Region:</label>
+                <select class="config-select" id="wordRegion">
+                    <option value="global">Global/International</option>
+                    <option value="american">American English</option>
+                    <option value="british">British English</option>
+                    <option value="regional">Include Regional Terms</option>
+                    <option value="academic">Academic/Scientific</option>
+                    <option value="casual">Casual/Everyday</option>
+                </select>
+            </div>
+
+            <div class="config-item">
+                <label class="config-label">Theme Preferences:</label>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="modernThemes">
+                    <label>Modern/Contemporary</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="vintageThemes">
+                    <label>Classic/Vintage</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="fantasyThemes">
+                    <label>Fantasy/Fictional</label>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <label class="config-label">Word Complexity:</label>
+                <input type="range" class="range-input" id="wordComplexity" min="1" max="5" value="3">
+                <div class="range-display" id="wordComplexityDisplay">Medium Complexity</div>
+            </div>
+
+            <button class="close-config" onclick="saveConfig()">Save Configuration</button>
         </div>
+
+        <div class="spacer-bottom"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, get, push } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
@@ -233,85 +508,295 @@
         const database = getDatabase(app);
         
         // Generate unique device ID
-        const deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+        const deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
         
         // Game state
-        let tapCount = 0;
-        let isGameActive = false;
+        let isProcessing = false;
         let longPressTimer = null;
         let heartbeatInterval = null;
-        let gameConfig = {
-            category: 'all',
-            difficulty: 'easy',
-            imposterCount: 1
-        };
+        let cleanupInterval = null;
+        let isWordVisible = true;
+        let currentGameData = null;
 
         // DOM elements
-        const tapCounter = document.getElementById('tapCounter');
         const status = document.getElementById('status');
         const playerCount = document.getElementById('playerCount');
         const mainScreen = document.getElementById('mainScreen');
         const configPanel = document.getElementById('configPanel');
         const gameContainer = document.getElementById('gameContainer');
+        const waitingAnimation = document.getElementById('waitingAnimation');
 
-        // Word lists
-        const wordLists = {
-            animals: {
-                easy: ['cat', 'dog', 'bird', 'fish', 'cow', 'pig', 'duck', 'bear', 'lion', 'tiger'],
-                medium: ['elephant', 'giraffe', 'penguin', 'dolphin', 'monkey', 'rabbit', 'turtle', 'eagle', 'whale', 'shark'],
-                hard: ['rhinoceros', 'hippopotamus', 'chimpanzee', 'crocodile', 'kangaroo', 'flamingo', 'octopus', 'chameleon', 'porcupine', 'armadillo']
-            },
-            countries: {
-                easy: ['USA', 'China', 'India', 'Japan', 'Brazil', 'France', 'Italy', 'Spain', 'Canada', 'Mexico'],
-                medium: ['Germany', 'Australia', 'Russia', 'Argentina', 'Thailand', 'Egypt', 'Turkey', 'Poland', 'Sweden', 'Greece'],
-                hard: ['Switzerland', 'Netherlands', 'Bangladesh', 'Philippines', 'Kazakhstan', 'Madagascar', 'Luxembourg', 'Montenegro', 'Azerbaijan', 'Lithuania']
+        // Audio context for ding sound
+        let audioContext;
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
-        };
+        }
 
-        // Initialize heartbeat
-        function startHeartbeat() {
-            const interval = Math.random() * 4000 + 6000; // 6-10 seconds
-            heartbeatInterval = setInterval(() => {
-                const timestamp = Date.now();
-                set(ref(database, `players/${deviceId}`), {
-                    timestamp: timestamp,
-                    active: true
-                });
-            }, interval);
+        function playDing() {
+            try {
+                initAudio();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(1320, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(1760, audioContext.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (error) {
+                console.log('Audio not available');
+            }
+        }
 
-            // Initial heartbeat
-            set(ref(database, `players/${deviceId}`), {
-                timestamp: Date.now(),
-                active: true
+        // Load and update configuration
+        async function loadConfig() {
+            try {
+                const configSnapshot = await get(ref(database, 'gameConfig'));
+                const config = configSnapshot.val();
+                if (config) {
+                    updateUIFromConfig(config);
+                }
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
+
+        function updateUIFromConfig(config) {
+            document.getElementById('imposterCount').value = config.imposterCount || 1;
+            document.getElementById('wordCategory').value = config.wordCategory || 'mixed';
+            document.getElementById('wordDifficulty').value = config.wordDifficulty || 'medium';
+            document.getElementById('wordLength').value = config.wordLength || 'any';
+            document.getElementById('allowProperNouns').checked = config.allowProperNouns || false;
+            document.getElementById('allowPlurals').checked = config.allowPlurals || false;
+            document.getElementById('allowCompounds').checked = config.allowCompounds || false;
+            document.getElementById('allowAbbreviations').checked = config.allowAbbreviations || false;
+            document.getElementById('minPlayers').value = config.minPlayers || 3;
+            document.getElementById('maxPlayers').value = config.maxPlayers || 15;
+            document.getElementById('roundDuration').value = config.roundDuration || 8;
+            document.getElementById('wordRegion').value = config.wordRegion || 'global';
+            document.getElementById('modernThemes').checked = config.modernThemes || false;
+            document.getElementById('vintageThemes').checked = config.vintageThemes || false;
+            document.getElementById('fantasyThemes').checked = config.fantasyThemes || false;
+            document.getElementById('wordComplexity').value = config.wordComplexity || 3;
+            
+            updateRangeDisplays();
+        }
+
+        // Listen for config changes from other devices
+        onValue(ref(database, 'gameConfig'), (snapshot) => {
+            const config = snapshot.val();
+            if (config) {
+                updateUIFromConfig(config);
+                updateImposterRange();
+            }
+        });
+
+        function updateRangeDisplays() {
+            const imposterCount = document.getElementById('imposterCount');
+            const roundDuration = document.getElementById('roundDuration');
+            const wordComplexity = document.getElementById('wordComplexity');
+            
+            document.getElementById('imposterCountDisplay').textContent = imposterCount.value;
+            document.getElementById('roundDurationDisplay').textContent = roundDuration.value + ' minutes';
+            
+            const complexityLabels = ['Very Simple', 'Simple', 'Medium', 'Complex', 'Very Complex'];
+            document.getElementById('wordComplexityDisplay').textContent = complexityLabels[wordComplexity.value - 1];
+        }
+
+        function updateImposterRange() {
+            get(ref(database, 'players')).then(snapshot => {
+                const players = snapshot.val() || {};
+                const currentTime = Date.now();
+                let activeCount = 0;
+
+                for (const playerData of Object.values(players)) {
+                    if (currentTime - playerData.timestamp < 15000) { // 15 seconds
+                        activeCount++;
+                    }
+                }
+
+                const maxImposters = Math.max(0, activeCount - 1);
+                const imposterInput = document.getElementById('imposterCount');
+                imposterInput.max = maxImposters;
+                
+                if (parseInt(imposterInput.value) > maxImposters) {
+                    imposterInput.value = maxImposters;
+                    updateRangeDisplays();
+                }
             });
         }
 
-        // Get word from AI
-        async function getWordFromAI() {
-            const categories = gameConfig.category === 'all' ? 'animals or countries' : gameConfig.category;
-            const prompt = `Generate a single ${gameConfig.difficulty} ${categories} word suitable for a guessing game. Only respond with the word, nothing else.`;
-            
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAioo23YXTQAxFZ9J5OGlzd3WrjPYW9IEY`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
+        // Event listeners for range inputs
+        document.getElementById('imposterCount').addEventListener('input', updateRangeDisplays);
+        document.getElementById('roundDuration').addEventListener('input', updateRangeDisplays);
+        document.getElementById('wordComplexity').addEventListener('input', updateRangeDisplays);
 
-                const data = await response.json();
-                const word = data.candidates[0].content.parts[0].text.trim().toLowerCase();
-                return word;
-            } catch (error) {
-                console.error('AI API error:', error);
-                // Fallback to local word list
-                const category = gameConfig.category === 'all' ? 
-                    (Math.random() < 0.5 ? 'animals' : 'countries') : 
-                    gameConfig.category;
-                const words = wordLists[category][gameConfig.difficulty];
-                return words[Math.floor(Math.random() * words.length)];
+        // Configuration functions
+        function showConfig() {
+            configPanel.style.display = 'block';
+            updateImposterRange();
+        }
+
+        window.saveConfig = function() {
+            const config = {
+                imposterCount: parseInt(document.getElementById('imposterCount').value),
+                wordCategory: document.getElementById('wordCategory').value,
+                wordDifficulty: document.getElementById('wordDifficulty').value,
+                wordLength: document.getElementById('wordLength').value,
+                allowProperNouns: document.getElementById('allowProperNouns').checked,
+                allowPlurals: document.getElementById('allowPlurals').checked,
+                allowCompounds: document.getElementById('allowCompounds').checked,
+                allowAbbreviations: document.getElementById('allowAbbreviations').checked,
+                minPlayers: parseInt(document.getElementById('minPlayers').value),
+                maxPlayers: parseInt(document.getElementById('maxPlayers').value),
+                roundDuration: parseInt(document.getElementById('roundDuration').value),
+                wordRegion: document.getElementById('wordRegion').value,
+                modernThemes: document.getElementById('modernThemes').checked,
+                vintageThemes: document.getElementById('vintageThemes').checked,
+                fantasyThemes: document.getElementById('fantasyThemes').checked,
+                wordComplexity: parseInt(document.getElementById('wordComplexity').value),
+                updatedBy: deviceId,
+                timestamp: Date.now()
+            };
+
+            set(ref(database, 'gameConfig'), config);
+            configPanel.style.display = 'none';
+        };
+
+        // Initialize heartbeat system
+        function startHeartbeat() {
+            const sendHeartbeat = () => {
+                set(ref(database, `players/${deviceId}`), {
+                    timestamp: Date.now(),
+                    active: true
+                }).catch(error => console.log('Heartbeat failed:', error));
+            };
+
+            sendHeartbeat();
+
+            const setRandomInterval = () => {
+                const interval = Math.random() * 4000 + 6000; // 6-10 seconds
+                heartbeatInterval = setTimeout(() => {
+                    sendHeartbeat();
+                    setRandomInterval();
+                }, interval);
+            };
+
+            setRandomInterval();
+        }
+
+        // Cleanup inactive players
+        function startCleanupSystem() {
+            const performCleanup = () => {
+                get(ref(database, 'players')).then(snapshot => {
+                    const players = snapshot.val() || {};
+                    const currentTime = Date.now();
+                    
+                    for (const [playerId, playerData] of Object.entries(players)) {
+                        if (currentTime - playerData.timestamp > 60000) { // 1 minute
+                            remove(ref(database, `players/${playerId}`)).catch(error => 
+                                console.log('Cleanup failed:', error)
+                            );
+                        }
+                    }
+                }).catch(error => console.log('Cleanup check failed:', error));
+            };
+
+            const setRandomCleanupInterval = () => {
+                const interval = Math.random() * 30000 + 45000; // 45-75 seconds
+                cleanupInterval = setTimeout(() => {
+                    performCleanup();
+                    setRandomCleanupInterval();
+                }, interval);
+            };
+
+            setRandomCleanupInterval();
+        }
+
+        // Get word from Gemini 2.5 Flash
+        async function getWordFromAI() {
+            const configSnapshot = await get(ref(database, 'gameConfig'));
+            const gameConfig = configSnapshot.val() || {};
+
+            const category = gameConfig.wordCategory || 'mixed';
+            const difficulty = gameConfig.wordDifficulty || 'medium';
+            const wordLength = gameConfig.wordLength || 'any';
+            const allowProperNouns = gameConfig.allowProperNouns || false;
+            const allowPlurals = gameConfig.allowPlurals || false;
+            const allowCompounds = gameConfig.allowCompounds || false;
+            const allowAbbreviations = gameConfig.allowAbbreviations || false;
+            const region = gameConfig.wordRegion || 'global';
+            const complexity = gameConfig.wordComplexity || 3;
+            const modernThemes = gameConfig.modernThemes || false;
+            const vintageThemes = gameConfig.vintageThemes || false;
+            const fantasyThemes = gameConfig.fantasyThemes || false;
+
+            let categoryPrompt = '';
+            switch(category) {
+                case 'animals': categoryPrompt = 'animal'; break;
+                case 'countries': categoryPrompt = 'country'; break;
+                case 'objects': categoryPrompt = 'everyday object'; break;
+                case 'food': categoryPrompt = 'food item'; break;
+                case 'professions': categoryPrompt = 'profession or job'; break;
+                case 'actions': categoryPrompt = 'action or verb'; break;
+                case 'emotions': categoryPrompt = 'emotion or feeling'; break;
+                case 'places': categoryPrompt = 'place or location'; break;
+                case 'technology': categoryPrompt = 'technology or digital term'; break;
+                default: categoryPrompt = 'word from any category';
             }
+
+            let lengthPrompt = '';
+            switch(wordLength) {
+                case 'short': lengthPrompt = ' that is 3-6 letters long'; break;
+                case 'medium': lengthPrompt = ' that is 5-8 letters long'; break;
+                case 'long': lengthPrompt = ' that is 7 or more letters long'; break;
+                default: lengthPrompt = '';
+            }
+
+            let restrictionsPrompt = '';
+            if (!allowProperNouns) restrictionsPrompt += ' No proper nouns.';
+            if (!allowPlurals) restrictionsPrompt += ' No plural words.';
+            if (!allowCompounds) restrictionsPrompt += ' No compound words.';
+            if (!allowAbbreviations) restrictionsPrompt += ' No abbreviations.';
+
+            let themePrompt = '';
+            if (modernThemes) themePrompt += ' Include modern/contemporary terms.';
+            if (vintageThemes) themePrompt += ' Include classic/vintage terms.';
+            if (fantasyThemes) themePrompt += ' Include fantasy/fictional terms.';
+
+            const complexityLevels = {
+                1: 'very simple and common',
+                2: 'simple and well-known',
+                3: 'moderately challenging',
+                4: 'challenging and less common',
+                5: 'very challenging and rare'
+            };
+
+            const prompt = `Generate a single ${difficulty} ${categoryPrompt}${lengthPrompt} that is ${complexityLevels[complexity]} suitable for a word guessing game. ${region} terms preferred.${restrictionsPrompt}${themePrompt} Only respond with the word, nothing else.`;
+            
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyAioo23YXTQAxFZ9J5OGlzd3WrjPYW9IEY`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        maxOutputTokens: 10,
+                        temperature: 0.9
+                    }
+                })
+            });
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text.trim().toLowerCase();
         }
 
         // Get active players
@@ -330,121 +815,130 @@
             return activePlayers;
         }
 
-        // Start game
-        async function startGame() {
+        // Main game logic
+        async function initiateGame() {
+            if (isProcessing) return;
+            isProcessing = true;
+
             try {
-                status.textContent = 'Getting word from AI...';
-                mainScreen.classList.add('loading');
+                status.innerHTML = 'Getting word<span class="loading-dots"></span>';
+                waitingAnimation.style.display = 'none';
 
                 const word = await getWordFromAI();
                 const activePlayers = await getActivePlayers();
+                const config = await get(ref(database, 'gameConfig'));
+                const gameConfig = config.val() || {};
                 
-                if (activePlayers.length < 2) {
-                    status.textContent = 'Need at least 2 players to start!';
-                    mainScreen.classList.remove('loading');
+                const minPlayers = gameConfig.minPlayers || 3;
+                const maxPlayers = gameConfig.maxPlayers || 15;
+
+                if (activePlayers.length < minPlayers) {
+                    status.textContent = `Need at least ${minPlayers} players`;
+                    waitingAnimation.style.display = 'block';
+                    isProcessing = false;
                     setTimeout(() => {
-                        status.textContent = '';
-                        tapCount = 0;
-                        tapCounter.textContent = '0';
+                        status.textContent = 'Tap to start game';
                     }, 3000);
                     return;
                 }
 
-                // Select imposters
-                const shuffledPlayers = [...activePlayers].sort(() => Math.random() - 0.5);
-                const numImposters = Math.min(parseInt(gameConfig.imposterCount), Math.floor(activePlayers.length / 2));
+                const playersToUse = activePlayers.slice(0, maxPlayers);
+                const shuffledPlayers = [...playersToUse].sort(() => Math.random() - 0.5);
+                const numImposters = Math.min(parseInt(gameConfig.imposterCount || 1), playersToUse.length - 1);
                 const imposters = shuffledPlayers.slice(0, numImposters);
 
-                // Store game data
                 const gameData = {
                     word: word,
-                    players: activePlayers,
+                    players: playersToUse,
                     imposters: imposters,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    initiator: deviceId
                 };
 
                 await set(ref(database, 'currentGame'), gameData);
                 
-                // Display result for this player
-                displayGameResult(word, imposters.includes(deviceId));
-                
             } catch (error) {
-                console.error('Game start error:', error);
-                status.textContent = 'Error starting game. Try again!';
-                mainScreen.classList.remove('loading');
+                console.error('Game initiation error:', error);
+                status.textContent = 'Failed to get word';
+                waitingAnimation.style.display = 'block';
+                isProcessing = false;
                 setTimeout(() => {
-                    status.textContent = '';
-                    tapCount = 0;
-                    tapCounter.textContent = '0';
+                    status.textContent = 'Tap to start game';
                 }, 3000);
             }
         }
 
         // Display game result
         function displayGameResult(word, isImposter) {
+            playDing();
+            currentGameData = { word, isImposter };
+
             mainScreen.innerHTML = '';
             
             const wordDisplay = document.createElement('div');
             wordDisplay.className = `word-display ${isImposter ? 'imposter-display' : ''}`;
+            wordDisplay.id = 'wordDisplay';
             
             if (isImposter) {
                 wordDisplay.innerHTML = `
                     <div>
-                        <div style="font-size: 3rem; margin-bottom: 10px;">🕵️</div>
-                        <div>YOU ARE THE</div>
-                        <div style="font-size: 3.5rem; margin-top: 10px;">IMPOSTER</div>
-                        <div style="font-size: 1.2rem; margin-top: 15px; opacity: 0.8;">Blend in without knowing the word!</div>
+                        <div style="font-size: 2rem; margin-bottom: 15px;">🕵️</div>
+                        <div style="font-size: 2rem;">IMPOSTER</div>
+                        <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">Blend in!</div>
                     </div>
                 `;
             } else {
                 wordDisplay.innerHTML = `
                     <div>
-                        <div style="font-size: 1.5rem; margin-bottom: 15px;">Your word is:</div>
-                        <div style="font-size: 4rem; text-transform: uppercase;">${word}</div>
-                        <div style="font-size: 1.2rem; margin-top: 15px; opacity: 0.8;">Find the imposter!</div>
+                        <div style="font-size: 1rem; margin-bottom: 10px; opacity: 0.8;">Your word:</div>
+                        <div style="text-transform: uppercase;">${word}</div>
+                        <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">Find the imposter!</div>
                     </div>
                 `;
             }
             
             mainScreen.appendChild(wordDisplay);
-            
-            // Reset button
-            const resetButton = document.createElement('button');
-            resetButton.textContent = 'New Game';
-            resetButton.style.cssText = `
-                background: rgba(255,255,255,0.2);
-                color: white;
-                border: 2px solid white;
-                padding: 15px 30px;
-                border-radius: 25px;
-                font-size: 1.2rem;
-                cursor: pointer;
-                margin-top: 30px;
-                transition: all 0.3s ease;
-            `;
-            resetButton.onmouseover = () => {
-                resetButton.style.background = 'rgba(255,255,255,0.3)';
-            };
-            resetButton.onmouseout = () => {
-                resetButton.style.background = 'rgba(255,255,255,0.2)';
-            };
-            resetButton.onclick = () => location.reload();
-            
-            mainScreen.appendChild(resetButton);
-            isGameActive = false;
+
+            const newStatus = document.createElement('div');
+            newStatus.className = 'status';
+            newStatus.id = 'status';
+            newStatus.textContent = 'Tap to start new game';
+            mainScreen.appendChild(newStatus);
+
+            const newPlayerCount = document.createElement('div');
+            newPlayerCount.className = 'player-count';
+            newPlayerCount.id = 'playerCount';
+            mainScreen.appendChild(newPlayerCount);
+
+            isProcessing = false;
+            isWordVisible = true;
+            updatePlayerCount();
+        }
+
+        // Toggle word visibility
+        function toggleWordVisibility() {
+            const wordDisplay = document.getElementById('wordDisplay');
+            if (wordDisplay) {
+                isWordVisible = !isWordVisible;
+                if (isWordVisible) {
+                    wordDisplay.classList.remove('hidden');
+                } else {
+                    wordDisplay.classList.add('hidden');
+                }
+            }
         }
 
         // Listen for game updates
         onValue(ref(database, 'currentGame'), (snapshot) => {
             const gameData = snapshot.val();
-            if (gameData && !isGameActive && Date.now() - gameData.timestamp < 30000) {
+            if (gameData && !isProcessing && Date.now() - gameData.timestamp < 30000) {
                 if (gameData.players.includes(deviceId)) {
                     displayGameResult(gameData.word, gameData.imposters.includes(deviceId));
                 }
             }
         });
 
-        // Update player count display
+        // Update player count
         function updatePlayerCount() {
             onValue(ref(database, 'players'), (snapshot) => {
                 const players = snapshot.val() || {};
@@ -452,46 +946,44 @@
                 let activeCount = 0;
 
                 for (const playerData of Object.values(players)) {
-                    if (currentTime - playerData.timestamp < 15000) {
+                    if (currentTime - playerData.timestamp < 15000) { // 15 seconds
                         activeCount++;
                     }
                 }
 
-                playerCount.textContent = `Active players: ${activeCount}`;
+                const currentPlayerCount = document.getElementById('playerCount');
+                if (currentPlayerCount) {
+                    currentPlayerCount.textContent = `${activeCount} players active`;
+                }
+
+                updateImposterRange();
             });
         }
 
-        // Touch/click handlers
+        // Handle screen interactions
         gameContainer.addEventListener('touchstart', handleInteraction, { passive: false });
         gameContainer.addEventListener('mousedown', handleInteraction);
         gameContainer.addEventListener('touchend', handleInteractionEnd, { passive: false });
         gameContainer.addEventListener('mouseup', handleInteractionEnd);
+        gameContainer.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
 
         function handleInteraction(e) {
             e.preventDefault();
-            
-            // Start long press timer for config
+            initAudio();
+
+            // Don't do anything if config panel is open
+            if (configPanel.style.display === 'block') return;
+
+            // Long press for config (5 seconds)
             longPressTimer = setTimeout(() => {
-                if (!isGameActive) {
-                    showConfig();
-                }
-            }, 6000);
+                showConfig();
+            }, 5000);
 
-            // Handle tap counting
-            if (!isGameActive && tapCount < 5) {
-                tapCount++;
-                tapCounter.textContent = tapCount;
-                tapCounter.classList.add('heartbeat');
-                
-                setTimeout(() => {
-                    tapCounter.classList.remove('heartbeat');
-                }, 500);
-
-                if (tapCount === 5) {
-                    isGameActive = true;
-                    status.textContent = 'Starting game...';
-                    setTimeout(startGame, 500);
-                }
+            // Toggle word visibility or start game
+            if (currentGameData) {
+                toggleWordVisibility();
+            } else if (!isProcessing) {
+                initiateGame();
             }
         }
 
@@ -503,43 +995,34 @@
             }
         }
 
-        function showConfig() {
-            configPanel.style.display = 'block';
-            
-            // Load current settings
-            document.getElementById('wordCategory').value = gameConfig.category;
-            document.getElementById('wordDifficulty').value = gameConfig.difficulty;
-            document.getElementById('imposterCount').value = gameConfig.imposterCount;
+        // Close config when clicking outside
+        document.addEventListener('click', (e) => {
+            if (configPanel.style.display === 'block' && !configPanel.contains(e.target)) {
+                configPanel.style.display = 'none';
+            }
+        });
+
+        // Initialize game
+        async function initializeGame() {
+            await loadConfig();
+            startHeartbeat();
+            startCleanupSystem();
+            updatePlayerCount();
+            updateRangeDisplays();
         }
 
-        window.closeConfig = function() {
-            // Save settings
-            gameConfig.category = document.getElementById('wordCategory').value;
-            gameConfig.difficulty = document.getElementById('wordDifficulty').value;
-            gameConfig.imposterCount = document.getElementById('imposterCount').value;
+        // Start the game
+        initializeGame();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (heartbeatInterval) clearTimeout(heartbeatInterval);
+            if (cleanupInterval) clearTimeout(cleanupInterval);
+            if (longPressTimer) clearTimeout(longPressTimer);
             
-            configPanel.style.display = 'none';
-        };
-
-        // Initialize
-        startHeartbeat();
-        updatePlayerCount();
-        
-        // Reset tap counter after 10 seconds of inactivity
-        let tapResetTimer;
-        function resetTapCounter() {
-            clearTimeout(tapResetTimer);
-            tapResetTimer = setTimeout(() => {
-                if (!isGameActive && tapCount > 0 && tapCount < 5) {
-                    tapCount = 0;
-                    tapCounter.textContent = '0';
-                }
-            }, 10000);
-        }
-
-        // Reset timer on each tap
-        gameContainer.addEventListener('click', resetTapCounter);
-        gameContainer.addEventListener('touchstart', resetTapCounter);
+            // Remove this device from active players
+            remove(ref(database, `players/${deviceId}`)).catch(() => {});
+        });
     </script>
 </body>
 </html>
