@@ -1,144 +1,340 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Imposter</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#000;color:#fff;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center}
-        .game{width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
-        .title{font-size:min(8vw,2.5rem);margin-bottom:2vh;color:#0ff}
-        .dots{display:flex;gap:1vw;margin:2vh 0}
-        .dot{width:min(3vw,12px);height:min(3vw,12px);background:#0ff;border-radius:50%;animation:pulse 2s infinite}
-        .dot:nth-child(2){animation-delay:.3s}
-        .dot:nth-child(3){animation-delay:.6s}
-        @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
-        .word{background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #0ff;color:#fff;padding:min(6vw,2.5rem);border-radius:min(3vw,1rem);font-size:min(10vw,2.5rem);font-weight:800;margin:3vh 0;box-shadow:0 0 min(6vw,1.5rem) rgba(0,255,255,.3);transition:all .3s ease;max-width:90vw;word-break:break-word;min-height:min(25vh,200px);display:flex;align-items:center;justify-content:center;flex-direction:column}
-        .imposter{background:linear-gradient(135deg,#2d1b69,#8b1538);border-color:#f0f;box-shadow:0 0 min(6vw,1.5rem) rgba(255,0,255,.3)}
-        .starter{background:linear-gradient(135deg,#1b692d,#38b15b);border-color:#0f0;box-shadow:0 0 min(6vw,1.5rem) rgba(0,255,0,.3)}
-        .word.hidden{opacity:0;transform:scale(.9)}
-        .status{font-size:min(4vw,1rem);color:#0ff;margin:1vh 0;opacity:.8}
-        .players{font-size:min(3vw,.8rem);color:#888;position:absolute;bottom:2vh;opacity:.6}
-        .config{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #0ff;padding:min(4vw,1rem);border-radius:min(2vw,.8rem);box-shadow:0 0 min(8vw,2rem) rgba(0,255,255,.4);display:none;z-index:1000;width:min(90vw,20rem);max-height:90vh;overflow-y:auto}
-        .config h3{font-size:min(4vw,1rem);margin-bottom:min(2vw,.6rem);color:#0ff;text-align:center}
-        .config-item{margin-bottom:min(2vw,.5rem)}
-        .config-label{display:block;font-size:min(3vw,.7rem);color:#0ff;margin-bottom:min(1vw,.2rem)}
-        .config-input,.config-select{width:100%;padding:min(1.5vw,.3rem);border:1px solid #333;border-radius:min(1vw,.2rem);background:#111;color:#fff;font-size:min(2.8vw,.65rem)}
-        .config-input:focus,.config-select:focus{outline:none;border-color:#0ff}
-        .range-display{text-align:center;font-size:min(2.5vw,.6rem);color:#888;margin-top:min(.5vw,.1rem)}
-        .checkbox-item{display:flex;align-items:center;gap:min(1.5vw,.3rem);margin:min(1.5vw,.3rem) 0}
-        .checkbox-item input{width:min(3vw,.8rem);height:min(3vw,.8rem)}
-        .checkbox-item label{font-size:min(2.5vw,.6rem)}
-        .btn{background:linear-gradient(45deg,#0ff,#f0f);color:#000;border:none;padding:min(2vw,.6rem);border-radius:min(1vw,.3rem);width:100%;font-size:min(3vw,.8rem);font-weight:600;cursor:pointer;margin-top:min(1.5vw,.5rem)}
-        .start-btn{background:linear-gradient(45deg,#0f0,#0a0);margin-bottom:min(2vw,.5rem)}
-        .loading::after{content:'';animation:dots 2s infinite}
-        @keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
-        .turn-indicator{font-size:min(3vw,.8rem);color:#0f0;margin-bottom:min(2vw,.5rem);padding:min(1vw,.3rem);background:rgba(0,255,0,.1);border:1px solid #0f0;border-radius:min(1vw,.3rem)}
-        .heartbeat-display{font-size:min(2vw,.5rem);color:#666;position:absolute;top:1vh;right:1vw}
-    </style>
-</head>
-<body>
-    <div class="game" id="game">
-        <h1 class="title">Word Imposter</h1>
-        <div class="dots" id="animation">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
-        <div class="status" id="status">Love; Love ❤️</div>
-        <div class="players" id="players"></div>
-        <div class="heartbeat-display" id="heartbeat">♥</div>
-    </div>
-
-    <div class="config" id="config">
-        <h3>Game Settings</h3>
-        <button class="btn start-btn" onclick="startGameFromConfig()">🎯 START NEW GAME</button>
-        
-        <div class="config-item">
-            <label class="config-label">Imposters:</label>
-            <input type="range" class="config-input" id="imposters" min="0" max="10" value="1">
-            <div class="range-display" id="impostersDisplay">1</div>
-        </div>
-        
-        <div class="config-item">
-            <label class="config-label">Category:</label>
-            <select class="config-select" id="category">
-                <option value="mixed">🎲 Simple Words</option>
-            </select>
-        </div>
-        
-        <div class="config-item">
-            <div class="checkbox-item">
-                <input type="checkbox" id="useAI">
-                <label>🤖 Use AI (disabled for now)</label>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Word Imposter</title>
+            <style>
+                *{margin:0;padding:0;box-sizing:border-box}
+                body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#000;color:#fff;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color: transparent;}
+                .game{width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative; user-select: none;}
+                .title{font-size:min(8vw,2.5rem);margin-bottom:2vh;color:#0ff}
+                .dots{display:flex;gap:1vw;margin:2vh 0}
+                .dot{width:min(3vw,12px);height:min(3vw,12px);background:#0ff;border-radius:50%;animation:pulse 2s infinite}
+                .dot:nth-child(2){animation-delay:.3s}
+                .dot:nth-child(3){animation-delay:.6s}
+                @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+                .word{background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #0ff;color:#fff;padding:min(6vw,2.5rem);border-radius:min(3vw,1rem);font-size:min(10vw,2.5rem);font-weight:800;margin:3vh 0;box-shadow:0 0 min(6vw,1.5rem) rgba(0,255,255,.3);transition:all .3s ease;max-width:90vw;word-break:break-word;min-height:min(25vh,200px);display:flex;align-items:center;justify-content:center;flex-direction:column}
+                .imposter{background:linear-gradient(135deg,#2d1b69,#8b1538);border-color:#f0f;box-shadow:0 0 min(6vw,1.5rem) rgba(255,0,255,.3)}
+                .starter{background:linear-gradient(135deg,#1b692d,#38b15b);border-color:#0f0;box-shadow:0 0 min(6vw,1.5rem) rgba(0,255,0,.3)}
+                .word.hidden{opacity:0;transform:scale(.9); pointer-events: none;}
+                .status{font-size:min(4vw,1rem);color:#0ff;margin:1vh 0;opacity:.8}
+                .players{font-size:min(3vw,.8rem);color:#888;position:absolute;bottom:2vh;opacity:.6}
+                .config{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #0ff;padding:min(4vw,1rem);border-radius:min(2vw,.8rem);box-shadow:0 0 min(8vw,2rem) rgba(0,255,255,.4);display:none;z-index:1000;width:min(90vw,20rem);max-height:90vh;overflow-y:auto}
+                .config h3{font-size:min(4vw,1rem);margin-bottom:min(2vw,.6rem);color:#0ff;text-align:center}
+                .config-item{margin-bottom:min(2vw,.5rem)}
+                .config-label{display:block;font-size:min(3vw,.7rem);color:#0ff;margin-bottom:min(1vw,.2rem)}
+                .config-input,.config-select{width:100%;padding:min(1.5vw,.3rem);border:1px solid #333;border-radius:min(1vw,.2rem);background:#111;color:#fff;font-size:min(2.8vw,.65rem)}
+                .config-input:focus,.config-select:focus{outline:none;border-color:#0ff}
+                .range-display{text-align:center;font-size:min(2.5vw,.6rem);color:#888;margin-top:min(.5vw,.1rem)}
+                .checkbox-item{display:flex;align-items:center;gap:min(1.5vw,.3rem);margin:min(1.5vw,.3rem) 0}
+                .checkbox-item input{width:min(3vw,.8rem);height:min(3vw,.8rem)}
+                .checkbox-item label{font-size:min(2.5vw,.6rem)}
+                .btn{background:linear-gradient(45deg,#0ff,#f0f);color:#000;border:none;padding:min(2vw,.6rem);border-radius:min(1vw,.3rem);width:100%;font-size:min(3vw,.8rem);font-weight:600;cursor:pointer;margin-top:min(1.5vw,.5rem)}
+                .start-btn{background:linear-gradient(45deg,#0f0,#0a0);margin-bottom:min(2vw,.5rem)}
+                .loading::after{content:'';animation:dots 2s infinite}
+                @keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+                .turn-indicator{font-size:min(3vw,.8rem);color:#0f0;margin-bottom:min(2vw,.5rem);padding:min(1vw,.3rem);background:rgba(0,255,0,.1);border:1px solid #0f0;border-radius:min(1vw,.3rem)}
+                .heartbeat-display{font-size:min(2vw,.5rem);color:#666;position:absolute;top:1vh;right:1vw}
+            </style>
+        </head>
+        <body>
+            <div class="game" id="game">
+                <h1 class="title">Word Imposter</h1>
+                <div class="dots" id="animation">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <div class="status" id="status">Love; Love ❤️</div>
+                <div class="players" id="players"></div>
+                <div class="heartbeat-display" id="heartbeat">♥</div>
             </div>
-        </div>
-        
-        <button class="btn" onclick="saveConfig()">💾 Save Settings</button>
-        <button class="btn" onclick="closeConfig()" style="background:linear-gradient(45deg,#666,#999);margin-top:.3rem">❌ Close</button>
-    </div>
 
-    <script type="module">
-        import{initializeApp}from"https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
-        import{getDatabase,ref,onValue,set,get,remove}from"https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
-        
-        const app=initializeApp({apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",authDomain:"community-canvas-255fa.firebaseapp.com",databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",projectId:"community-canvas-255fa",storageBucket:"community-canvas-255fa.appspot.com",messagingSenderId:"729445267995",appId:"1:729445267995:web:05da6756d66c58b9ccd6be"});
-        const db=getDatabase(app),GAME_NODE='wordImposterGame';
-        
-        let deviceId=localStorage.getItem('wordImposterDeviceId');
-        if(!deviceId){deviceId='device_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);localStorage.setItem('wordImposterDeviceId',deviceId)}
-        
-        let processing=false,longPress=null,heartbeat=null,cleanup=null,visible=true,gameData=null,audioCtx,heartbeatInterval=4;
-        const game=document.getElementById('game'),status=document.getElementById('status'),players=document.getElementById('players'),config=document.getElementById('config'),animation=document.getElementById('animation'),heartbeatEl=document.getElementById('heartbeat');
+            <div class="config" id="config">
+                <h3>Game Settings</h3>
+                <button class="btn start-btn" onclick="startGameFromConfig()">🎯 START NEW GAME</button>
 
-        function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
-        function ding(){initAudio();const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.connect(gain);gain.connect(audioCtx.destination);osc.frequency.setValueAtTime(800,audioCtx.currentTime);osc.frequency.setValueAtTime(1200,audioCtx.currentTime+.15);gain.gain.setValueAtTime(.4,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.01,audioCtx.currentTime+.6);osc.start();osc.stop(audioCtx.currentTime+.6)}
+                <div class="config-item">
+                    <label class="config-label">Imposters:</label>
+                    <input type="range" class="config-input" id="imposters" min="1" max="10" value="1">
+                    <div class="range-display" id="impostersDisplay">1</div>
+                </div>
 
-        function startHeartbeat(){if(heartbeat)clearTimeout(heartbeat);const send=()=>{set(ref(db,`${GAME_NODE}/players/${deviceId}`),{timestamp:Date.now()});heartbeatEl.style.color='#0f0';setTimeout(()=>heartbeatEl.style.color='#666',200)};send();const loop=()=>{heartbeat=setTimeout(()=>{send();loop()},heartbeatInterval*1000+Math.random()*1000)};loop()}
+                <div class="config-item">
+                    <label class="config-label">Category:</label>
+                    <select class="config-select" id="category" disabled>
+                        <option value="mixed">🎲 Simple Words (Default)</option>
+                    </select>
+                </div>
 
-        function startCleanup(){const clean=()=>{get(ref(db,`${GAME_NODE}/players`)).then(snap=>{const p=snap.val()||{},now=Date.now();for(const[id,data]of Object.entries(p)){if(now-data.timestamp>heartbeatInterval*3000)remove(ref(db,`${GAME_NODE}/players/${id}`))}})};const loop=()=>{cleanup=setTimeout(()=>{clean();loop()},heartbeatInterval*2000+Math.random()*5000)};loop()}
+                <div class="config-item">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="useAI" disabled>
+                        <label>🤖 Use AI (Needs valid API key)</label>
+                    </div>
+                </div>
 
-        const wordPrompts={animals:['exotic animal species','marine creature','jungle animal','arctic wildlife','mythical creature-like real animal','nocturnal predator','colorful bird species','tiny insect','farm animal breed'],countries:['European nation','island country','landlocked country','African nation','Asian country','South American state','Nordic country','Middle Eastern nation'],cities:['capital city','coastal city','ancient city','modern metropolis','mountain city','desert city','river city','tourist destination'],objects:['household item','electronic device','kitchen tool','art supply','sports equipment','musical instrument','vehicle part','office supply'],food:['exotic fruit','spicy dish','sweet dessert','fermented food','street food','breakfast item','beverage','cooking ingredient'],professions:['creative profession','medical job','outdoor job','technical career','service job','artistic profession','science career','trade skill'],sports:['team sport','individual sport','water sport','winter sport','extreme sport','indoor game','Olympic sport','ball game'],movies:['movie genre','film character type','movie setting','cinema term','director style','movie theme','film technique'],brands:['tech brand','fashion brand','food brand','car manufacturer','sports brand','luxury brand','electronics company'],colors:['warm color','cool color','metallic shade','pastel tone','vibrant hue','earth tone','jewel color','color combination'],emotions:['complex emotion','positive feeling','social emotion','physical sensation','mental state','relationship feeling'],technology:['software concept','hardware component','internet term','programming concept','digital tool','tech trend'],nature:['weather phenomenon','geological formation','plant species','natural resource','ecosystem','celestial body'],music:['music genre','musical instrument','music term','song structure','performance type','audio equipment']};
+                <button class="btn" onclick="saveConfig()">💾 Save Settings</button>
+                <button class="btn" onclick="closeConfig()" style="background:linear-gradient(45deg,#666,#999);margin-top:.3rem">❌ Close</button>
+            </div>
 
-        async function getWord(){const cfg=await get(ref(db,`${GAME_NODE}/config`));const c=cfg.val()||{category:'mixed',useAI:false};if(c.useAI){const prompt='Generate one very simple, basic word that everyone knows. Examples: dog, cat, tree, car, house, book, sun, water, fire, bird. Respond with ONLY the word, nothing else. Make it simple and common.';try{const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyAioo23YXTQAxFZ9J5OGlzd3WrjPYW9IEY`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:5,temperature:.8}})});const data=await res.json();return data.candidates[0].content.parts[0].text.trim().toLowerCase().replace(/[^\w\s-]/g,'')}catch{}}const words=['dog','cat','tree','car','house','book','sun','water','fire','bird','fish','lion','bear','wolf','fox','deer','horse','cow','pig','sheep','chicken','duck','rabbit','mouse','elephant','tiger','monkey','snake','frog','bee','spider','flower','grass','mountain','river','ocean','lake','forest','desert','rock','sand','cloud','rain','snow','wind','storm','moon','star','planet','earth','apple','banana','orange','bread','milk','cheese','pizza','cake','cookie','tea','coffee','juice','chair','table','bed','door','window','phone','computer','bike','bus','train','plane','boat','ball','toy','game','music','dance','sing','run','walk','jump','swim','fly','red','blue','green','yellow','black','white','pink','purple','orange','brown','big','small','hot','cold','fast','slow','happy','sad','love','friend'];return words[Math.floor(Math.random()*words.length)]}
+            <script type="module">
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+                import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        async function getActivePlayers(){const snap=await get(ref(db,`${GAME_NODE}/players`));const p=snap.val()||{},now=Date.now();return Object.keys(p).filter(id=>now-p[id].timestamp<heartbeatInterval*3000)}
+                const firebaseConfig = {apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",authDomain:"community-canvas-255fa.firebaseapp.com",databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",projectId:"community-canvas-255fa",storageBucket:"community-canvas-255fa.appspot.com",messagingSenderId:"729445267995",appId:"1:729445267995:web:05da6756d66c58b9ccd6be"};
+                const GEMINI_API_KEY = "AIzaSyAioo23YXTQAxFZ9J5OGlzd3WrjPYW9IEY"; // NOTE: This key is invalid and will cause errors if AI is enabled.
 
-        async function startGame(){if(processing)return;processing=true;try{status.innerHTML='Getting word<span class="loading"></span>';animation.style.display='none';const word=await getWord();const activePlayers=await getActivePlayers();if(activePlayers.length<3){status.textContent='Need 3+ players';animation.style.display='flex';processing=false;setTimeout(()=>status.textContent='Love; Love ❤️',3000);return}const cfg=await get(ref(db,`${GAME_NODE}/config`));const c=cfg.val()||{imposters:1};const shuffled=[...activePlayers].sort(()=>Math.random()-.5);let numImposters=Math.min(parseInt(c.imposters||1),activePlayers.length-1);const imposters=shuffled.slice(0,numImposters);const starter=shuffled[Math.floor(Math.random()*shuffled.length)];await set(ref(db,`${GAME_NODE}/currentGame`),{word,players:activePlayers,imposters,starter,timestamp:Date.now()})}catch(error){status.textContent='Error';animation.style.display='flex';processing=false;setTimeout(()=>status.textContent='Love; Love ❤️',3000)}}
+                const app = initializeApp(firebaseConfig);
+                const db = getDatabase(app);
+                const GAME_NODE = 'wordImposterGame';
 
-        function showResult(word,isImposter,isStarter){ding();gameData={word,isImposter,isStarter};const starterClass=isStarter?'starter':'';const imposterClass=isImposter?'imposter':'';const combinedClass=`${starterClass} ${imposterClass}`.trim();game.innerHTML=`<div class="word ${combinedClass}" id="wordDisplay">${isStarter?'<div class="turn-indicator">🎯 YOU START FIRST!<br>Give the first hint</div>':''}${isImposter?'<div><div style="font-size:1.5em;margin-bottom:.3em">🕵️</div><div>IMPOSTER</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Blend in & guess the word!</div></div>':`<div><div style="font-size:.6em;margin-bottom:.3em;opacity:.8">Word:</div><div style="text-transform:uppercase">${word}</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Find the imposters!</div></div>`}</div><div class="status" id="status">Tap to hide/show • Hold for config</div><div class="players" id="players"></div><div class="heartbeat-display" id="heartbeat">♥</div>`;processing=false;visible=true;updatePlayers()}
+                let deviceId = localStorage.getItem('wordImposterDeviceId');
+                if (!deviceId) {
+                    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('wordImposterDeviceId', deviceId);
+                }
 
-        function toggleVisibility(){if(!gameData)return;const wordEl=document.getElementById('wordDisplay');if(wordEl){visible=!visible;wordEl.classList.toggle('hidden',!visible)}}
+                let processing = false;
+                let longPressTimer = null;
+                let longPressFired = false;
+                let heartbeatTimeout = null;
+                let cleanupTimeout = null;
+                let isWordVisible = true;
+                let currentGameData = null;
+                let audioCtx;
+                const heartbeatInterval = 4; // seconds
 
-        function updatePlayers(){onValue(ref(db,`${GAME_NODE}/players`),snap=>{const p=snap.val()||{},now=Date.now();const count=Object.values(p).filter(data=>now-data.timestamp<4000).length;const playersEl=document.getElementById('players');if(playersEl)playersEl.textContent=`${count} players online`;const impostersInput=document.getElementById('imposters');if(impostersInput&&count>0){impostersInput.max=Math.max(0,count-1);if(parseInt(impostersInput.value)>count-1){impostersInput.value=Math.max(0,count-1);updateRange('imposters')}}})}
+                const gameEl = document.getElementById('game');
+                const statusEl = document.getElementById('status');
+                const playersEl = document.getElementById('players');
+                const configEl = document.getElementById('config');
+                const animationEl = document.getElementById('animation');
+                const heartbeatEl = document.getElementById('heartbeat');
 
-        function startHeartbeat(){if(heartbeat)clearTimeout(heartbeat);const send=()=>{set(ref(db,`${GAME_NODE}/players/${deviceId}`),{timestamp:Date.now()});heartbeatEl.style.color='#0f0';setTimeout(()=>heartbeatEl.style.color='#666',200)};send();const loop=()=>{heartbeat=setTimeout(()=>{send();loop()},4000+Math.random()*1000)};loop()}
+                function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+                function ding() {
+                    initAudio();
+                    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + .15);
+                    gain.gain.setValueAtTime(.4, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(.01, audioCtx.currentTime + .6);
+                    osc.start(); osc.stop(audioCtx.currentTime + .6);
+                }
 
-        function startCleanup(){const clean=()=>{get(ref(db,`${GAME_NODE}/players`)).then(snap=>{const p=snap.val()||{},now=Date.now();for(const[id,data]of Object.entries(p)){if(now-data.timestamp>12000)remove(ref(db,`${GAME_NODE}/players/${id}`))}})};const loop=()=>{cleanup=setTimeout(()=>{clean();loop()},10000+Math.random()*5000)};loop()}
+                function startHeartbeat() {
+                    if (heartbeatTimeout) clearTimeout(heartbeatTimeout);
+                    const send = () => {
+                        set(ref(db, `${GAME_NODE}/players/${deviceId}`), { timestamp: Date.now() });
+                        heartbeatEl.style.color = '#0f0';
+                        setTimeout(() => heartbeatEl.style.color = '#666', 200);
+                    };
+                    send();
+                    const loop = () => {
+                        heartbeatTimeout = setTimeout(() => {
+                            send();
+                            loop();
+                        }, heartbeatInterval * 1000 + Math.random() * 1000);
+                    };
+                    loop();
+                }
 
-        function updateRange(type='imposters'){if(type==='imposters'){document.getElementById('impostersDisplay').textContent=document.getElementById('imposters').value}else if(type==='heartbeat'){const val=document.getElementById('heartbeatInterval').value;document.getElementById('heartbeatDisplay').textContent=val+'s';heartbeatInterval=parseInt(val);startHeartbeat()}}
+                function startCleanup() {
+                    if (cleanupTimeout) clearTimeout(cleanupTimeout);
+                    const clean = () => {
+                        get(ref(db, `${GAME_NODE}/players`)).then(snap => {
+                            const p = snap.val() || {}, now = Date.now();
+                            for (const [id, data] of Object.entries(p)) {
+                                if (now - data.timestamp > heartbeatInterval * 3 * 1000) {
+                                    remove(ref(db, `${GAME_NODE}/players/${id}`));
+                                }
+                            }
+                        });
+                    };
+                    const loop = () => {
+                        cleanupTimeout = setTimeout(() => {
+                            clean();
+                            loop();
+                        }, heartbeatInterval * 2 * 1000 + Math.random() * 5000);
+                    };
+                    loop();
+                }
 
-        async function loadConfig(){try{const cfg=await get(ref(db,`${GAME_NODE}/config`));const c=cfg.val();if(c){document.getElementById('imposters').value=c.imposters||1;document.getElementById('useAI').checked=c.useAI||false;updateRange('imposters')}else{await set(ref(db,`${GAME_NODE}/config`),{imposters:1,useAI:false})}}catch(e){await set(ref(db,`${GAME_NODE}/config`),{imposters:1,useAI:false})}}
+                async function getWord() {
+                    const cfgSnap = await get(ref(db, `${GAME_NODE}/config`));
+                    const c = cfgSnap.val() || { category: 'mixed', useAI: false };
+                    if (c.useAI) {
+                        const prompt = 'Generate one very simple, basic word that everyone knows. Examples: dog, cat, tree, car, house, book, sun, water, fire, bird. Respond with ONLY the word, nothing else. Make it simple and common.';
+                        try {
+                            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 5, temperature: .8 } })
+                            });
+                            const data = await res.json();
+                            return data.candidates[0].content.parts[0].text.trim().toLowerCase().replace(/[^\w\s-]/g, '');
+                        } catch (e) {
+                            console.error("AI word generation failed. Falling back to local list.", e);
+                        }
+                    }
+                    const words = ['dog', 'cat', 'tree', 'car', 'house', 'book', 'sun', 'water', 'fire', 'bird', 'fish', 'lion', 'bear', 'wolf', 'fox', 'deer', 'horse', 'cow', 'pig', 'sheep', 'chicken', 'duck', 'rabbit', 'mouse', 'elephant', 'tiger', 'monkey', 'snake', 'frog', 'bee', 'spider', 'flower', 'grass', 'mountain', 'river', 'ocean', 'lake', 'forest', 'desert', 'rock', 'sand', 'cloud', 'rain', 'snow', 'wind', 'storm', 'moon', 'star', 'planet', 'earth', 'apple', 'banana', 'orange', 'bread', 'milk', 'cheese', 'pizza', 'cake', 'cookie', 'tea', 'coffee', 'juice', 'chair', 'table', 'bed', 'door', 'window', 'phone', 'computer', 'bike', 'bus', 'train', 'plane', 'boat', 'ball', 'toy', 'game', 'music', 'dance', 'sing', 'run', 'walk', 'jump', 'swim', 'fly', 'red', 'blue', 'green', 'yellow', 'black', 'white', 'pink', 'purple', 'orange', 'brown', 'big', 'small', 'hot', 'cold', 'fast', 'slow', 'happy', 'sad', 'love', 'friend'];
+                    return words[Math.floor(Math.random() * words.length)];
+                }
 
-        function showConfig(){config.style.display='block';loadConfig()}
-        function closeConfig(){config.style.display='none'}
+                async function getActivePlayers() {
+                    const snap = await get(ref(db, `${GAME_NODE}/players`));
+                    const p = snap.val() || {}, now = Date.now();
+                    return Object.keys(p).filter(id => now - p[id].timestamp < heartbeatInterval * 3 * 1000);
+                }
 
-        window.saveConfig=async function(){const c={imposters:parseInt(document.getElementById('imposters').value),useAI:document.getElementById('useAI').checked};await set(ref(db,`${GAME_NODE}/config`),c);config.style.display='none'};
+                async function startGame() {
+                    if (processing) return;
+                    processing = true;
+                    try {
+                        statusEl.innerHTML = 'Getting word<span class="loading"></span>';
+                        animationEl.style.display = 'none';
+                        const word = await getWord();
+                        const activePlayers = await getActivePlayers();
+                        if (activePlayers.length < 3) {
+                            statusEl.textContent = 'Need 3+ players';
+                            animationEl.style.display = 'flex';
+                            setTimeout(() => statusEl.textContent = 'Love; Love ❤️', 3000);
+                            processing = false;
+                            return;
+                        }
+                        const cfgSnap = await get(ref(db, `${GAME_NODE}/config`));
+                        const c = cfgSnap.val() || { imposters: 1 };
+                        const shuffled = [...activePlayers].sort(() => Math.random() - .5);
+                        let numImposters = Math.min(parseInt(c.imposters || 1), activePlayers.length - 1);
+                        if (numImposters < 1) numImposters = 1; // Ensure at least 1 imposter
+                        const imposters = shuffled.slice(0, numImposters);
+                        const starter = shuffled[Math.floor(Math.random() * shuffled.length)];
+                        await set(ref(db, `${GAME_NODE}/currentGame`), { word, players: activePlayers, imposters, starter, timestamp: Date.now() });
+                    } catch (error) {
+                        console.error("Error starting game:", error);
+                        statusEl.textContent = 'Error starting game';
+                        animationEl.style.display = 'flex';
+                        setTimeout(() => statusEl.textContent = 'Love; Love ❤️', 3000);
+                    } finally {
+                        processing = false;
+                    }
+                }
 
-        window.startGameFromConfig=function(){config.style.display='none';if(!processing)startGame()};
+                function showResult(word, isImposter, isStarter) {
+                    ding();
+                    currentGameData = { word, isImposter, isStarter };
+                    const starterClass = isStarter ? 'starter' : '';
+                    const imposterClass = isImposter ? 'imposter' : '';
+                    const combinedClass = `${starterClass} ${imposterClass}`.trim();
+                    gameEl.innerHTML = `<div class="word ${combinedClass}" id="wordDisplay">${isStarter ? '<div class="turn-indicator">🎯 YOU START FIRST!<br>Give the first hint</div>' : ''}${isImposter ? '<div><div style="font-size:1.5em;margin-bottom:.3em">🕵️</div><div>IMPOSTER</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Blend in & guess the word!</div></div>' : `<div><div style="font-size:.6em;margin-bottom:.3em;opacity:.8">Word:</div><div style="text-transform:uppercase">${word}</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Find the imposters!</div></div>`}</div><div class="status" id="status">Tap to hide/show • Hold for config</div><div class="players" id="players"></div><div class="heartbeat-display" id="heartbeat">♥</div>`;
+                    isWordVisible = true;
+                    updatePlayersDisplay(); // Renamed to avoid confusion with the old function
+                }
 
-        document.getElementById('imposters').addEventListener('input',()=>updateRange('imposters'));
-        
-        onValue(ref(db,`${GAME_NODE}/config`),snap=>{const c=snap.val();if(c&&config.style.display==='none'){document.getElementById('imposters').value=c.imposters||1;document.getElementById('useAI').checked=c.useAI||false;updateRange('imposters')}});
-        
-        onValue(ref(db,`${GAME_NODE}/currentGame`),snap=>{const data=snap.val();if(data&&Date.now()-data.timestamp<60000){if(data.players.includes(deviceId)){showResult(data.word,data.imposters.includes(deviceId),data.starter===deviceId)}}});
+                function toggleVisibility() {
+                    if (!currentGameData) return;
+                    const wordEl = document.getElementById('wordDisplay');
+                    if (wordEl) {
+                        isWordVisible = !isWordVisible;
+                        wordEl.classList.toggle('hidden', !isWordVisible);
+                    }
+                }
 
-        ['touchstart','mousedown'].forEach(event=>{game.addEventListener(event,e=>{e.preventDefault();initAudio();longPress=setTimeout(()=>showConfig(),2000);if(gameData)toggleVisibility()})});
+                function updatePlayersDisplay() {
+                    onValue(ref(db, `${GAME_NODE}/players`), snap => {
+                        const p = snap.val() || {}, now = Date.now();
+                        const count = Object.values(p).filter(data => now - data.timestamp < heartbeatInterval * 3 * 1000).length;
+                        const playersEl_inner = document.getElementById('players');
+                        if (playersEl_inner) playersEl_inner.textContent = `${count} players online`;
 
-        ['touchend','mouseup'].forEach(event=>{game.addEventListener(event,e=>{e.preventDefault();if(longPress){clearTimeout(longPress);longPress=null}})});
+                        const impostersInput = document.getElementById('imposters');
+                        if (impostersInput && count > 0) {
+                            impostersInput.max = Math.max(1, count - 1);
+                            if (parseInt(impostersInput.value) > impostersInput.max) {
+                                impostersInput.value = impostersInput.max;
+                            }
+                            updateRangeDisplay('imposters');
+                        }
+                    });
+                }
 
-        startHeartbeat();startCleanup();updatePlayers();loadConfig();
-    </script>
-</body>
-</html>
+                function updateRangeDisplay(type) {
+                    if (type === 'imposters') {
+                        document.getElementById('impostersDisplay').textContent = document.getElementById('imposters').value;
+                    }
+                }
+
+                async function loadConfig() {
+                    try {
+                        const cfgSnap = await get(ref(db, `${GAME_NODE}/config`));
+                        const c = cfgSnap.val();
+                        if (c) {
+                            document.getElementById('imposters').value = c.imposters || 1;
+                            document.getElementById('useAI').checked = c.useAI || false;
+                            updateRangeDisplay('imposters');
+                        } else {
+                            await set(ref(db, `${GAME_NODE}/config`), { imposters: 1, useAI: false });
+                        }
+                    } catch (e) {
+                         await set(ref(db, `${GAME_NODE}/config`), { imposters: 1, useAI: false });
+                    }
+                }
+
+                function showConfig() { configEl.style.display = 'block'; loadConfig(); }
+                function closeConfig() { configEl.style.display = 'none'; }
+
+                window.saveConfig = async function () {
+                    const c = { imposters: parseInt(document.getElementById('imposters').value), useAI: document.getElementById('useAI').checked };
+                    await set(ref(db, `${GAME_NODE}/config`), c);
+                    configEl.style.display = 'none';
+                };
+
+                window.closeConfig = closeConfig;
+                window.startGameFromConfig = function () { configEl.style.display = 'none'; if (!processing) startGame(); };
+
+                document.getElementById('imposters').addEventListener('input', () => updateRangeDisplay('imposters'));
+
+                onValue(ref(db, `${GAME_NODE}/currentGame`), snap => {
+                    const data = snap.val();
+                    if (data && Date.now() - data.timestamp < 60000) {
+                        if (data.players.includes(deviceId)) {
+                            showResult(data.word, data.imposters.includes(deviceId), data.starter === deviceId);
+                        }
+                    }
+                });
+
+                ['touchstart', 'mousedown'].forEach(event => {
+                    gameEl.addEventListener(event, e => {
+                        e.preventDefault();
+                        initAudio();
+                        longPressFired = false;
+                        longPressTimer = setTimeout(() => {
+                            longPressFired = true;
+                            showConfig();
+                        }, 1000); // 1 second hold
+                    });
+                });
+
+                ['touchend', 'mouseup', 'mouseleave'].forEach(event => {
+                    gameEl.addEventListener(event, e => {
+                        e.preventDefault();
+                        if (longPressTimer) {
+                            clearTimeout(longPressTimer);
+                            longPressTimer = null;
+                        }
+                        if (!longPressFired && currentGameData) {
+                            toggleVisibility();
+                        }
+                    });
+                });
+
+                startHeartbeat();
+                startCleanup();
+                updatePlayersDisplay();
+                loadConfig();
+            </script>
+        </body>
+        </html>
