@@ -238,7 +238,7 @@
             <div class="dot"></div>
             <div class="dot"></div>
         </div>
-        <div class="status" id="status">Love; Love ❤️</div>
+        <div class="status" id="status">Hold screen to configure</div>
         <div class="players" id="players"></div>
         <div class="heartbeat-display" id="heartbeat">♥</div>
     </div>
@@ -440,7 +440,7 @@
                 
                 if (activePlayers.length < 3) {
                     status.textContent = 'Need 3+ players'; animation.style.display = 'flex'; processing = false;
-                    setTimeout(() => status.textContent = 'Love; Love ❤️', 3000);
+                    setTimeout(() => status.textContent = 'Hold screen to configure', 3000);
                     return;
                 }
 
@@ -458,7 +458,7 @@
                 
             } catch (error) {
                 status.textContent = 'Error'; animation.style.display = 'flex'; processing = false;
-                setTimeout(() => status.textContent = 'Love; Love ❤️, 3000);
+                setTimeout(() => status.textContent = 'Hold screen to configure', 3000);
             }
         }
 
@@ -608,4 +608,3 @@
     </script>
 </body>
 </html>
-
