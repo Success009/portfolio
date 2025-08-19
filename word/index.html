@@ -61,21 +61,25 @@
             background: linear-gradient(135deg, #1a1a2e, #16213e);
             border: 2px solid #0ff;
             color: #fff;
-            padding: min(8vw, 3rem);
-            border-radius: min(4vw, 1rem);
-            font-size: min(12vw, 3rem);
+            padding: min(6vw, 2.5rem);
+            border-radius: min(3vw, 1rem);
+            font-size: min(10vw, 2.5rem);
             font-weight: 800;
             margin: 3vh 0;
-            box-shadow: 0 0 min(8vw, 2rem) rgba(0,255,255,0.3);
+            box-shadow: 0 0 min(6vw, 1.5rem) rgba(0,255,255,0.3);
             transition: all 0.3s ease;
             max-width: 90vw;
             word-break: break-word;
+            min-height: min(25vh, 200px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .imposter {
             background: linear-gradient(135deg, #2d1b69, #8b1538);
             border-color: #f0f;
-            box-shadow: 0 0 min(8vw, 2rem) rgba(255,0,255,0.3);
+            box-shadow: 0 0 min(6vw, 1.5rem) rgba(255,0,255,0.3);
         }
 
         .word.hidden {
@@ -105,41 +109,41 @@
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #1a1a2e, #16213e);
             border: 2px solid #0ff;
-            padding: min(6vw, 1.5rem);
-            border-radius: min(3vw, 0.8rem);
-            box-shadow: 0 0 min(10vw, 3rem) rgba(0,255,255,0.4);
+            padding: min(5vw, 1.2rem);
+            border-radius: min(2vw, 0.8rem);
+            box-shadow: 0 0 min(8vw, 2rem) rgba(0,255,255,0.4);
             display: none;
             z-index: 1000;
-            width: min(90vw, 20rem);
-            max-height: 90vh;
+            width: min(85vw, 18rem);
+            max-height: 85vh;
             overflow-y: auto;
         }
 
         .config h3 {
-            font-size: min(5vw, 1.2rem);
-            margin-bottom: min(4vw, 1rem);
+            font-size: min(4.5vw, 1.1rem);
+            margin-bottom: min(3vw, 0.8rem);
             color: #0ff;
         }
 
         .config-item {
-            margin-bottom: min(3vw, 0.8rem);
+            margin-bottom: min(2.5vw, 0.7rem);
         }
 
         .config-label {
             display: block;
-            font-size: min(3.5vw, 0.8rem);
+            font-size: min(3.2vw, 0.75rem);
             color: #0ff;
-            margin-bottom: min(1vw, 0.3rem);
+            margin-bottom: min(1vw, 0.25rem);
         }
 
         .config-input, .config-select {
             width: 100%;
-            padding: min(2vw, 0.5rem);
+            padding: min(2vw, 0.4rem);
             border: 1px solid #333;
-            border-radius: min(1vw, 0.3rem);
+            border-radius: min(1vw, 0.25rem);
             background: #111;
             color: #fff;
-            font-size: min(3vw, 0.8rem);
+            font-size: min(3vw, 0.75rem);
         }
 
         .config-input:focus, .config-select:focus {
@@ -147,19 +151,9 @@
             border-color: #0ff;
         }
 
-        .config-row {
-            display: flex;
-            gap: min(2vw, 0.5rem);
-        }
-
-        .config-row .config-item {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
         .range-display {
             text-align: center;
-            font-size: min(3vw, 0.7rem);
+            font-size: min(2.8vw, 0.65rem);
             color: #888;
             margin-top: min(1vw, 0.2rem);
         }
@@ -167,30 +161,30 @@
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: min(2vw, 0.5rem);
-            margin: min(2vw, 0.5rem) 0;
+            gap: min(2vw, 0.4rem);
+            margin: min(2vw, 0.4rem) 0;
         }
 
         .checkbox-item input {
-            width: min(4vw, 1rem);
-            height: min(4vw, 1rem);
+            width: min(3.5vw, 0.9rem);
+            height: min(3.5vw, 0.9rem);
         }
 
         .checkbox-item label {
-            font-size: min(3vw, 0.7rem);
+            font-size: min(2.8vw, 0.65rem);
         }
 
         .save-btn {
             background: linear-gradient(45deg, #0ff, #f0f);
             color: #000;
             border: none;
-            padding: min(3vw, 0.8rem);
-            border-radius: min(2vw, 0.5rem);
+            padding: min(2.5vw, 0.7rem);
+            border-radius: min(1.5vw, 0.4rem);
             width: 100%;
-            font-size: min(4vw, 1rem);
+            font-size: min(3.5vw, 0.9rem);
             font-weight: 600;
             cursor: pointer;
-            margin-top: min(3vw, 1rem);
+            margin-top: min(2vw, 0.8rem);
         }
 
         .loading::after {
@@ -202,12 +196,6 @@
             0%, 20% { content: '.'; }
             40% { content: '..'; }
             60%, 100% { content: '...'; }
-        }
-
-        @media (max-height: 500px) {
-            .title { font-size: min(6vw, 1.5rem); margin-bottom: 1vh; }
-            .word { padding: min(6vw, 2rem); font-size: min(10vw, 2rem); margin: 2vh 0; }
-            .dots { margin: 1vh 0; }
         }
     </style>
 </head>
@@ -227,47 +215,31 @@
         <h3>Settings</h3>
         <div class="config-item">
             <label class="config-label">Imposters:</label>
-            <input type="range" class="config-input" id="imposters" min="0" max="10" value="1">
+            <input type="range" class="config-input" id="imposters" min="1" max="10" value="1">
             <div class="range-display" id="impostersDisplay">1</div>
         </div>
-        <div class="config-row">
-            <div class="config-item">
-                <label class="config-label">Category:</label>
-                <select class="config-select" id="category">
-                    <option value="mixed">Mixed</option>
-                    <option value="animals">Animals</option>
-                    <option value="countries">Countries</option>
-                    <option value="objects">Objects</option>
-                    <option value="food">Food</option>
-                </select>
-            </div>
-            <div class="config-item">
-                <label class="config-label">Difficulty:</label>
-                <select class="config-select" id="difficulty">
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-            </div>
+        <div class="config-item">
+            <label class="config-label">Category:</label>
+            <select class="config-select" id="category">
+                <option value="mixed">Mixed</option>
+                <option value="animals">Animals</option>
+                <option value="countries">Countries</option>
+                <option value="objects">Objects</option>
+                <option value="food">Food</option>
+            </select>
         </div>
-        <div class="config-row">
-            <div class="config-item">
-                <label class="config-label">Min Players:</label>
-                <input type="number" class="config-input" id="minPlayers" min="2" max="20" value="2">
-            </div>
-            <div class="config-item">
-                <label class="config-label">Max Players:</label>
-                <input type="number" class="config-input" id="maxPlayers" min="2" max="50" value="10">
-            </div>
+        <div class="config-item">
+            <label class="config-label">Difficulty:</label>
+            <select class="config-select" id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
         </div>
         <div class="config-item">
             <div class="checkbox-item">
-                <input type="checkbox" id="properNouns">
-                <label>Proper Nouns</label>
-            </div>
-            <div class="checkbox-item">
-                <input type="checkbox" id="plurals">
-                <label>Plurals</label>
+                <input type="checkbox" id="randomImposters">
+                <label>Random Imposters (0 to max)</label>
             </div>
         </div>
         <button class="save-btn" onclick="saveConfig()">Save</button>
@@ -288,7 +260,14 @@
         });
         
         const db = getDatabase(app);
-        const deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+        const GAME_NODE = 'wordImposterGame';
+        
+        // Persistent device ID
+        let deviceId = localStorage.getItem('wordImposterDeviceId');
+        if (!deviceId) {
+            deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('wordImposterDeviceId', deviceId);
+        }
         
         let processing = false;
         let longPress = null;
@@ -323,7 +302,7 @@
         }
 
         function startHeartbeat() {
-            const send = () => set(ref(db, `players/${deviceId}`), { timestamp: Date.now() });
+            const send = () => set(ref(db, `${GAME_NODE}/players/${deviceId}`), { timestamp: Date.now() });
             send();
             const loop = () => {
                 heartbeat = setTimeout(() => { send(); loop(); }, Math.random() * 4000 + 6000);
@@ -333,30 +312,28 @@
 
         function startCleanup() {
             const clean = () => {
-                get(ref(db, 'players')).then(snap => {
+                get(ref(db, `${GAME_NODE}/players`)).then(snap => {
                     const p = snap.val() || {};
                     const now = Date.now();
                     for (const [id, data] of Object.entries(p)) {
-                        if (now - data.timestamp > 60000) remove(ref(db, `players/${id}`));
+                        if (now - data.timestamp > 15000) {
+                            remove(ref(db, `${GAME_NODE}/players/${id}`));
+                        }
                     }
                 });
             };
             const loop = () => {
-                cleanup = setTimeout(() => { clean(); loop(); }, Math.random() * 30000 + 45000);
+                cleanup = setTimeout(() => { clean(); loop(); }, Math.random() * 15000 + 10000);
             };
             loop();
         }
 
         async function getWord() {
-            const cfg = await get(ref(db, 'gameConfig'));
-            const c = cfg.val() || {};
-            const cat = c.category || 'mixed';
-            const diff = c.difficulty || 'easy';
-            const proper = c.properNouns ? '' : ' No proper nouns.';
-            const plural = c.plurals ? '' : ' No plurals.';
+            const cfg = await get(ref(db, `${GAME_NODE}/config`));
+            const c = cfg.val() || { category: 'mixed', difficulty: 'easy' };
             
             let catPrompt = '';
-            switch(cat) {
+            switch(c.category) {
                 case 'animals': catPrompt = 'animal'; break;
                 case 'countries': catPrompt = 'country'; break;
                 case 'objects': catPrompt = 'object'; break;
@@ -364,7 +341,7 @@
                 default: catPrompt = 'word';
             }
 
-            const prompt = `Generate one ${diff} ${catPrompt} for guessing game.${proper}${plural} Just the word.`;
+            const prompt = `Generate one ${c.difficulty} ${catPrompt} for guessing game. Just the word.`;
             
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyAioo23YXTQAxFZ9J5OGlzd3WrjPYW9IEY`, {
                 method: 'POST',
@@ -380,10 +357,10 @@
         }
 
         async function getActivePlayers() {
-            const snap = await get(ref(db, 'players'));
+            const snap = await get(ref(db, `${GAME_NODE}/players`));
             const p = snap.val() || {};
             const now = Date.now();
-            return Object.keys(p).filter(id => now - p[id].timestamp < 60000);
+            return Object.keys(p).filter(id => now - p[id].timestamp < 15000);
         }
 
         async function startGame() {
@@ -396,28 +373,32 @@
 
                 const word = await getWord();
                 const activePlayers = await getActivePlayers();
-                const cfg = await get(ref(db, 'gameConfig'));
-                const c = cfg.val() || {};
                 
-                const min = c.minPlayers || 2;
-                const max = c.maxPlayers || 10;
-
-                if (activePlayers.length < min) {
-                    status.textContent = `Need ${min} players`;
+                if (activePlayers.length < 3) {
+                    status.textContent = 'Need 3+ players';
                     animation.style.display = 'flex';
                     processing = false;
                     setTimeout(() => status.textContent = 'Tap to start', 3000);
                     return;
                 }
 
-                const playersToUse = activePlayers.slice(0, max);
-                const shuffled = [...playersToUse].sort(() => Math.random() - 0.5);
-                const numImposters = Math.min(parseInt(c.imposters || 1), playersToUse.length - 1);
+                const cfg = await get(ref(db, `${GAME_NODE}/config`));
+                const c = cfg.val() || { imposters: 1, randomImposters: false };
+                
+                const shuffled = [...activePlayers].sort(() => Math.random() - 0.5);
+                let numImposters;
+                
+                if (c.randomImposters) {
+                    numImposters = Math.floor(Math.random() * (activePlayers.length - 1)); // 0 to (players-1)
+                } else {
+                    numImposters = Math.min(parseInt(c.imposters || 1), activePlayers.length - 1);
+                }
+                
                 const imposters = shuffled.slice(0, numImposters);
 
-                await set(ref(db, 'currentGame'), {
+                await set(ref(db, `${GAME_NODE}/currentGame`), {
                     word,
-                    players: playersToUse,
+                    players: activePlayers,
                     imposters,
                     timestamp: Date.now()
                 });
@@ -437,8 +418,8 @@
             game.innerHTML = `
                 <div class="word ${isImposter ? 'imposter' : ''}" id="wordDisplay">
                     ${isImposter ? 
-                        '<div><div style="font-size: 1.5em; margin-bottom: 0.2em;">🕵️</div><div>IMPOSTER</div><div style="font-size: 0.6em; margin-top: 0.2em; opacity: 0.8;">Blend in!</div></div>' :
-                        `<div><div style="font-size: 0.6em; margin-bottom: 0.2em; opacity: 0.8;">Word:</div><div style="text-transform: uppercase;">${word}</div><div style="font-size: 0.6em; margin-top: 0.2em; opacity: 0.8;">Find imposter!</div></div>`
+                        '<div><div style="font-size: 1.5em; margin-bottom: 0.3em;">🕵️</div><div>IMPOSTER</div><div style="font-size: 0.6em; margin-top: 0.3em; opacity: 0.8;">Blend in!</div></div>' :
+                        `<div><div style="font-size: 0.6em; margin-bottom: 0.3em; opacity: 0.8;">Word:</div><div style="text-transform: uppercase;">${word}</div><div style="font-size: 0.6em; margin-top: 0.3em; opacity: 0.8;">Find imposters!</div></div>`
                     }
                 </div>
                 <div class="status" id="status">Tap for new game</div>
@@ -460,17 +441,17 @@
         }
 
         function updatePlayers() {
-            onValue(ref(db, 'players'), snap => {
+            onValue(ref(db, `${GAME_NODE}/players`), snap => {
                 const p = snap.val() || {};
                 const now = Date.now();
-                const count = Object.values(p).filter(data => now - data.timestamp < 60000).length;
+                const count = Object.values(p).filter(data => now - data.timestamp < 15000).length;
                 const playersEl = document.getElementById('players');
                 if (playersEl) playersEl.textContent = `${count} active`;
                 
-                // Update imposter range
+                // Update imposter range max
                 const impostersInput = document.getElementById('imposters');
-                if (impostersInput) {
-                    const maxImposters = Math.max(0, count - 1);
+                if (impostersInput && count > 0) {
+                    const maxImposters = Math.max(1, count - 1);
                     impostersInput.max = maxImposters;
                     if (parseInt(impostersInput.value) > maxImposters) {
                         impostersInput.value = maxImposters;
@@ -488,19 +469,32 @@
 
         async function loadConfig() {
             try {
-                const cfg = await get(ref(db, 'gameConfig'));
+                const cfg = await get(ref(db, `${GAME_NODE}/config`));
                 const c = cfg.val();
                 if (c) {
                     document.getElementById('imposters').value = c.imposters || 1;
                     document.getElementById('category').value = c.category || 'mixed';
                     document.getElementById('difficulty').value = c.difficulty || 'easy';
-                    document.getElementById('minPlayers').value = c.minPlayers || 2;
-                    document.getElementById('maxPlayers').value = c.maxPlayers || 10;
-                    document.getElementById('properNouns').checked = c.properNouns || false;
-                    document.getElementById('plurals').checked = c.plurals || false;
+                    document.getElementById('randomImposters').checked = c.randomImposters || false;
                     updateRange();
+                } else {
+                    // Set defaults
+                    await set(ref(db, `${GAME_NODE}/config`), {
+                        imposters: 1,
+                        category: 'mixed',
+                        difficulty: 'easy',
+                        randomImposters: false
+                    });
                 }
-            } catch (e) {}
+            } catch (e) {
+                // Set defaults on error
+                await set(ref(db, `${GAME_NODE}/config`), {
+                    imposters: 1,
+                    category: 'mixed',
+                    difficulty: 'easy',
+                    randomImposters: false
+                });
+            }
         }
 
         function showConfig() {
@@ -508,26 +502,36 @@
             loadConfig();
         }
 
-        window.saveConfig = function() {
+        window.saveConfig = async function() {
             const c = {
-                imposters: document.getElementById('imposters').value,
+                imposters: parseInt(document.getElementById('imposters').value),
                 category: document.getElementById('category').value,
                 difficulty: document.getElementById('difficulty').value,
-                minPlayers: document.getElementById('minPlayers').value,
-                maxPlayers: document.getElementById('maxPlayers').value,
-                properNouns: document.getElementById('properNouns').checked,
-                plurals: document.getElementById('plurals').checked
+                randomImposters: document.getElementById('randomImposters').checked
             };
-            set(ref(db, 'gameConfig'), c);
+            await set(ref(db, `${GAME_NODE}/config`), c);
             config.style.display = 'none';
         };
 
         // Event listeners
         document.getElementById('imposters').addEventListener('input', updateRange);
         
-        onValue(ref(db, 'currentGame'), snap => {
+        // Listen for config changes
+        onValue(ref(db, `${GAME_NODE}/config`), snap => {
+            const c = snap.val();
+            if (c && config.style.display === 'none') {
+                document.getElementById('imposters').value = c.imposters || 1;
+                document.getElementById('category').value = c.category || 'mixed';
+                document.getElementById('difficulty').value = c.difficulty || 'easy';
+                document.getElementById('randomImposters').checked = c.randomImposters || false;
+                updateRange();
+            }
+        });
+        
+        // Listen for game updates
+        onValue(ref(db, `${GAME_NODE}/currentGame`), snap => {
             const data = snap.val();
-            if (data && !processing && Date.now() - data.timestamp < 30000) {
+            if (data && Date.now() - data.timestamp < 30000) {
                 if (data.players.includes(deviceId)) {
                     showResult(data.word, data.imposters.includes(deviceId));
                 }
