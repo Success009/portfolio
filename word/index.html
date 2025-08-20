@@ -66,10 +66,7 @@
         <div class="config-item">
             <div class="checkbox-item">
                 <input type="checkbox" id="unknownImposter" checked>
-                <label>🎭 Unknown Imposter <span class="feature-highlight">NEW!</span></label>
-            </div>
-            <div style="font-size:min(2vw,.5rem);color:#888;margin-top:min(.5vw,.2rem);padding-left:min(4vw,1rem);">
-                Imposters don't know they're imposters
+                <label>🎭 Unknown Imposter</label>
             </div>
         </div>
 
@@ -200,7 +197,7 @@
                 }
             }
             
-            const words = ['dog', 'cat', 'tree', 'car', 'house', 'book', 'sun', 'water', 'fire', 'bird', 'fish', 'lion', 'bear', 'wolf', 'fox', 'deer', 'horse', 'cow', 'pig', 'sheep', 'chicken', 'duck', 'rabbit', 'mouse', 'elephant', 'tiger', 'monkey', 'snake', 'frog', 'bee', 'spider', 'flower', 'grass', 'mountain', 'river', 'ocean', 'lake', 'forest', 'desert', 'rock', 'sand', 'cloud', 'rain', 'snow', 'wind', 'storm', 'moon', 'star', 'planet', 'earth', 'apple', 'banana', 'orange', 'bread', 'milk', 'cheese', 'pizza', 'cake', 'cookie', 'tea', 'coffee', 'juice', 'chair', 'table', 'bed', 'door', 'window', 'phone', 'computer', 'bike', 'bus', 'train', 'plane', 'boat', 'ball', 'toy', 'game', 'music', 'dance', 'sing', 'run', 'walk', 'jump', 'swim', 'fly', 'red', 'blue', 'green', 'yellow', 'black', 'white', 'pink', 'purple', 'orange', 'brown', 'big', 'small', 'hot', 'cold', 'fast', 'slow', 'happy', 'sad', 'love', 'friend'];
+            const words = ['dog', 'cat', 'tree', 'car', 'house', 'book', 'sun', 'water', 'fire', 'bird', 'fish', 'lion', 'bear', 'wolf', 'fox', 'deer', 'horse', 'cow', 'pig', 'sheep', 'chicken', 'duck', 'rabbit', 'mouse', 'elephant', 'tiger', 'monkey', 'snake', 'frog', 'bee', 'spider', 'flower', 'grass', 'mountain', 'river', 'ocean', 'lake', 'forest', 'desert', 'rock', 'sand', 'cloud', 'rain', 'snow', 'wind', 'storm', 'moon', 'star', 'planet', 'earth', 'apple', 'banana', 'orange', 'bread', 'milk', 'cheese', 'pizza', 'cake', 'cookie', 'tea', 'coffee', 'juice', 'chair', 'table', 'bed', 'door', 'window', 'phone', 'computer', 'bike', 'bus', 'train', 'plane', 'boat', 'ball', 'toy', 'game', 'music', 'dance', 'sing', 'run', 'walk', 'jump', 'swim', 'fly', 'red', 'blue', 'green', 'yellow', 'black', 'white', 'pink', 'purple', 'orange', 'brown', 'big', 'small', 'hot', 'cold', 'fast', 'slow', 'happy', 'sad', 'love', 'friend', 'school', 'park', 'shop', 'home', 'work', 'play', 'food', 'drink', 'sleep', 'wake', 'light', 'dark', 'up', 'down', 'left', 'right', 'new', 'old', 'good', 'bad', 'yes', 'no', 'stop', 'go', 'come', 'here', 'there', 'baby', 'child', 'man', 'woman', 'boy', 'girl', 'mother', 'father', 'brother', 'sister', 'hand', 'foot', 'head', 'eye', 'ear', 'nose', 'mouth', 'hair', 'face', 'smile', 'laugh', 'cry', 'help', 'thank', 'sorry', 'please'];
             
             if (isForImposter && mainWord) {
                 // Filter out the main word and try to avoid similar words
@@ -281,41 +278,41 @@
             const unknownImposter = gameData.unknownImposter || false;
             
             let displayWord = gameData.word;
-            let isUnknownImposter = false;
+            let showAsImposter = false;
             
-            // Determine what word to show and styling
-            if (isImposter && unknownImposter && gameData.imposterWords && gameData.imposterWords[deviceId]) {
-                // Unknown imposter - show their different word, but don't tell them they're an imposter
-                displayWord = gameData.imposterWords[deviceId];
-                isUnknownImposter = true;
+            // Determine what to show based on unknown imposter setting
+            if (unknownImposter) {
+                // Unknown imposter mode - imposters get different word but don't know they're imposters
+                if (isImposter && gameData.imposterWords && gameData.imposterWords[deviceId]) {
+                    displayWord = gameData.imposterWords[deviceId];
+                }
+                // Everyone appears as normal player in unknown mode
+                showAsImposter = false;
+            } else {
+                // Classic mode - imposters know they're imposters
+                showAsImposter = isImposter;
             }
             
             currentGameData = { 
                 word: displayWord, 
                 isImposter, 
                 isStarter, 
-                isUnknownImposter,
+                showAsImposter,
                 unknownImposter
             };
             
             const starterClass = isStarter ? 'starter' : '';
-            let imposterClass = '';
-            let roleDisplay = '';
+            const imposterClass = showAsImposter ? 'imposter' : '';
+            const combinedClass = `${starterClass} ${imposterClass}`.trim();
             
-            if (isImposter && !unknownImposter) {
-                // Classic imposter mode - they know they're imposters
-                imposterClass = 'imposter';
+            let roleDisplay = '';
+            if (showAsImposter) {
+                // Classic imposter display
                 roleDisplay = '<div><div style="font-size:1.5em;margin-bottom:.3em">🕵️</div><div>IMPOSTER</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Blend in & guess the word!</div></div>';
-            } else if (isUnknownImposter) {
-                // Unknown imposter - they think they're normal players
-                imposterClass = 'unknown-imposter';
-                roleDisplay = `<div><div style="font-size:.6em;margin-bottom:.3em;opacity:.8">Word:</div><div style="text-transform:uppercase">${displayWord}</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Find the imposters!</div></div>`;
             } else {
-                // Normal player
+                // Normal player display (including unknown imposters)
                 roleDisplay = `<div><div style="font-size:.6em;margin-bottom:.3em;opacity:.8">Word:</div><div style="text-transform:uppercase">${displayWord}</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Find the imposters!</div></div>`;
             }
-            
-            const combinedClass = `${starterClass} ${imposterClass}`.trim();
             
             gameEl.innerHTML = `<div class="word ${combinedClass}" id="wordDisplay">${isStarter ? '<div class="turn-indicator">🎯 YOU START FIRST!<br>Give the first hint</div>' : ''}${roleDisplay}</div><div class="status" id="status">Tap to hide/show • Hold for config</div><div class="players" id="players"></div><div class="heartbeat-display" id="heartbeat">♥</div>`;
             
@@ -432,4 +429,3 @@
     </script>
 </body>
 </html>
-
