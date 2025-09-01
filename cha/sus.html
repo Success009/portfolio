@@ -8,23 +8,6 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;height:100vh;overflow:hidden}
 
-.intruder{
-background:linear-gradient(135deg,#ff6b6b,#ff3737,#ee5a52);
-color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
-height:100vh;padding:40px;text-align:center;position:relative;overflow:hidden
-}
-.intruder::before{
-content:'';position:absolute;top:0;left:0;right:0;bottom:0;
-background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="40" cy="60" r="0.5" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-opacity:0.3;animation:float 20s ease-in-out infinite
-}
-.intruder-icon{font-size:80px;margin-bottom:30px;animation:pulse 2s ease-in-out infinite;z-index:1}
-.intruder-title{font-size:32px;font-weight:800;margin-bottom:15px;text-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:1}
-.intruder-subtitle{font-size:18px;opacity:0.9;font-weight:300;letter-spacing:0.5px;z-index:1}
-
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-20px)}}
-
 .chat{display:flex;flex-direction:column;height:100vh;background:#fff}
 .header{
 background:linear-gradient(135deg,#667eea,#764ba2);
@@ -88,22 +71,11 @@ from{opacity:0;transform:translateY(20px) scale(0.95)}
 to{opacity:1;transform:translateY(0) scale(1)}
 }
 
-.typing{
-display:flex;justify-content:flex-start;margin:8px 0;opacity:0.6
-}
-.typing .bubble{
-background:#e9ecef;color:#6c757d;padding:8px 16px;
-animation:typingPulse 1.5s ease-in-out infinite
-}
-@keyframes typingPulse{0%,100%{opacity:0.6}50%{opacity:1}}
-
 @media(max-width:480px){
 .header{padding:15px}
 .messages{padding:10px 8px}
 .bubble{max-width:90%;padding:10px 14px}
 .input-area{padding:12px}
-.intruder-title{font-size:28px}
-.intruder-subtitle{font-size:16px}
 }
 </style>
 </head>
@@ -125,50 +97,7 @@ measurementId:"G-FW93CB5QL7"
 firebase.initializeApp(cfg);
 const db=firebase.database();
 const app=document.getElementById('app');
-let verified=false,msgs=[],msgContainer;
-
-function block(){
-app.innerHTML=`<div class="intruder">
-<div class="intruder-subtitle">Just joking</div>
-<div class="intruder-icon">🖕</div>
-<div class="intruder-title">Don't fucking interfere</div>
-</div>`;
-}
-
-async function ensureStructure(){
-try{
-const chatRef=db.ref('chatting');
-const snapshot=await chatRef.once('value');
-if(!snapshot.exists()){
-await chatRef.set({
-Token:"device_bnnkklkcm34_1756732674868",
-messages:{Bhrikuti:{},success:{}}
-});
-}
-const tokenSnapshot=await chatRef.child('Token').once('value');
-if(!tokenSnapshot.exists()){
-await chatRef.child('Token').set("device_bnnkklkcm34_1756732674868");
-}
-}catch(e){console.error('Structure setup failed:',e)}
-}
-
-async function verifyToken(){
-const localTkn=localStorage.getItem('deviceToken');
-if(!localTkn){block();return}
-await ensureStructure();
-try{
-const snapshot=await db.ref('chatting/Token').once('value');
-const allowedTkn=snapshot.val();
-if(localTkn===allowedTkn){
-verified=true;
-renderChat();
-}else{
-block();
-}
-}catch(e){
-block();
-}
-}
+let msgs=[],msgContainer;
 
 function renderChat(){
 app.innerHTML=`<div class="chat">
@@ -231,7 +160,6 @@ setTimeout(()=>addMessage(m,false),i*50);
 }
 
 function loadMsgs(){
-if(!verified)return;
 const bhrikutiRef=db.ref('chatting/messages/Bhrikuti');
 const successRef=db.ref('chatting/messages/success');
 
@@ -241,13 +169,11 @@ Promise.all([
 bhrikutiRef.once('value'),
 successRef.once('value')
 ]).then(([bhrikutiSnap,successSnap])=>{
-// Process Bhrikuti messages (left side)
 if(bhrikutiSnap.exists()){
 Object.entries(bhrikutiSnap.val()).forEach(([id,msg])=>{
 if(msg&&msg.text)newMsgs.push({...msg,sender:'user',id:'bhrikuti_'+id});
 });
 }
-// Process success messages (right side)
 if(successSnap.exists()){
 Object.entries(successSnap.val()).forEach(([id,msg])=>{
 if(msg&&msg.text)newMsgs.push({...msg,sender:'me',id:'success_'+id});
@@ -274,31 +200,26 @@ successRef.on('value',processMessages);
 }
 
 async function send(){
-if(!verified)return;
 const i=document.getElementById('input');
 const txt=i.value.trim();
 if(!txt)return;
-
-const localTkn=localStorage.getItem('deviceToken');
-const isFriend=localTkn==="device_bnnkklkcm34_1756732674868";
-const targetPath=isFriend?'chatting/messages/Bhrikuti':'chatting/messages/success';
 
 i.value='';
 i.style.height='auto';
 i.focus();
 
 try{
-await db.ref(targetPath).push({
+await db.ref('chatting/messages/success').push({
 text:txt,
 timestamp:new Date().toISOString(),
-user:localTkn
+user:'success'
 });
 }catch(e){
 console.error('Send failed:',e);
 }
 }
 
-document.addEventListener('DOMContentLoaded',verifyToken);
+document.addEventListener('DOMContentLoaded',renderChat);
 </script>
 </body>
 </html>
