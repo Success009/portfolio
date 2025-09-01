@@ -199,7 +199,11 @@ this.style.height=Math.min(this.scrollHeight,120)+'px';
 
 function addMessage(msg,animate=true){
 const d=document.createElement('div');
-d.className=`msg ${msg.sender}`;
+// Fixed: Determine display side based on message source, not sender field
+// Messages from 'user' collection appear on left (user class)
+// Messages from 'success' collection appear on right (me class)
+const displayClass = msg.source === 'user' ? 'user' : 'me';
+d.className=`msg ${displayClass}`;
 const t=new Date(msg.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
 d.innerHTML=`<div class="bubble">${escapeHtml(msg.text)}<div class="time">${t}</div></div>`;
 if(!animate)d.style.animation='none';
@@ -241,16 +245,16 @@ Promise.all([
 userRef.once('value'),
 successRef.once('value')
 ]).then(([userSnap,successSnap])=>{
-// Process user messages
+// Process user messages (appear on left)
 if(userSnap.exists()){
 Object.entries(userSnap.val()).forEach(([id,msg])=>{
-if(msg&&msg.text)newMsgs.push({...msg,sender:'user',id:'user_'+id});
+if(msg&&msg.text)newMsgs.push({...msg,source:'user',id:'user_'+id});
 });
 }
-// Process success messages  
+// Process success messages (appear on right)
 if(successSnap.exists()){
 Object.entries(successSnap.val()).forEach(([id,msg])=>{
-if(msg&&msg.text)newMsgs.push({...msg,sender:'me',id:'success_'+id});
+if(msg&&msg.text)newMsgs.push({...msg,source:'success',id:'success_'+id});
 });
 }
 
@@ -279,9 +283,8 @@ const i=document.getElementById('input');
 const txt=i.value.trim();
 if(!txt)return;
 
-const localTkn=localStorage.getItem('deviceToken');
-const isAdmin=localTkn!=="device_bnnkklkcm34_1756732674868";
-const targetPath=isAdmin?'chatting/messages/success':'chatting/messages/user';
+// Fixed: User messages always go to 'user' collection
+const targetPath='chatting/messages/user';
 
 i.value='';
 i.style.height='auto';
@@ -291,7 +294,7 @@ try{
 await db.ref(targetPath).push({
 text:txt,
 timestamp:new Date().toISOString(),
-user:localTkn
+user:localStorage.getItem('deviceToken')
 });
 }catch(e){
 console.error('Send failed:',e);
