@@ -1,2 +1,155 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chat</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f0f2f5;height:100vh;overflow:hidden}.intruder{background:#000;color:#ff4444;display:flex;align-items:center;justify-content:center;height:100vh;font-size:24px;font-weight:bold;text-align:center}.chat{display:flex;flex-direction:column;height:100vh}.header{background:#4267b2;color:white;padding:15px 20px;font-weight:600;font-size:18px;box-shadow:0 2px 4px rgba(0,0,0,.1)}.messages{flex:1;overflow-y:auto;padding:10px;background:#e5e5ea}.msg{display:flex;margin:5px 0;animation:slideIn .3s ease}.user{justify-content:flex-start}.me{justify-content:flex-end}.bubble{max-width:75%;padding:8px 12px;border-radius:18px;position:relative;word-wrap:break-word}.user .bubble{background:#fff;color:#000;border-bottom-left-radius:4px}.me .bubble{background:#007bff;color:#fff;border-bottom-right-radius:4px}.time{font-size:11px;opacity:.7;margin-top:2px}.input-area{background:#fff;padding:10px;border-top:1px solid #ddd;display:flex;align-items:end}.input{flex:1;border:1px solid #ddd;border-radius:20px;padding:8px 15px;outline:none;resize:none;max-height:100px;font-family:inherit}.send{background:#007bff;color:#fff;border:none;border-radius:50%;width:40px;height:40px;margin-left:8px;cursor:pointer;font-size:16px}@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}</style></head><body><div id="app"></div><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><script>const cfg={apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",authDomain:"community-canvas-255fa.firebaseapp.com",databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",projectId:"community-canvas-255fa",storageBucket:"community-canvas-255fa.appStorage.com",messagingSenderId:"729445267995",appId:"1:729445267995:web:05da6756d66c58b9ccd6be",measurementId:"G-FW93CB5QL7"};firebase.initializeApp(cfg);const db=firebase.database();const app=document.getElementById('app');let verified=falselet msgs=[];function renderChat(){app.innerHTML=`<div class="chat"><div class="header">Messages</div><div class="messages" id="msgs"></div><div class="input-area"><textarea id="input" class="input" placeholder="Type a message..." rows="1"></textarea><button onclick="send()" class="send">→</button></div></div>`;loadMsgs();document.getElementById('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});document.getElementById('input').addEventListener('input',function(){this.style.height='auto';this.style.height=this.scrollHeight+'px'})}function renderMsgs(){const c=document.getElementById('msgs');c.innerHTML='';msgs.forEach(m=>{const d=document.createElement('div');d.className=`msg ${m.sender}`;const t=new Date(m.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});d.innerHTML=`<div class="bubble">${m.text}<div class="time">${t}</div></div>`;c.appendChild(d)});c.scrollTop=c.scrollHeight}function loadMsgs(){if(!verified)return;db.ref('chatting/messages').on('value',s=>{msgs=[];const data=s.val();if(data){Object.entries(data).forEach(([k,v])=>{if(typeof v==='object'&&v.text){msgs.push({...v,sender:k==='user'?'user':'me'})}else if(k!=='user'){Object.entries(v).forEach(([_,msg])=>{if(msg.text)msgs.push({...msg,sender:'me'})})}})}msgs.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));renderMsgs()})}async function verifyToken(){const localTkn=localStorage.getItem('deviceToken');if(!localTkn){app.innerHTML='<div class="intruder">Don\'t fucking interfere</div>';return}try{const s=await db.ref('chatting/Token').once('value');const allowedTkn=s.val();if(localTkn===allowedTkn){verified=true;renderChat()}else{app.innerHTML='<div class="intruder">Don\'t fucking interfere</div>'}}catch(e){app.innerHTML='<div class="intruder">Don\'t fucking interfere</div>'}}function send(){if(!verified)return;const i=document.getElementById('input');const txt=i.value.trim();if(!txt)return;db.ref('chatting/messages/user').push({text:txt,timestamp:new Date().toISOString()});i.value='';i.style.height='auto'}document.addEventListener('DOMContentLoaded',verifyToken)</script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f0f2f5;height:100vh;overflow:hidden}
+.intruder{background:#000;color:#ff4444;display:flex;align-items:center;justify-content:center;height:100vh;font-size:24px;font-weight:bold;text-align:center}
+.chat{display:flex;flex-direction:column;height:100vh}
+.header{background:#4267b2;color:white;padding:15px 20px;font-weight:600;font-size:18px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+.messages{flex:1;overflow-y:auto;padding:10px;background:#e5e5ea}
+.msg{display:flex;margin:5px 0;animation:slideIn .3s ease}
+.user{justify-content:flex-start}
+.me{justify-content:flex-end}
+.bubble{max-width:75%;padding:8px 12px;border-radius:18px;position:relative;word-wrap:break-word}
+.user .bubble{background:#fff;color:#000;border-bottom-left-radius:4px}
+.me .bubble{background:#007bff;color:#fff;border-bottom-right-radius:4px}
+.time{font-size:11px;opacity:.7;margin-top:2px}
+.input-area{background:#fff;padding:10px;border-top:1px solid #ddd;display:flex;align-items:end}
+.input{flex:1;border:1px solid #ddd;border-radius:20px;padding:8px 15px;outline:none;resize:none;max-height:100px;font-family:inherit}
+.send{background:#007bff;color:#fff;border:none;border-radius:50%;width:40px;height:40px;margin-left:8px;cursor:pointer;font-size:16px}
+@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const cfg={
+apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+authDomain:"community-canvas-255fa.firebaseapp.com",
+databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",
+projectId:"community-canvas-255fa",
+storageBucket:"community-canvas-255fa.appStorage.com",
+messagingSenderId:"729445267995",
+appId:"1:729445267995:web:05da6756d66c58b9ccd6be",
+measurementId:"G-FW93CB5QL7"
+};
+firebase.initializeApp(cfg);
+const db=firebase.database();
+const app=document.getElementById('app');
+let verified=false,msgs=[];
 
+function block(){app.innerHTML='<div class="intruder">Don\'t fucking interfere</div>'}
+
+async function verifyToken(){
+const localTkn=localStorage.getItem('deviceToken');
+if(!localTkn){block();return}
+try{
+const snapshot=await db.ref('chatting/Token').once('value');
+const allowedTkn=snapshot.val();
+if(localTkn===allowedTkn){
+verified=true;
+renderChat();
+}else{
+block();
+}
+}catch(e){
+try{
+await db.ref('chatting').set({Token:localTkn,messages:{}});
+verified=true;
+renderChat();
+}catch(e2){
+block();
+}
+}
+}
+
+function renderChat(){
+app.innerHTML=`<div class="chat">
+<div class="header">Messages</div>
+<div class="messages" id="msgs"></div>
+<div class="input-area">
+<textarea id="input" class="input" placeholder="Type a message..." rows="1"></textarea>
+<button onclick="send()" class="send">→</button>
+</div></div>`;
+setupInput();
+loadMsgs();
+}
+
+function setupInput(){
+const inp=document.getElementById('input');
+inp.addEventListener('keydown',e=>{
+if(e.key==='Enter'&&!e.shiftKey){
+e.preventDefault();
+send();
+}
+});
+inp.addEventListener('input',function(){
+this.style.height='auto';
+this.style.height=this.scrollHeight+'px';
+});
+}
+
+function renderMsgs(){
+const c=document.getElementById('msgs');
+if(!c)return;
+c.innerHTML='';
+msgs.forEach(m=>{
+const d=document.createElement('div');
+d.className=`msg ${m.sender}`;
+const t=new Date(m.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+d.innerHTML=`<div class="bubble">${m.text}<div class="time">${t}</div></div>`;
+c.appendChild(d);
+});
+c.scrollTop=c.scrollHeight;
+}
+
+function loadMsgs(){
+if(!verified)return;
+db.ref('chatting/messages').on('value',s=>{
+msgs=[];
+const data=s.val();
+if(data){
+Object.entries(data).forEach(([k,v])=>{
+if(k==='user'&&typeof v==='object'){
+Object.entries(v).forEach(([_,msg])=>{
+if(msg&&msg.text)msgs.push({...msg,sender:'user'});
+});
+}else if(k!=='user'&&typeof v==='object'){
+if(v.text){
+msgs.push({...v,sender:'me'});
+}else{
+Object.entries(v).forEach(([_,msg])=>{
+if(msg&&msg.text)msgs.push({...msg,sender:'me'});
+});
+}
+}
+});
+}
+msgs.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+renderMsgs();
+});
+}
+
+function send(){
+if(!verified)return;
+const i=document.getElementById('input');
+const txt=i.value.trim();
+if(!txt)return;
+db.ref('chatting/messages/user').push({
+text:txt,
+timestamp:new Date().toISOString()
+});
+i.value='';
+i.style.height='auto';
+}
+
+document.addEventListener('DOMContentLoaded',verifyToken);
+</script>
+</body>
+</html>
