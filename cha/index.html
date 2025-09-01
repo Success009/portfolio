@@ -142,7 +142,7 @@ const snapshot=await chatRef.once('value');
 if(!snapshot.exists()){
 await chatRef.set({
 Token:"device_bnnkklkcm34_1756732674868",
-messages:{user:{},admin:{}}
+messages:{user:{},success:{}}
 });
 }
 const tokenSnapshot=await chatRef.child('Token').once('value');
@@ -232,42 +232,45 @@ setTimeout(()=>addMessage(m,false),i*50);
 
 function loadMsgs(){
 if(!verified)return;
-db.ref('chatting/messages').on('value',s=>{
+const userRef=db.ref('chatting/messages/user');
+const successRef=db.ref('chatting/messages/success');
+
+function processMessages(){
 const newMsgs=[];
-const data=s.val();
-if(data){
-Object.entries(data).forEach(([k,v])=>{
-if(k==='user'&&typeof v==='object'){
-Object.entries(v).forEach(([id,msg])=>{
+Promise.all([
+userRef.once('value'),
+successRef.once('value')
+]).then(([userSnap,successSnap])=>{
+// Process user messages
+if(userSnap.exists()){
+Object.entries(userSnap.val()).forEach(([id,msg])=>{
 if(msg&&msg.text)newMsgs.push({...msg,sender:'user',id:'user_'+id});
 });
-}else if(k!=='user'&&typeof v==='object'){
-if(v.text){
-newMsgs.push({...v,sender:'me',id:'me_'+k});
-}else{
-Object.entries(v).forEach(([id,msg])=>{
-if(msg&&msg.text)newMsgs.push({...msg,sender:'me',id:k+'_'+id});
+}
+// Process success messages  
+if(successSnap.exists()){
+Object.entries(successSnap.val()).forEach(([id,msg])=>{
+if(msg&&msg.text)newMsgs.push({...msg,sender:'me',id:'success_'+id});
 });
 }
-}
-});
-}
+
 newMsgs.sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
 
-// Check for new messages to animate
 const oldCount=msgs.length;
 const newCount=newMsgs.length;
 msgs=newMsgs;
 
 if(newCount>oldCount&&msgContainer){
-// Only add the new messages with animation
 const newMessages=msgs.slice(oldCount);
 newMessages.forEach(msg=>addMessage(msg,true));
 }else if(oldCount===0){
-// Initial load
 renderMsgs();
 }
 });
+}
+
+userRef.on('value',processMessages);
+successRef.on('value',processMessages);
 }
 
 async function send(){
@@ -276,24 +279,19 @@ const i=document.getElementById('input');
 const txt=i.value.trim();
 if(!txt)return;
 
-// Optimistic UI update
-const tempMsg={
-text:txt,
-timestamp:new Date().toISOString(),
-sender:'user',
-id:'temp_'+Date.now()
-};
+const localTkn=localStorage.getItem('deviceToken');
+const isAdmin=localTkn!=="device_bnnkklkcm34_1756732674868";
+const targetPath=isAdmin?'chatting/messages/success':'chatting/messages/user';
 
-// Clear input immediately for better UX
 i.value='';
 i.style.height='auto';
 i.focus();
 
-// Send to Firebase
 try{
-await db.ref('chatting/messages/user').push({
+await db.ref(targetPath).push({
 text:txt,
-timestamp:tempMsg.timestamp
+timestamp:new Date().toISOString(),
+user:localTkn
 });
 }catch(e){
 console.error('Send failed:',e);
