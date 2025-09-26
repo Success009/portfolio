@@ -798,21 +798,18 @@
         id: 13,
         name: "Mole",
         color: "#8B4513",
-        type: "Mining",
+        type: "Utility",
         description: "Master of underground mining with instant digging capabilities and ground dashing powers.",
-        cooldown: "None for pickaxe, XP consumption for dashing",
-        duration: "Instant mining, continuous dashing",
-        restrictions: "Requires XP for dash ability",
+        cooldown: "None",
+        duration: "None",
+        restrictions: "Requires XP",
         details: "The Mole ability grants incredible underground powers with a special unbreakable pickaxe.",
         howToUse: [
-          "Use /mole command to get your special pickaxe",
-          "Pickaxe has Fortune 5 and Efficiency 10",
-          "Pickaxe is unbreakable and only you can use it",
-          "Other players cannot use your pickaxe - server will take it back",
+          "Use /mole command to get a special pickaxe",
           "Hold Shift + Right Click while holding pickaxe to dash into ground",
-          "Dashing consumes 1 XP every 2 seconds",
           "Continue dashing until you release Shift button",
-          "Break blocks around you while dashing"
+          "Break blocks around you while dashing",
+          "Other players cannot use your pickaxe - server will take it back"
         ]
       },
       {
@@ -837,15 +834,15 @@
         color: "#5555FF",
         type: "Support",
         description: "This ability makes the user be able to enchant any enchantable item in any player's hand with its enchantment.",
-        cooldown: "5 minutes",
+        cooldown: "None",
         duration: "Instant",
-        restrictions: "None",
+        restrictions: "Uses 5 levels per enchant",
         details: "",
         howToUse: [
-          "Target any player holding an enchantable item",
-          "Apply enchantments to their item instantly",
-          "5-minute cooldown between uses",
-          "Works on any enchantable item in the game"
+          "do (/minecraft:enchant) to enchant",
+          "Target any player holding an item",
+          "The skill can only apply Within Minecraft enchantment limit",
+          "The skill has no distant limit."
         ]
       },
       {
