@@ -268,59 +268,45 @@
   </script>
 
   <!-- =============================================================================== -->
-  <!-- ====== TEMPORARY SCRIPT - RUN ONCE FROM CONSOLE THEN DELETE THIS BLOCK ======== -->
+  <!-- == TEMPORARY SCRIPT - CHECKS & SEEDS DB ONCE, THEN CAN BE SAFELY DELETED ===== -->
   <!-- =============================================================================== -->
   <script>
-    /**
-     * INSTRUCTIONS:
-     * 1. Open this page in your browser.
-     * 2. Open the Developer Console (usually F12).
-     * 3. Type `seedInitialDataToFirebase()` and press Enter.
-     * 4. You will see a "SUCCESS" message in the console. Check Firebase to confirm.
-     * 5. Once successful, DELETE this entire <script> block from your HTML file.
-     */
-    window.seedInitialDataToFirebase = function() {
-        console.log("Starting data seed... This will OVERWRITE ALL data under '/Ability'.");
-        const initialData = {
-            abilities: [
-                {id: 1, name: "Creator", color: "#11ff00", type: "God", description: "The being whose sole purpose is to create and grand abilities maintaining balance of the existence itself.", details: "Unknown entity??", howToUse: ["This ability is beyond mortal comprehension", "Only the creator knows its true power", "Controls all existence in the server"]},
-                {id: 2, name: "Spector", color: "#55FFFF", type: "Utility", description: "This ability makes the user be able to switch between spectator and survival mode.", details: "This ability does not provide every function of the spectator mode, for example restricting teleportation.", restrictions: "Disabled in combat", howToUse: ["/s To change to spectator", "/s again To change back to survival at original spot", "/ss To change to survival at current spectator spot"]},
-                {id: 3, name: "Enchanter", color: "#5555FF", type: "Support", description: "This ability makes the user be able to enchant any enchantable item in any player's hand.", restrictions: "Uses 5 levels per enchant", howToUse: ["Use (/minecraft:enchant) to enchant", "Target any player holding an item", "The skill can only apply Within Minecraft enchantment limit", "The skill has no distance limit."]},
-                {id: 4, name: "Shifter", color: "#ff7b00", type: "Utility", description: "This ability makes the user be able change their size at will.", details: "The user can switch to five different modes: Small(1 block), Normal(2 Blocks), Large(4 Blocks), Extra Large(8 Blocks), and Giant(Unknown)", restrictions: "Energy", howToUse: ["Switch between 5 different size modes.", "Each mode has different energy requirements."]},
-                {id: 5, name: "Flotter", color: "#ffffff", type: "Movement", description: "This ability makes the user be able to give/take the ability of flight to any player.", details: "The wielder of the ability can manipulate his own flying speed going 2 or 3 times faster.", howToUse: ["Grant or remove flight ability from any player", "Control your own flying speed up to 3x faster."]},
-                {id: 6, name: "Wizard", color: "#00AA00", type: "Support", description: "Give different buffs like strength, jump boost, speed etc. to any player. User can also give Blessings and Curse other players.", details: "Different skills have different cool down and duration with infinite range.", howToUse: ["Give buffs like strength, speed, jump boost to players", "Cast blessings on allies or curses on enemies."]},
-                {id: 7, name: "Strengther", color: "#AA00AA", type: "Combat", description: "This ability gives the user permanent passive buffs like strength, jump boost, speed etc. to give advantage over combat.", details: "The ability has no gameplay impacting cool down or duration.", howToUse: ["Passive strength, jump boost, and speed buffs are always active."]},
-                {id: 8, name: "Immortal", color: "#AA0000", type: "Survival", description: "This ability makes the user be able to instantly Heal him/herself which will instantly fill the health and saturation bar.", howToUse: ["Instantly heal yourself to full health and saturation.", "No cooldown between uses."]},
-                {id: 9, name: "Reaper", color: "#555555", type: "Combat", description: "This ability allows the user to hunt and pull nearby players.", details: "When the player is Haunted, they will receive different kind of stunning effects.", howToUse: ["Hunt all players within 10 blocks", "Pull nearest player to your position", "Apply stunning effects when haunting."]},
-                {id: 10, name: "Teleporter", color: "#FFFF55", type: "Movement", description: "This ability allows the user to teleport anywhere in the world and use a teleportation wand.", details: "The wielder can also send a request to other player to teleport them.", restrictions: "Disabled in combat", howToUse: ["Teleport anywhere in the world instantly", "Use teleportation wand to teleport where you look", "Send teleport requests to other players"]},
-                {id: 11, name: "Freezing Blazer", color: "#0000AA", type: "Elemental", description: "This Ability allows the user the power of fire and ice.", details: "As passive abilities, user is immune to heat, can breathe in water and move faster in water.", howToUse: ["Create fire explosions", "Freeze nearby players for 5 seconds", "Passive heat immunity, water breathing and faster swim speed."]},
-                {id: 12, name: "Locator", color: "#FF5555", type: "Utility", description: "This ability allows the user to locate structures, biomes or players from anywhere in the world.", details: "The wielder of the ability will also receive speed boost and night vision.", howToUse: ["Locate any structure, biome, or player.", "Enjoy a passive speed boost and night vision."]},
-                {id: 13, name: "Mole", color: "#8B4513", type: "Utility", description: "Master of underground mining with instant digging capabilities and ground dashing powers.", restrictions: "Requires XP", details: "The Mole ability grants incredible underground powers with a special unbreakable pickaxe.", howToUse: ["Use /mole command to get a special pickaxe", "Hold Shift + Right Click while holding pickaxe to dash into ground", "Break blocks around you while dashing"]}
-            ],
-            subAbilities: [
-              {id: 1, name: "Dragon Welder", color: "#FF5500", type: "Combat", rarity: "Mythical", description: "Granted to the user when wielding dragon eggs.", skills: ["Summon iron golems (CD: 2 min)", "Dragon Instinct: Make nearby players glow (CD: 2 min, DUR: 5 sec)", "Dragon Vision: See in dark (Passive)", "Fire Ball: Summon a weak Fire Ball (No CD)", "Dragonic Aura: Cool particle effects"]},
-              {id: 2, name: "Undead", color: "#00AA00", type: "Survival", rarity: "Legendary", description: "A powerful undead-themed ability giving invincibility and life-stealing powers.", skills: ["Become extremely slow and invincible (CD: 60 sec, DUR: 5 sec)", "Aura of Decay: Damage all entities in 10 blocks and heal for damage dealt to players (CD: 60 sec)"]},
-              {id: 3, name: "Unseen", color: "#000000", type: "Tactical", rarity: "Rare", description: "A stealth-focused ability allowing complete invisibility.", skills: ["Go completely invisible with no particle effects (CD: 5 sec, DUR: infinite toggle)", "Cannot stay hidden against 'Dragon instinct'"]}
-            ],
-            announcements: [
-                { timestamp: 1689854400000, title: "New Ability: Mole Added!", content: "<p><strong>Type:</strong> Mining</p><p>The Mole ability has been added to the server! Master underground mining with instant digging capabilities and ground dashing powers.</p>" },
-                { timestamp: 1689422400000, title: "New Sub-Ability Concept: Ice", content: "<p><strong>Active:</strong> /freeze - Encase nearby players in ice for 5 seconds.</p><p><strong>Passive:</strong> No freezing damage, can breathe and swim faster in water.</p>" }
-            ],
-            rules: [
-                { order: 1, title: "No Spam", description: "Please refrain from excessive and repetitive messages in the chat." },
-                { order: 2, title: "No Advertisement", description: "Do not advertise other servers, products, or services unrelated to Ability SMP." },
-                { order: 3, title: "Cheating or Hacking", description: "Cheats and exploits are strictly prohibited. Play fairly." },
-                { order: 4, title: "Keep Chat Friendly", description: "Keep the chat friendly and suitable for all ages. No inappropriate content." },
-                { order: 5, title: "No Lag Machines", description: "Lag machines are strictly prohibited and will result in a permanent ban." },
-                { order: 6, title: "No Chunk Loaders", description: "All kinds of chunk loaders are prohibited because they can cause server lag." },
-                { order: 7, title: "Have Fun!", description: "Most importantly, have fun exploring and using your abilities!" }
-            ]
+    (function() {
+      const tempDbRef = firebase.database().ref('Ability');
+
+      tempDbRef.once('value', (snapshot) => {
+        if (snapshot.exists()) {
+          console.log("Database at '/Ability' already contains data. Seed script did not run. You can now safely remove this temporary script block.");
+          return;
+        }
+
+        console.log("Database at '/Ability' is empty. Seeding initial data now...");
+
+        // Raw data in arrays
+        const abilitiesArray = [{id:1,name:"Creator",color:"#11ff00",type:"God",description:"The being whose sole purpose is to create and grand abilities maintaining balance of the existence itself.",details:"Unknown entity??",howToUse:["This ability is beyond mortal comprehension","Only the creator knows its true power","Controls all existence in the server"]},{id:2,name:"Spector",color:"#55FFFF",type:"Utility",description:"This ability makes the user be able to switch between spectator and survival mode.",details:"This ability does not provide every function of the spectator mode, for example restricting teleportation.",restrictions:"Disabled in combat",howToUse:["/s To change to spectator","/s again To change back to survival at original spot","/ss To change to survival at current spectator spot"]},{id:3,name:"Enchanter",color:"#5555FF",type:"Support",description:"This ability makes the user be able to enchant any enchantable item in any player's hand.",restrictions:"Uses 5 levels per enchant",howToUse:["Use (/minecraft:enchant) to enchant","Target any player holding an item","The skill can only apply Within Minecraft enchantment limit","The skill has no distance limit."]},{id:4,name:"Shifter",color:"#ff7b00",type:"Utility",description:"This ability makes the user be able to change their size at will.",details:"The user can switch to five different modes: Small(1 block), Normal(2 Blocks), Large(4 Blocks), Extra Large(8 Blocks), and Giant(Unknown)",restrictions:"Energy",howToUse:["Switch between 5 different size modes.","Each mode has different energy requirements."]},{id:5,name:"Flotter",color:"#ffffff",type:"Movement",description:"This ability makes the user be able to give/take the ability of flight to any player.",details:"The wielder of the ability can manipulate his own flying speed going 2 or 3 times faster.",howToUse:["Grant or remove flight ability from any player","Control your own flying speed up to 3x faster."]},{id:6,name:"Wizard",color:"#00AA00",type:"Support",description:"Give different buffs like strength, jump boost, speed etc. to any player. User can also give Blessings and Curse other players.",details:"Different skills have different cool down and duration with infinite range.",howToUse:["Give buffs like strength, speed, jump boost to players","Cast blessings on allies or curses on enemies."]},{id:7,name:"Strengther",color:"#AA00AA",type:"Combat",description:"This ability gives the user permanent passive buffs like strength, jump boost, speed etc. to give advantage over combat.",details:"The ability has no gameplay impacting cool down or duration.",howToUse:["Passive strength, jump boost, and speed buffs are always active."]},{id:8,name:"Immortal",color:"#AA0000",type:"Survival",description:"This ability makes the user be able to instantly Heal him/herself which will instantly fill the health and saturation bar.",howToUse:["Instantly heal yourself to full health and saturation.","No cooldown between uses."]},{id:9,name:"Reaper",color:"#555555",type:"Combat",description:"This ability allows the user to hunt and pull nearby players.",details:"When the player is Haunted, they will receive different kind of stunning effects.",howToUse:["Hunt all players within 10 blocks","Pull nearest player to your position","Apply stunning effects when haunting."]},{id:10,name:"Teleporter",color:"#FFFF55",type:"Movement",description:"This ability allows the user to teleport anywhere in the world and use a teleportation wand.",details:"The wielder can also send a request to other player to teleport them.",restrictions:"Disabled in combat",howToUse:["Teleport anywhere in the world instantly","Use teleportation wand to teleport where you look","Send teleport requests to other players"]},{id:11,name:"Freezing Blazer",color:"#0000AA",type:"Elemental",description:"This Ability allows the user the power of fire and ice.",details:"As passive abilities, user is immune to heat, can breathe in water and move faster in water.",howToUse:["Create fire explosions","Freeze nearby players for 5 seconds","Passive heat immunity, water breathing and faster swim speed."]},{id:12,name:"Locator",color:"#FF5555",type:"Utility",description:"This ability allows the user to locate structures, biomes or players from anywhere in the world.",details:"The wielder of the ability will also receive speed boost and night vision.",howToUse:["Locate any structure, biome, or player.","Enjoy a passive speed boost and night vision."]},{id:13,name:"Mole",color:"#8B4513",type:"Utility",description:"Master of underground mining with instant digging capabilities and ground dashing powers.",restrictions:"Requires XP",details:"The Mole ability grants incredible underground powers with a special unbreakable pickaxe.",howToUse:["Use /mole command to get a special pickaxe","Hold Shift + Right Click while holding pickaxe to dash into ground","Break blocks around you while dashing"]}];
+        const subAbilitiesArray = [{id:1,name:"Dragon Welder",color:"#FF5500",type:"Combat",rarity:"Mythical",description:"Granted to the user when wielding dragon eggs.",skills:["Summon iron golems (CD: 2 min)","Dragon Instinct: Make nearby players glow (CD: 2 min, DUR: 5 sec)","Dragon Vision: See in dark (Passive)","Fire Ball: Summon a weak Fire Ball (No CD)","Dragonic Aura: Cool particle effects"]},{id:2,name:"Undead",color:"#00AA00",type:"Survival",rarity:"Legendary",description:"A powerful undead-themed ability giving invincibility and life-stealing powers.",skills:["Become extremely slow and invincible (CD: 60 sec, DUR: 5 sec)","Aura of Decay: Damage all entities in 10 blocks and heal for damage dealt to players (CD: 60 sec)"]},{id:3,name:"Unseen",color:"#000000",type:"Tactical",rarity:"Rare",description:"A stealth-focused ability allowing complete invisibility.",skills:["Go completely invisible with no particle effects (CD: 5 sec, DUR: infinite toggle)","Cannot stay hidden against 'Dragon instinct'"]}];
+        const announcementsArray = [{timestamp:1689854400000,title:"New Ability: Mole Added!",content:"<p><strong>Type:</strong> Mining</p><p>The Mole ability has been added to the server! Master underground mining with instant digging capabilities and ground dashing powers.</p>"},{timestamp:1689422400000,title:"New Sub-Ability Concept: Ice",content:"<p><strong>Active:</strong> /freeze - Encase nearby players in ice for 5 seconds.</p><p><strong>Passive:</strong> No freezing damage, can breathe and swim faster in water.</p>"}];
+        const rulesArray = [{order:1,title:"No Spam",description:"Please refrain from excessive and repetitive messages in the chat."},{order:2,title:"No Advertisement",description:"Do not advertise other servers, products, or services unrelated to Ability SMP."},{order:3,title:"Cheating or Hacking",description:"Cheats and exploits are strictly prohibited. Play fairly."},{order:4,title:"Keep Chat Friendly",description:"Keep the chat friendly and suitable for all ages. No inappropriate content."},{order:5,title:"No Lag Machines",description:"Lag machines are strictly prohibited and will result in a permanent ban."},{order:6,title:"No Chunk Loaders",description:"All kinds of chunk loaders are prohibited because they can cause server lag."},{order:7,title:"Have Fun!",description:"Most importantly, have fun exploring and using your abilities!"}];
+        
+        // **THE FIX**: Convert arrays to objects for Firebase
+        const initialDataObject = {
+          abilities: Object.assign({}, abilitiesArray),
+          subAbilities: Object.assign({}, subAbilitiesArray),
+          announcements: Object.assign({}, announcementsArray),
+          rules: Object.assign({}, rulesArray)
         };
-        const dbRef = firebase.database().ref('Ability');
-        dbRef.set(initialData)
-          .then(() => console.log('%cSUCCESS: All initial data has been seeded to Firebase.', 'color: green; font-weight: bold;'))
-          .catch(e => console.error('ERROR seeding data:', e));
-    };
+
+        // Perform a single, atomic .set() operation
+        tempDbRef.set(initialDataObject)
+          .then(() => {
+            console.log('%cSUCCESS! All initial data has been seeded to Firebase.', 'color: green; font-weight: bold;');
+            console.log('You can now safely remove the temporary script block from your HTML file.');
+          })
+          .catch((error) => {
+            console.error('ERROR during automatic seeding:', error);
+          });
+      });
+    })();
   </script>
 </body>
 </html>
