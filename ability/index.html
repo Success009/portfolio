@@ -24,7 +24,11 @@
     body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-gradient); z-index: -1; }
     .minecraft-font { font-family: 'Minecraft', 'Poppins', sans-serif; }
     
-    header { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(12px); padding: 15px 0; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--card-border); }
+    @keyframes initial-fade-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes initial-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fade-out { to { opacity: 0; } }
+
+    header { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(12px); padding: 15px 0; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--card-border); animation: initial-fade-down 0.6s ease-out; }
     .header-content { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; gap: 20px; }
     .logo-section { display: flex; justify-content: flex-start; }
     .logo-img { height: 50px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition: transform var(--transition-speed) ease; }
@@ -36,9 +40,9 @@
     .social-icon { width: 35px; height: 35px; opacity: 0.8; transition: all var(--transition-speed) ease; }
     .social-icon:hover { opacity: 1; filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); transform: scale(1.15); }
 
-    .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+    .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; animation: initial-fade-up 0.6s ease-out; }
     .glass-panel { background: rgba(10, 25, 47, 0.7); backdrop-filter: blur(12px); border-radius: 15px; overflow: hidden; border: 1px solid var(--card-border); box-shadow: 0 0 15px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1); }
-    .navigation { display: flex; justify-content: center; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); border-radius: 10px; margin-bottom: 30px; }
+    .navigation { display: flex; justify-content: center; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); border-radius: 10px; margin-bottom: 30px; animation: initial-fade-up 0.6s ease-out 0.2s; animation-fill-mode: backwards; }
     .tab { padding: 15px 30px; cursor: pointer; position: relative; text-align: center; font-weight: 600; color: rgba(255, 255, 255, 0.7); transition: color var(--transition-speed) ease; }
     .tab::before { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0; height: 3px; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
     .tab.selected, .tab:hover { color: white; }
@@ -46,44 +50,44 @@
     .tab:hover:not(.selected)::before { width: 30%; }
 
     .content-section { padding: 40px; display: none; }
-    .content-section.active { display: block; }
+    .content-section.active { display: block; animation: initial-fade-up 0.5s ease-out; }
+    .content-section.fade-out { animation: fade-out 0.3s ease-out forwards; }
     .section-title { font-size: 2.2rem; margin-bottom: 35px; text-align: center; position: relative; color: var(--primary); text-shadow: 0 0 10px rgba(46,204,113,0.3); }
     .section-title::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); width: 80px; height: 3px; background: var(--primary); border-radius: 3px; }
     
     .welcome-text { text-align: center; line-height: 1.8; max-width: 800px; margin: 0 auto 50px auto; font-size: 1.1rem; }
     .about-us-text { text-align: center; line-height: 1.8; max-width: 800px; margin: 50px auto 0 auto; padding-top: 30px; border-top: 1px solid var(--card-border); opacity: 0.9; }
     .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
-    .feature-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 25px; display: flex; flex-direction: column; align-items: center; text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .feature-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 25px; display: flex; flex-direction: column; align-items: center; text-align: center; }
     .feature-icon { font-size: 2.5rem; margin-bottom: 15px; color: var(--primary); }
     .feature-title { font-size: 1.2rem; margin-bottom: 10px; font-weight: 600; }
     
     .abilities-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-    .ability-card { background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; cursor: pointer; border: 1px solid transparent; transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
+    .ability-card { background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; cursor: pointer; border: 1px solid transparent; }
     .ability-header { background: rgba(0,0,0,0.3); padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .ability-title { margin: 0; display: flex; align-items: center; font-size: 1.3rem; }
     .ability-type { background: var(--primary); color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; margin-left: 10px; text-transform: uppercase; }
     .ability-body { padding: 20px; }
     .ability-description { font-size: 0.95rem; line-height: 1.6; }
     .rules-list { counter-reset: rule-counter; list-style-type: none; display: grid; gap: 15px; }
-    .rule-item { position: relative; padding: 20px 20px 20px 60px; background: var(--card-bg); border-radius: 8px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .rule-item { position: relative; padding: 20px 20px 20px 60px; background: var(--card-bg); border-radius: 8px; }
     .rule-item::before { counter-increment: rule-counter; content: counter(rule-counter); position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     .rule-title { font-size: 1.1rem; margin-bottom: 10px; color: var(--primary); }
-    .announcement-card { background: var(--card-bg); border-radius: 10px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--primary); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .announcement-card { background: var(--card-bg); border-radius: 10px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--primary); }
     .announcement-title { font-size: 1.3rem; margin-bottom: 10px; color: var(--primary); }
     .announcement-date { font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; }
 
-    .animate-on-scroll { opacity: 0; transition: opacity 0.6s ease-out; }
-    .animate-on-scroll.is-visible { opacity: 1; }
-    .feature-card:hover, .ability-card:hover, .rule-item:hover, .announcement-card:hover { transform: translateY(-8px); box-shadow: var(--glow-shadow); }
+    .animate-on-scroll { opacity: 0; transform: translateY(20px); transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+    .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
+    .interactive-card { transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
+    .interactive-card:hover { transform: translateY(-8px) scale(1.03); box-shadow: var(--glow-shadow); }
     .ability-card:hover { border-color: var(--primary); }
     
     .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
-    .modal.show { display: flex; align-items: center; justify-content: center; animation: modalFadeIn 0.3s ease; }
-    @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .modal-content { background: #1e2a38; margin: 15px; padding: 0; border-radius: 15px; width: 90%; max-width: 600px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; animation: modalSlideUp 0.3s ease; border: 1px solid var(--card-border); }
-    @keyframes modalSlideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .close { color: #aaa; position: absolute; right: 20px; top: 18px; font-size: 28px; font-weight: bold; cursor: pointer; z-index: 1; transition: color 0.3s ease; }
-    .close:hover { color: var(--primary); }
+    .modal.show { display: flex; align-items: center; justify-content: center; animation: initial-fade-up 0.3s ease; }
+    .modal-content { background: #1e2a38; margin: 15px; padding: 0; border-radius: 15px; width: 90%; max-width: 600px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--card-border); }
+    .close { color: #aaa; position: absolute; right: 20px; top: 18px; font-size: 28px; font-weight: bold; cursor: pointer; z-index: 1; transition: color 0.3s ease, transform 0.3s ease; }
+    .close:hover { color: var(--primary); transform: rotate(90deg); }
     .modal-header { position: relative; padding: 20px 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255,255,255,0.05); }
     .modal-title { font-size: 1.8rem; font-weight: 600; color: var(--primary); margin: 0; }
     #modalBody { padding: 30px; overflow-y: auto; }
@@ -140,10 +144,10 @@
         <h2 class="section-title">Welcome to Ability SMP</h2>
         <div class="welcome-text"><p>Ability SMP offers a unique gameplay experience where players are granted special abilities that transform your Minecraft adventure.</p></div>
         <div class="features-grid">
-          <div class="feature-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-magic"></i></div><h3 class="feature-title">Unique Abilities</h3><p>Choose from a variety of powerful abilities that give you special powers in the game.</p></div>
-          <div class="feature-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-users"></i></div><h3 class="feature-title">Community Focused</h3><p>Join a friendly community of players enjoying the enhanced SMP experience.</p></div>
-          <div class="feature-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-balance-scale"></i></div><h3 class="feature-title">Balanced Gameplay</h3><p>Each ability is carefully balanced to ensure fair and fun gameplay for everyone.</p></div>
-          <div class="feature-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-star"></i></div><h3 class="feature-title">Special Events</h3><p>Participate in regular events and earn unique rewards and sub-abilities.</p></div>
+          <div class="feature-card interactive-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-magic"></i></div><h3 class="feature-title">Unique Abilities</h3><p>Choose from a variety of powerful abilities that give you special powers in the game.</p></div>
+          <div class="feature-card interactive-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-users"></i></div><h3 class="feature-title">Community Focused</h3><p>Join a friendly community of players enjoying the enhanced SMP experience.</p></div>
+          <div class="feature-card interactive-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-balance-scale"></i></div><h3 class="feature-title">Balanced Gameplay</h3><p>Each ability is carefully balanced to ensure fair and fun gameplay for everyone.</p></div>
+          <div class="feature-card interactive-card animate-on-scroll"><div class="feature-icon"><i class="fas fa-star"></i></div><h3 class="feature-title">Special Events</h3><p>Participate in regular events and earn unique rewards and sub-abilities.</p></div>
         </div>
         <div class="about-us-text"><p>Here, you'll find all about Ability SMP - its abilities, rules, sub-abilities, announcements, and other essential details. Explore and get ready for an epic journey!</p></div>
       </div>
@@ -171,27 +175,33 @@
   
   <script>
     const firebaseConfig = {
-        apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
-        authDomain: "community-canvas-255fa.firebaseapp.com",
-        databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
-        projectId: "community-canvas-255fa",
-        storageBucket: "community-canvas-255fa.appspot.com",
-        messagingSenderId: "729445267995",
-        appId: "1:729445267995:web:05da6756d66c58b9ccd6be"
+        apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA", authDomain: "community-canvas-255fa.firebaseapp.com",
+        databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com", projectId: "community-canvas-255fa",
+        storageBucket: "community-canvas-255fa.appspot.com", messagingSenderId: "729445267995", appId: "1:729445267995:web:05da6756d66c58b9ccd6be"
     };
     firebase.initializeApp(firebaseConfig);
     const abilityRef = firebase.database().ref('Ability');
 
-    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
-        document.querySelector('.tab.selected').classList.remove('selected');
-        tab.classList.add('selected');
-        document.querySelector('.content-section.active').classList.remove('active');
-        document.getElementById(`${tab.dataset.tab}-section`).classList.add('active');
-    }));
-
     const modal = document.getElementById('abilityModal');
     document.querySelector('.close').onclick = () => modal.classList.remove('show');
     window.onclick = (event) => { if (event.target == modal) modal.classList.remove('show'); };
+    
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+        const currentTab = document.querySelector('.tab.selected');
+        const currentSection = document.querySelector('.content-section.active');
+        const targetId = `${tab.dataset.tab}-section`;
+        
+        if (currentSection.id === targetId) return;
+
+        currentTab.classList.remove('selected');
+        tab.classList.add('selected');
+        
+        currentSection.classList.add('fade-out');
+        currentSection.addEventListener('animationend', () => {
+            currentSection.classList.remove('active', 'fade-out');
+            document.getElementById(targetId).classList.add('active');
+        }, { once: true });
+    }));
     
     function openDynamicModal(item) {
         document.getElementById('modalTitle').textContent = item.name;
@@ -227,22 +237,25 @@
             const container = document.getElementById(containerId);
             container.innerHTML = ''; 
             if (!snapshot.exists()) { container.innerHTML = `<p style="text-align:center;">No items available.</p>`; return; }
+            let delay = 0;
             snapshot.forEach(childSnapshot => {
                 const item = childSnapshot.val();
                 if (item) {
                     const element = renderFunction(item);
                     element.classList.add('animate-on-scroll');
+                    element.style.transitionDelay = `${delay * 50}ms`;
                     container.appendChild(element);
                     scrollObserver.observe(element);
+                    delay++;
                 }
             });
         });
     };
 
-    const renderAbilityCard = (ability) => { const c = document.createElement('div'); c.className = 'ability-card'; c.onclick = () => openDynamicModal(ability); c.innerHTML = `<div class="ability-header"><h3 class="ability-title"><span style="color: ${ability.color}">${ability.name}</span><span class="ability-type">${ability.type}</span></h3></div><div class="ability-body"><p class="ability-description">${ability.description}</p></div>`; return c; };
-    const renderSubAbilityCard = (sub) => { const c = document.createElement('div'); c.className = 'ability-card'; c.onclick = () => openDynamicModal(sub); c.innerHTML = `<div class="ability-header"><h3 class="ability-title"><span style="color: ${sub.color}">${sub.name}</span><span class="ability-type">${sub.type}</span></h3></div><div class="ability-body"><p><strong>Rarity:</strong> ${sub.rarity}</p><p class="ability-description">${sub.description}</p></div>`; return c; };
-    const renderRuleItem = (rule) => { const el = document.createElement('li'); el.className = 'rule-item'; el.innerHTML = `<h3 class="rule-title">${rule.title}</h3><p class="rule-description">${rule.description}</p>`; return el; };
-    const renderAnnouncementCard = (ann) => { const c = document.createElement('div'); c.className = 'announcement-card'; c.innerHTML = `<h3 class="announcement-title">${ann.title}</h3><div class="announcement-date">Posted on ${new Date(ann.timestamp).toLocaleDateString()}</div><div class="announcement-content">${ann.content}</div>`; return c; };
+    const renderAbilityCard = (ability) => { const c = document.createElement('div'); c.className = 'ability-card interactive-card'; c.onclick = () => openDynamicModal(ability); c.innerHTML = `<div class="ability-header"><h3 class="ability-title"><span style="color: ${ability.color}">${ability.name}</span><span class="ability-type">${ability.type}</span></h3></div><div class="ability-body"><p class="ability-description">${ability.description}</p></div>`; return c; };
+    const renderSubAbilityCard = (sub) => { const c = document.createElement('div'); c.className = 'ability-card interactive-card'; c.onclick = () => openDynamicModal(sub); c.innerHTML = `<div class="ability-header"><h3 class="ability-title"><span style="color: ${sub.color}">${sub.name}</span><span class="ability-type">${sub.type}</span></h3></div><div class="ability-body"><p><strong>Rarity:</strong> ${sub.rarity}</p><p class="ability-description">${sub.description}</p></div>`; return c; };
+    const renderRuleItem = (rule) => { const el = document.createElement('li'); el.className = 'rule-item interactive-card'; el.innerHTML = `<h3 class="rule-title">${rule.title}</h3><p class="rule-description">${rule.description}</p>`; return el; };
+    const renderAnnouncementCard = (ann) => { const c = document.createElement('div'); c.className = 'announcement-card interactive-card'; c.innerHTML = `<h3 class="announcement-title">${ann.title}</h3><div class="announcement-date">Posted on ${new Date(ann.timestamp).toLocaleDateString()}</div><div class="announcement-content">${ann.content}</div>`; return c; };
     
     loadAndRenderData('abilities', 'id', 'abilities-container', renderAbilityCard);
     loadAndRenderData('subAbilities', 'id', 'sub-abilities-container', renderSubAbilityCard);
@@ -253,9 +266,10 @@
         if (!snapshot.exists()) { container.innerHTML = `<p style="text-align:center;">No announcements.</p>`; return; }
         const announcements = [];
         snapshot.forEach(childSnapshot => announcements.push(childSnapshot.val()));
-        announcements.reverse().forEach(ann => {
+        announcements.reverse().forEach((ann, index) => {
             const element = renderAnnouncementCard(ann);
             element.classList.add('animate-on-scroll');
+            element.style.transitionDelay = `${index * 50}ms`;
             container.appendChild(element);
             scrollObserver.observe(element);
         });
@@ -264,6 +278,7 @@
     function createMinecraftBlocks() {
       const container = document.getElementById('minecraft-blocks');
       const types = ['https://minecraft.wiki/images/Grass_Block_JE6.png', 'https://minecraft.wiki/images/Diamond_Ore_JE6_BE6.png', 'https://minecraft.wiki/images/Stone_JE4_BE2.png'];
+      if (!container) return;
       for (let i = 0; i < 15; i++) {
         const block = document.createElement('div');
         block.className = 'block';
