@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ability SMP Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #1a202c; --surface: #2d3748; --surface-light: #4a5568;
+            --primary: #2ecc71; --primary-dark: #27ae60; --text: #edf2f7;
+            --danger: #e53e3e; --danger-dark: #c53030; --border: #4a5568;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); display: flex; font-size: 16px; }
+        
+        /* --- Sidebar Navigation --- */
+        .sidebar { width: 220px; background-color: var(--surface); height: 100vh; position: fixed; top: 0; left: 0; border-right: 1px solid var(--border); padding-top: 20px; }
+        .sidebar h1 { text-align: center; color: var(--primary); margin-bottom: 30px; font-size: 1.5rem; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 15px 20px; color: var(--text); text-decoration: none; transition: background-color 0.2s; }
+        .sidebar-nav a:hover { background-color: var(--surface-light); }
+        .sidebar-nav a.active { background-color: var(--primary); color: var(--bg); font-weight: 600; }
+        .sidebar-nav a i { width: 20px; text-align: center; }
+
+        /* --- Main Content --- */
+        main { margin-left: 220px; width: calc(100% - 220px); padding: 30px; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .section-header h2 { font-size: 2rem; }
+
+        /* --- Buttons --- */
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background-color 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background-color: var(--primary); color: var(--bg); }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-danger { background-color: var(--danger); color: var(--text); }
+        .btn-danger:hover { background-color: var(--danger-dark); }
+        .btn-secondary { background-color: var(--surface-light); color: var(--text); }
+
+        /* --- Item Cards --- */
+        .item-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .item-card { background-color: var(--surface); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+        .item-card-header { padding: 15px; font-size: 1.1rem; font-weight: 600; border-bottom: 1px solid var(--border); }
+        .item-card-body { padding: 15px; font-size: 0.9rem; opacity: 0.8; }
+        .item-card-footer { padding: 10px 15px; background-color: #273041; display: flex; justify-content: flex-end; gap: 10px; }
+        .item-card .btn { padding: 6px 12px; font-size: 0.9rem; }
+        
+        /* --- Modal & Form --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal.show { display: flex; }
+        .modal-content { background-color: var(--surface); width: 90%; max-width: 600px; max-height: 90vh; border-radius: 8px; display: flex; flex-direction: column; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .modal-title { font-size: 1.5rem; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; background-color: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-family: inherit; }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .form-group input[type="color"] { padding: 5px; height: 40px; }
+        
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
+            .sidebar-nav { display: flex; overflow-x: auto; }
+            main { margin-left: 0; width: 100%; padding: 15px; }
+            .section-header h2 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <h1>Admin Panel</h1>
+        <div class="sidebar-nav">
+            <a href="#announcements" class="active"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
+            <a href="#abilities"><i class="fa-solid fa-wand-magic-sparkles"></i> Abilities</a>
+            <a href="#subAbilities"><i class="fa-solid fa-star"></i> Sub-Abilities</a>
+            <a href="#rules"><i class="fa-solid fa-gavel"></i> Rules</a>
+        </div>
+    </nav>
+
+    <main>
+        <section id="announcements" class="content-section active">
+            <div class="section-header">
+                <h2>Manage Announcements</h2>
+                <button class="btn btn-primary" id="new-announcement-btn"><i class="fa-solid fa-plus"></i> New Announcement</button>
+            </div>
+            <div id="announcements-list" class="item-list"></div>
+        </section>
+
+        <section id="abilities" class="content-section">
+            <div class="section-header">
+                <h2>Manage Abilities</h2>
+                <button class="btn btn-primary" id="new-ability-btn"><i class="fa-solid fa-plus"></i> New Ability</button>
+            </div>
+            <div id="abilities-list" class="item-list"></div>
+        </section>
+
+        <section id="subAbilities" class="content-section">
+            <div class="section-header">
+                <h2>Manage Sub-Abilities</h2>
+                <button class="btn btn-primary" id="new-subAbility-btn"><i class="fa-solid fa-plus"></i> New Sub-Ability</button>
+            </div>
+            <div id="subAbilities-list" class="item-list"></div>
+        </section>
+
+        <section id="rules" class="content-section">
+            <div class="section-header">
+                <h2>Manage Rules</h2>
+                <button class="btn btn-primary" id="new-rule-btn"><i class="fa-solid fa-plus"></i> New Rule</button>
+            </div>
+            <div id="rules-list" class="item-list"></div>
+        </section>
+    </main>
+
+    <div class="modal" id="form-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title" id="modal-title"></h3></div>
+            <div class="modal-body">
+                <form id="modal-form"></form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+                <button class="btn btn-primary" id="modal-save-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA", authDomain: "community-canvas-255fa.firebaseapp.com",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com", projectId: "community-canvas-255fa",
+            storageBucket: "community-canvas-255fa.appspot.com", messagingSenderId: "729445267995", appId: "1:729445267995:web:05da6756d66c58b9ccd6be"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        const refs = {
+            abilities: db.ref('Ability/abilities'),
+            subAbilities: db.ref('Ability/subAbilities'),
+            rules: db.ref('Ability/rules'),
+            announcements: db.ref('Ability/announcements')
+        };
+        
+        const templates = {
+            abilities: { id: 0, name: '', color: '#ffffff', type: '', description: '', details: '', restrictions: '', howToUse: [] },
+            subAbilities: { id: 0, name: '', color: '#ffffff', type: '', rarity: '', description: '', skills: [] },
+            rules: { order: 0, title: '', description: '' },
+            announcements: { title: '', content: '' }
+        };
+
+        const renderers = {
+            abilities: (item, key) => `<div class="item-card-header">${item.name}</div><div class="item-card-body">${item.description.substring(0, 100)}...</div>`,
+            subAbilities: (item, key) => `<div class="item-card-header">${item.name}</div><div class="item-card-body">${item.description.substring(0, 100)}...</div>`,
+            rules: (item, key) => `<div class="item-card-header">${item.order}. ${item.title}</div><div class="item-card-body">${item.description}</div>`,
+            announcements: (item, key) => `<div class="item-card-header">${item.title}</div><div class="item-card-body">${new Date(item.timestamp).toLocaleString()}</div>`
+        };
+
+        const renderList = (type, ref) => {
+            const listEl = document.getElementById(`${type}-list`);
+            ref.on('value', snapshot => {
+                listEl.innerHTML = '';
+                if (!snapshot.exists()) return;
+                snapshot.forEach(childSnapshot => {
+                    const key = childSnapshot.key;
+                    const item = childSnapshot.val();
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        ${renderers[type](item, key)}
+                        <div class="item-card-footer">
+                            <button class="btn btn-secondary edit-btn" data-key="${key}">Edit</button>
+                            <button class="btn btn-danger delete-btn" data-key="${key}">Delete</button>
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
+
+                listEl.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => openFormForEdit(type, btn.dataset.key)));
+                listEl.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => deleteItem(type, btn.dataset.key)));
+            });
+        };
+        
+        const formatTitle = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        const generateForm = (item) => {
+            const form = document.getElementById('modal-form');
+            form.innerHTML = '';
+            for(const key in item) {
+                const value = item[key];
+                let inputHtml = '';
+                const label = `<label for="form-${key}">${formatTitle(key)}</label>`;
+
+                if (key === 'color') {
+                    inputHtml = `<input type="color" id="form-${key}" name="${key}" value="${value}">`;
+                } else if (Array.isArray(value)) {
+                    inputHtml = `<textarea id="form-${key}" name="${key}" placeholder="Enter each item on a new line">${value.join('\n')}</textarea>`;
+                } else if (typeof value === 'string' && value.length > 100 || key === 'description' || key === 'content') {
+                    inputHtml = `<textarea id="form-${key}" name="${key}">${value}</textarea>`;
+                } else if (typeof value === 'number') {
+                    inputHtml = `<input type="number" id="form-${key}" name="${key}" value="${value}">`;
+                } else {
+                    inputHtml = `<input type="text" id="form-${key}" name="${key}" value="${value}">`;
+                }
+                form.innerHTML += `<div class="form-group">${label}${inputHtml}</div>`;
+            }
+        };
+
+        const modal = document.getElementById('form-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const saveBtn = document.getElementById('modal-save-btn');
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+
+        const openFormForNew = (type) => {
+            modalTitle.textContent = `Create New ${formatTitle(type)}`;
+            generateForm(templates[type]);
+            saveBtn.onclick = () => saveItem(type);
+            modal.classList.add('show');
+        };
+
+        const openFormForEdit = (type, key) => {
+            refs[type].child(key).once('value', snapshot => {
+                modalTitle.textContent = `Edit ${formatTitle(type)}`;
+                generateForm(snapshot.val());
+                saveBtn.onclick = () => saveItem(type, key);
+                modal.classList.add('show');
+            });
+        };
+        
+        const saveItem = (type, key) => {
+            const form = document.getElementById('modal-form');
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (const [fieldName, value] of formData.entries()) {
+                const templateField = templates[type][fieldName];
+                if (Array.isArray(templateField)) {
+                    data[fieldName] = value.split('\n').filter(line => line.trim() !== '');
+                } else if (typeof templateField === 'number') {
+                    data[fieldName] = Number(value);
+                } else {
+                    data[fieldName] = value;
+                }
+            }
+            if (type === 'announcements' && !key) {
+                data.timestamp = Date.now();
+            }
+
+            const operation = key ? refs[type].child(key).update(data) : refs[type].push(data);
+            operation.then(() => modal.classList.remove('show')).catch(err => console.error(err));
+        };
+
+        const deleteItem = (type, key) => {
+            if (confirm(`Are you sure you want to delete this ${type.slice(0, -1)}? This cannot be undone.`)) {
+                refs[type].child(key).remove().catch(err => console.error(err));
+            }
+        };
+
+        cancelBtn.onclick = () => modal.classList.remove('show');
+
+        // Navigation
+        const navLinks = document.querySelectorAll('.sidebar-nav a');
+        const sections = document.querySelectorAll('.content-section');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                sections.forEach(s => s.classList.remove('active'));
+                document.querySelector(link.getAttribute('href')).classList.add('active');
+            });
+        });
+        
+        // Initial setup
+        document.getElementById('new-announcement-btn').onclick = () => openFormForNew('announcements');
+        document.getElementById('new-ability-btn').onclick = () => openFormForNew('abilities');
+        document.getElementById('new-subAbility-btn').onclick = () => openFormForNew('subAbilities');
+        document.getElementById('new-rule-btn').onclick = () => openFormForNew('rules');
+
+        renderList('abilities', refs.abilities);
+        renderList('subAbilities', refs.subAbilities);
+        renderList('rules', refs.rules);
+        renderList('announcements', refs.announcements);
+
+        // Auto-select tab based on hash
+        if (window.location.hash) {
+            const link = document.querySelector(`.sidebar-nav a[href="${window.location.hash}"]`);
+            if (link) link.click();
+        }
+    </script>
+</body>
+</html>
