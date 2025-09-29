@@ -150,15 +150,23 @@
             announcements: (item) => `<div class="item-card-header">${item.title}</div><div class="item-card-body">Posted: ${new Date(item.timestamp).toLocaleString()}</div>`
         };
 
+        // CORRECTED RENDER FUNCTION
         const renderList = (type, ref) => {
             const listEl = document.getElementById(`${type}-list`);
-            const orderBy = (type === 'rules') ? 'order' : 'id';
-            ref.orderByChild(orderBy).on('value', snapshot => {
+            const orderBy = ['rules', 'announcements'].includes(type) ? 'order' : 'id';
+            const query = (type === 'announcements') ? ref.orderByChild('timestamp') : ref.orderByChild(orderBy);
+
+            query.on('value', snapshot => {
                 listEl.innerHTML = '';
-                if (!snapshot.exists()) return;
+                if (!snapshot.exists()) {
+                    listEl.innerHTML = `<p>No items found.</p>`;
+                    return;
+                }
                 
                 const items = [];
-                snapshot.forEach(child => items.push({ key: child.key, ...child.val() }));
+                snapshot.forEach(child => { items.push({ key: child.key, ...child.val() }); });
+                
+                if (type === 'announcements') items.reverse();
                 if (type === 'rules') allData.rules = items;
 
                 items.forEach((itemWithKey, index) => {
@@ -208,7 +216,7 @@
 
             if(form.querySelector('#editor-content')){
                 currentEditor = SUNEDITOR.create('editor-content', {
-                    buttonList: [['bold', 'italic', 'underline'], ['list'], ['link', 'fontColor', 'hiliteColor']],
+                    buttonList: [['undo', 'redo'],['bold', 'italic', 'underline'], ['list'], ['link', 'fontColor', 'hiliteColor'], ['removeFormat']],
                     theme: 'dark', height: '250px'
                 });
             }
@@ -219,27 +227,12 @@
         const saveBtn = document.getElementById('modal-save-btn');
         const cancelBtn = document.getElementById('modal-cancel-btn');
 
-        const closeModal = () => {
-            if (currentEditor) {
-                currentEditor.destroy();
-                currentEditor = null;
-            }
-            modal.classList.remove('show');
-        };
-
-        const openFormForNew = (type) => {
-            modalTitle.textContent = `Create New ${formatTitle(type)}`;
-            generateForm(templates[type]);
-            saveBtn.onclick = () => saveItem(type);
-            modal.classList.add('show');
-        };
-
+        const closeModal = () => { if (currentEditor) { currentEditor.destroy(); currentEditor = null; } modal.classList.remove('show'); };
+        const openFormForNew = (type) => { modalTitle.textContent = `Create New ${formatTitle(type)}`; generateForm(templates[type]); saveBtn.onclick = () => saveItem(type); modal.classList.add('show'); };
         const openFormForEdit = (type, key) => {
             refs[type].child(key).once('value', snapshot => {
-                modalTitle.textContent = `Edit ${formatTitle(type)}`;
-                generateForm(snapshot.val());
-                saveBtn.onclick = () => saveItem(type, key);
-                modal.classList.add('show');
+                modalTitle.textContent = `Edit ${formatTitle(type)}`; generateForm(snapshot.val());
+                saveBtn.onclick = () => saveItem(type, key); modal.classList.add('show');
             });
         };
         
@@ -247,11 +240,7 @@
             const form = document.getElementById('modal-form');
             const formData = new FormData(form);
             const data = {};
-            
-            if (currentEditor) {
-                data.content = currentEditor.getContents(true);
-            }
-
+            if (currentEditor) data.content = currentEditor.getContents(true);
             for (const [fieldName, value] of formData.entries()) {
                 if(fieldName === 'content' && currentEditor) continue;
                 const templateField = templates[type][fieldName];
@@ -260,13 +249,12 @@
                 else data[fieldName] = value;
             }
             if (type === 'announcements' && !key) data.timestamp = Date.now();
-
             const operation = key ? refs[type].child(key).update(data) : refs[type].push(data);
             operation.then(closeModal).catch(err => console.error(err));
         };
 
         const deleteItem = (type, key) => {
-            if (confirm(`Are you sure you want to delete this ${type.slice(0, -1)}? This cannot be undone.`)) {
+            if (confirm(`Are you sure you want to delete this ${type.slice(0, -1)}?`)) {
                 refs[type].child(key).remove().catch(err => console.error(err));
             }
         };
@@ -275,16 +263,12 @@
             const rules = allData.rules;
             const currentIndex = rules.findIndex(r => r.key === key);
             const targetIndex = currentIndex + direction;
-
             if (targetIndex < 0 || targetIndex >= rules.length) return;
-
-            const currentRule = rules[currentIndex];
-            const targetRule = rules[targetIndex];
-            
-            const updates = {};
-            updates[currentRule.key + '/order'] = targetRule.order;
-            updates[targetRule.key + '/order'] = currentRule.order;
-
+            const [currentRule, targetRule] = [rules[currentIndex], rules[targetIndex]];
+            const updates = {
+                [`${currentRule.key}/order`]: targetRule.order,
+                [`${targetRule.key}/order`]: currentRule.order
+            };
             refs.rules.update(updates).catch(console.error);
         };
 
