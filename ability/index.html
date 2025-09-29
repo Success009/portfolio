@@ -229,22 +229,27 @@
         });
     }, { threshold: 0.1 });
 
-    const loadAndRenderData = (childNode, orderBy, containerId, renderFunction) => {
+    const loadAndRenderData = (childNode, orderBy, containerId, renderFunction, reverse = false) => {
         abilityRef.child(childNode).orderByChild(orderBy).on('value', (snapshot) => {
             const container = document.getElementById(containerId);
             container.innerHTML = ''; 
             if (!snapshot.exists()) { container.innerHTML = `<p style="text-align:center;">No items available.</p>`; return; }
-            let delay = 0;
+            
+            const items = [];
             snapshot.forEach(childSnapshot => {
-                const item = childSnapshot.val();
-                if (item) {
-                    const element = renderFunction(item);
-                    element.classList.add('animate-on-scroll');
-                    element.style.setProperty('--animation-delay', `${delay * 50}ms`);
-                    container.appendChild(element);
-                    scrollObserver.observe(element);
-                    delay++;
-                }
+                items.push(childSnapshot.val());
+            });
+
+            if (reverse) {
+                items.reverse();
+            }
+
+            items.forEach((item, index) => {
+                const element = renderFunction(item);
+                element.classList.add('animate-on-scroll');
+                element.style.setProperty('--animation-delay', `${index * 50}ms`);
+                container.appendChild(element);
+                scrollObserver.observe(element);
             });
         });
     };
@@ -257,20 +262,7 @@
     loadAndRenderData('abilities', 'id', 'abilities-container', renderAbilityCard);
     loadAndRenderData('subAbilities', 'id', 'sub-abilities-container', renderSubAbilityCard);
     loadAndRenderData('rules', 'order', 'rules-list-container', renderRuleItem);
-    abilityRef.child('announcements').orderByChild('timestamp').on('value', (snapshot) => {
-        const container = document.getElementById('announcements-container');
-        container.innerHTML = '';
-        if (!snapshot.exists()) { container.innerHTML = `<p style="text-align:center;">No announcements.</p>`; return; }
-        const announcements = [];
-        snapshot.forEach(childSnapshot => announcements.push(childSnapshot.val()));
-        announcements.reverse().forEach((ann, index) => {
-            const element = renderAnnouncementCard(ann);
-            element.classList.add('animate-on-scroll');
-            element.style.setProperty('--animation-delay', `${index * 50}ms`);
-            container.appendChild(element);
-            scrollObserver.observe(element);
-        });
-    });
+    loadAndRenderData('announcements', 'timestamp', 'announcements-container', renderAnnouncementCard, true);
 
     function createMinecraftBlocks() {
       const container = document.getElementById('minecraft-blocks');
