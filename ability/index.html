@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,14 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Minecraft&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2ecc71;
-      --secondary: #3498db;
-      --dark: #2c3e50;
-      --light: #ecf0f1;
-      --accent: #e74c3c;
+      --primary: #2ecc71; --secondary: #3498db; --dark: #2c3e50; --light: #ecf0f1; --accent: #e74c3c;
       --bg-gradient: linear-gradient(135deg, rgba(26, 42, 108, 0.8), rgba(32, 76, 128, 0.9), rgba(0, 107, 166, 0.8));
-      --card-bg: rgba(255, 255, 255, 0.1);
-      --card-border: rgba(255, 255, 255, 0.2);
+      --card-bg: rgba(255, 255, 255, 0.1); --card-border: rgba(255, 255, 255, 0.2);
       --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
       --transition-speed: 0.3s;
     }
@@ -44,8 +40,8 @@
     .content-section.active { display: block; }
     .section-title { font-size: 2rem; margin-bottom: 20px; text-align: center; position: relative; color: var(--primary); text-shadow: 0 0 10px rgba(46,204,113,0.3); }
     .section-title::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 80px; height: 3px; background: var(--primary); }
-    .about-us-text, .features-grid { text-align: center; line-height: 1.7; }
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px; }
+    .about-us-text { text-align: center; line-height: 1.7; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px; text-align: center;}
     .feature-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 20px; transition: transform 0.3s; }
     .feature-card:hover { transform: translateY(-10px); }
     .feature-icon { font-size: 2.5rem; margin-bottom: 15px; color: var(--primary); }
@@ -126,13 +122,10 @@
         </div>
       </div>
 
-      <!-- Abilities Section -->
+      <!-- Dynamic Sections -->
       <div class="content-section" id="abilities-section"><h2 class="section-title">Abilities</h2><div class="abilities-container" id="abilities-container"></div></div>
-      <!-- Sub-Abilities Section -->
       <div class="content-section" id="sub-abilities-section"><h2 class="section-title">Sub-Abilities</h2><div class="abilities-container" id="sub-abilities-container"></div></div>
-      <!-- Rules Section -->
       <div class="content-section" id="rules-section"><h2 class="section-title">Server Rules</h2><ul class="rules-list" id="rules-list-container"></ul></div>
-      <!-- Announcement Section -->
       <div class="content-section" id="announcement-section"><h2 class="section-title">Recent Announcements</h2><div id="announcements-container"></div></div>
     </div>
   </div>
@@ -182,7 +175,6 @@
         const modalBody = document.getElementById('modalBody');
         modalBody.innerHTML = '';
         const ignoredKeys = ['name', 'color', 'type', 'rarity', 'id', 'order'];
-
         const formatTitle = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 
         for (const key in item) {
@@ -193,8 +185,6 @@
                     sectionHTML = `<p>${value}</p>`;
                 } else if (Array.isArray(value) && value.length > 0) {
                     sectionHTML = `<ul>${value.map(li => `<li>${li}</li>`).join('')}</ul>`;
-                } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                    sectionHTML = `<ul>${Object.entries(value).map(([prop, val]) => `<li><strong>${formatTitle(prop)}:</strong> ${val}</li>`).join('')}</ul>`;
                 }
                 
                 if(sectionHTML) {
@@ -286,11 +276,11 @@
      * 1. Open this page in your browser.
      * 2. Open the Developer Console (usually F12).
      * 3. Type `seedInitialDataToFirebase()` and press Enter.
-     * 4. Verify the data has been added to your Firebase Realtime Database under the 'Ability' node.
-     * 5. Once successful, you can DELETE this entire <script> block from your HTML file.
+     * 4. You will see a "SUCCESS" message in the console. Check Firebase to confirm.
+     * 5. Once successful, DELETE this entire <script> block from your HTML file.
      */
     window.seedInitialDataToFirebase = function() {
-        console.log("Starting data seed. This will OVERWRITE ALL data under '/Ability'...");
+        console.log("Starting data seed... This will OVERWRITE ALL data under '/Ability'.");
         const initialData = {
             abilities: [
                 {id: 1, name: "Creator", color: "#11ff00", type: "God", description: "The being whose sole purpose is to create and grand abilities maintaining balance of the existence itself.", details: "Unknown entity??", howToUse: ["This ability is beyond mortal comprehension", "Only the creator knows its true power", "Controls all existence in the server"]},
@@ -326,8 +316,9 @@
                 { order: 7, title: "Have Fun!", description: "Most importantly, have fun exploring and using your abilities!" }
             ]
         };
-        firebase.database().ref('Ability').set(initialData)
-          .then(() => console.log('SUCCESS: All initial data has been seeded to Firebase.'))
+        const dbRef = firebase.database().ref('Ability');
+        dbRef.set(initialData)
+          .then(() => console.log('%cSUCCESS: All initial data has been seeded to Firebase.', 'color: green; font-weight: bold;'))
           .catch(e => console.error('ERROR seeding data:', e));
     };
   </script>
