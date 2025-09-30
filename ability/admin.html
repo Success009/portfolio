@@ -121,7 +121,7 @@
             rules: db.ref('Ability/rules'), announcements: db.ref('Ability/announcements')
         };
         
-        // UPDATED TEMPLATE
+        // TEMPLATE FIX: Changed howToUse to skills for abilities
         const templates = {
             abilities: { id: 0, name: '', color: '#2ecc71', type: '', description: '', details: '', skills: [], restrictions: '' },
             subAbilities: { id: 0, name: '', color: '#3498db', type: '', rarity: '', description: '', skills: [], drawbacks: [] },
@@ -131,23 +131,15 @@
 
         let currentEditor = null;
         let allData = { rules: [] };
-        let currentlyEditingItem = null; // Store the original item being edited
+        let currentlyEditingItem = null; 
 
         const renderers = {
-            abilities: (item) => `<div class="item-card-header" style="border-left: 4px solid ${item.color};">${item.name}</div><div class="item-card-body">${(item.description || '').substring(0, 100)}...</div>`,
-            subAbilities: (item) => `<div class="item-card-header" style="border-left: 4px solid ${item.color};">${item.name}</div><div class="item-card-body">${(item.description || '').substring(0, 100)}...</div>`,
+            abilities: (item) => `<div class="item-card-header" style="border-left: 4px solid ${item.color || '#fff'};">${item.name}</div><div class="item-card-body">${(item.description || '').substring(0, 100)}...</div>`,
+            subAbilities: (item) => `<div class="item-card-header" style="border-left: 4px solid ${item.color || '#fff'};">${item.name}</div><div class="item-card-body">${(item.description || '').substring(0, 100)}...</div>`,
             rules: (item, key, index, total) => {
                 const upDisabled = index === 0 ? 'disabled' : '';
                 const downDisabled = index === total - 1 ? 'disabled' : '';
-                return `
-                    <div class="item-card-header">
-                        <span>${item.order}. ${item.title}</span>
-                        <div class="reorder-controls">
-                            <button class="reorder-btn move-up" data-key="${key}" ${upDisabled}><i class="fa-solid fa-arrow-up"></i></button>
-                            <button class="reorder-btn move-down" data-key="${key}" ${downDisabled}><i class="fa-solid fa-arrow-down"></i></button>
-                        </div>
-                    </div>
-                    <div class="item-card-body">${item.description}</div>`;
+                return `<div class="item-card-header"><span>${item.order}. ${item.title}</span><div class="reorder-controls"><button class="reorder-btn move-up" data-key="${key}" ${upDisabled}><i class="fa-solid fa-arrow-up"></i></button><button class="reorder-btn move-down" data-key="${key}" ${downDisabled}><i class="fa-solid fa-arrow-down"></i></button></div></div><div class="item-card-body">${item.description}</div>`;
             },
             announcements: (item) => `<div class="item-card-header">${item.title}</div><div class="item-card-body">Posted: ${new Date(item.timestamp).toLocaleString()}</div>`
         };
@@ -185,7 +177,6 @@
         const generateForm = (item) => {
             const form = document.getElementById('modal-form');
             form.innerHTML = '';
-            // Use a merged object to ensure all fields from the template are present
             const fullItem = { ...templates[item.formType], ...item };
 
             for(const key in fullItem) {
@@ -193,19 +184,22 @@
                 const value = fullItem[key];
                 const label = `<label for="form-${key}">${formatTitle(key)}</label>`;
                 let inputHtml;
+                const valueIsArray = Array.isArray(value);
+                const valueIsStringButShouldBeArray = !valueIsArray && Array.isArray(templates[item.formType][key]);
 
                 if (key === 'content') {
                     inputHtml = `<textarea id="editor-content" name="content">${value}</textarea>`;
                 } else if (key === 'color') {
                     inputHtml = `<input type="color" id="form-${key}" name="${key}" value="${value}">`;
-                } else if (Array.isArray(value)) {
-                    inputHtml = `<textarea id="form-${key}" name="${key}" placeholder="Enter each item on a new line">${value.join('\n')}</textarea>`;
-                } else if (typeof value === 'string' && value.length > 100 || ['description', 'details'].includes(key)) {
+                } else if (valueIsArray || valueIsStringButShouldBeArray) { // Check if it IS an array or SHOULD BE an array
+                    const textValue = valueIsArray ? value.join('\n') : (value || '');
+                    inputHtml = `<textarea id="form-${key}" name="${key}" placeholder="Enter each item on a new line">${textValue}</textarea>`;
+                } else if (typeof value === 'string' && (value.length > 100 || ['description', 'details'].includes(key))) {
                     inputHtml = `<textarea id="form-${key}" name="${key}">${value}</textarea>`;
                 } else if (typeof value === 'number') {
                     inputHtml = `<input type="number" id="form-${key}" name="${key}" value="${value}">`;
                 } else {
-                    inputHtml = `<input type="text" id="form-${key}" name="${key}" value="${value}">`;
+                    inputHtml = `<input type="text" id="form-${key}" name="${key}" value="${value || ''}">`;
                 }
                 form.innerHTML += `<div class="form-group">${label}${inputHtml}</div>`;
             }
@@ -222,7 +216,7 @@
 
         const closeModal = () => { if (currentEditor) { currentEditor.destroy(); currentEditor = null; } modal.classList.remove('show'); currentlyEditingItem = null; };
         const openFormForNew = (type) => {
-            currentlyEditingItem = { ...templates[type], formType: type }; // Store template for type checking
+            currentlyEditingItem = { ...templates[type], formType: type }; 
             modalTitle.textContent = `Create New ${formatTitle(type)}`;
             generateForm(currentlyEditingItem);
             saveBtn.onclick = () => saveItem(type);
@@ -230,7 +224,7 @@
         };
         const openFormForEdit = (type, key) => {
             refs[type].child(key).once('value', snapshot => {
-                currentlyEditingItem = { ...snapshot.val(), formType: type }; // Store original item
+                currentlyEditingItem = { ...snapshot.val(), formType: type }; 
                 modalTitle.textContent = `Edit ${formatTitle(type)}`; 
                 generateForm(currentlyEditingItem);
                 saveBtn.onclick = () => saveItem(type, key); 
@@ -248,7 +242,6 @@
             for (const [fieldName, value] of formData.entries()) {
                 if(fieldName === 'content' && currentEditor) continue;
                 
-                // Check original item's type first, then template as a fallback
                 const originalValue = currentlyEditingItem ? currentlyEditingItem[fieldName] : undefined;
                 const templateValue = templates[type][fieldName];
 
