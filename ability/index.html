@@ -91,7 +91,6 @@
     .modal-header { position: relative; padding: 20px 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255,255,255,0.05); }
     .modal-title { font-size: 1.8rem; font-weight: 600; color: var(--primary); margin: 0; }
     #modalBody { padding: 30px; overflow-y: auto; }
-    .modal-section-title { font-size: 1.2rem; color: var(--primary); margin-bottom: 10px; font-weight: 600; border-left: 3px solid var(--primary); padding-left: 10px; }
     .modal-content ul { padding-left: 20px; list-style-type: none; }
     .modal-content li { margin-bottom: 8px; position: relative; }
     .modal-content li::before { content: "▶"; color: var(--primary); position: absolute; left: -20px; top: 2px; font-size: 0.8em; }
@@ -214,7 +213,7 @@
                 let sectionHTML = '';
                 if (typeof value === 'string' && value.trim() !== '') sectionHTML = `<p>${value}</p>`;
                 else if (Array.isArray(value) && value.length > 0) sectionHTML = `<ul>${value.map(li => `<li>${li}</li>`).join('')}</ul>`;
-                if(sectionHTML) modalBody.innerHTML += `<div class="modal-section"><h3 class="modal-section-title">${formatTitle(key)}</h3>${sectionHTML}</div>`;
+                if(sectionHTML) modalBody.innerHTML += `<div class="modal-section"></h3>${sectionHTML}</div>`;
             }
         }
         modal.classList.add('show');
