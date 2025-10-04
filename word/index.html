@@ -94,7 +94,7 @@
         import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         // --- WARNING: DO NOT USE A REAL KEY HERE ON A PUBLIC WEBSITE ---
-        // --- Replace this placeholder with your actual Google Gemini API key. ---
+        // This key is visible to anyone who views the page source.
         const GEMINI_API_KEY = "AIzaSyCVhh967ATShWvPX0jjh2sbruzWTxEGXL4";
 
         const firebaseConfig = {apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",authDomain:"community-canvas-255fa.firebaseapp.com",databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",projectId:"community-canvas-255fa",storageBucket:"community-canvas-255fa.appspot.com",messagingSenderId:"729445267995",appId:"1:729445267995:web:05da6756d66c58b9ccd6be"};
@@ -181,7 +181,7 @@
             const c = cfgSnap.val() || { category: 'simple', useAI: true };
             const apiKey = GEMINI_API_KEY;
 
-            if (c.useAI && apiKey && apiKey !== "YOUR_GEMINI_API_KEY_HERE") {
+            if (c.useAI && apiKey) {
                 const category_map = {
                     'simple': 'a simple, common, everyday word',
                     'animals': 'a simple, common animal',
@@ -204,10 +204,15 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 10, temperature: 0.9 } })
                     });
                     if (!res.ok) throw new Error(`API request failed with status ${res.status}`);
+                    
                     const data = await res.json();
-                    const word = data.candidates[0].content.parts[0].text.trim().toLowerCase().replace(/[^\w\s-]/g, '').split(' ')[0];
-                    if (word) return word;
-                    throw new Error("API returned an empty word");
+                    // Robust check for a valid response from the API
+                    if (data.candidates && data.candidates.length > 0) {
+                        const word = data.candidates[0].content.parts[0].text.trim().toLowerCase().replace(/[^\w\s-]/g, '').split(' ')[0];
+                        if (word) return word;
+                    }
+                    throw new Error("API returned no valid candidates or an empty word.");
+
                 } catch (e) {
                     console.error("AI word generation failed. Falling back to local list.", e);
                     statusEl.textContent = 'AI Error! Using backup words.';
@@ -236,7 +241,7 @@
             try {
                 const cfgSnap = await get(ref(db, `${GAME_NODE}/config`));
                 const c = cfgSnap.val() || { imposters: 1, unknownImposter: true, useAI: true };
-                const AImode = c.useAI && GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? ' (using AI)' : '';
+                const AImode = c.useAI && GEMINI_API_KEY ? ' (using AI)' : '';
                 statusEl.innerHTML = `Getting word${AImode}<span class="loading"></span>`;
                 animationEl.style.display = 'none';
                 
