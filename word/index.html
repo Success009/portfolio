@@ -16,9 +16,10 @@
         @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
         .word{background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #0ff;color:#fff;padding:min(6vw,2.5rem);border-radius:min(3vw,1rem);font-size:min(10vw,2.5rem);font-weight:800;margin:3vh 0;box-shadow:0 0 min(6vw,1.5rem) rgba(0,255,255,.3);transition:all .3s ease;max-width:90vw;word-break:break-word;min-height:min(25vh,200px);display:flex;align-items:center;justify-content:center;flex-direction:column}
         .imposter{background:linear-gradient(135deg,#2d1b69,#8b1538);border-color:#f0f;box-shadow:0 0 min(6vw,1.5rem) rgba(255,0,255,.3)}
+        .unknown-imposter{background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #0ff;box-shadow:0 0 min(6vw,1.5rem) rgba(0,255,255,.3)}
         .starter{background:linear-gradient(135deg,#1b692d,#38b15b);border-color:#0f0;box-shadow:0 0 min(6vw,1.5rem) rgba(0,255,0,.3)}
         .word.hidden{opacity:0;transform:scale(.9); pointer-events: none;}
-        .status{font-size:min(4vw,1rem);color:#0ff;margin:1vh 0;opacity:.8;min-height:1.2em;}
+        .status{font-size:min(4vw,1rem);color:#0ff;margin:1vh 0;opacity:.8}
         .players{font-size:min(3vw,.8rem);color:#888;position:absolute;bottom:2vh;opacity:.6}
         .config{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #0ff;padding:min(4vw,1rem);border-radius:min(2vw,.8rem);box-shadow:0 0 min(8vw,2rem) rgba(0,255,255,.4);display:none;z-index:1000;width:min(90vw,20rem);max-height:90vh;overflow-y:auto}
         .config h3{font-size:min(4vw,1rem);margin-bottom:min(2vw,.6rem);color:#0ff;text-align:center}
@@ -36,6 +37,7 @@
         @keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
         .turn-indicator{font-size:min(3vw,.8rem);color:#0f0;margin-bottom:min(2vw,.5rem);padding:min(1vw,.3rem);background:rgba(0,255,0,.1);border:1px solid #0f0;border-radius:min(1vw,.3rem)}
         .heartbeat-display{font-size:min(2vw,.5rem);color:#666;position:absolute;top:1vh;right:1vw}
+        .feature-highlight{background:linear-gradient(45deg,#ff6600,#ff9900);color:#000;font-weight:bold;padding:min(1vw,.2rem);border-radius:min(.5vw,.1rem);margin-left:min(1vw,.2rem);font-size:min(2vw,.5rem)}
     </style>
 </head>
 <body>
@@ -64,24 +66,21 @@
         <div class="config-item">
             <div class="checkbox-item">
                 <input type="checkbox" id="unknownImposter" checked>
-                <label for="unknownImposter">🎭 Unknown Imposter Mode</label>
+                <label>🎭 Unknown Imposter</label>
             </div>
         </div>
 
         <div class="config-item">
             <label class="config-label">Category:</label>
-            <select class="config-select" id="category">
-                <option value="simple">🎲 Simple Words</option>
-                <option value="animals">🐶 Animals</option>
-                <option value="objects">🚗 Objects</option>
-                <option value="food">🍕 Food</option>
+            <select class="config-select" id="category" disabled>
+                <option value="mixed">🎲 Simple Words (Default)</option>
             </select>
         </div>
 
         <div class="config-item">
             <div class="checkbox-item">
-                <input type="checkbox" id="useAI" checked>
-                <label for="useAI">🤖 Use AI for Words</label>
+                <input type="checkbox" id="useAI" disabled>
+                <label>🤖 Use AI (Needs valid API key)</label>
             </div>
         </div>
 
@@ -93,12 +92,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // --- WARNING: DO NOT USE A REAL KEY HERE ON A PUBLIC WEBSITE ---
-        // This key is visible to anyone who views the page source.
-        const GEMINI_API_KEY = "AIzaSyCVhh967ATShWvPX0jjh2sbruzWTxEGXL4";
-
         const firebaseConfig = {apiKey:"AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",authDomain:"community-canvas-255fa.firebaseapp.com",databaseURL:"https://community-canvas-255fa-default-rtdb.firebaseio.com",projectId:"community-canvas-255fa",storageBucket:"community-canvas-255fa.appspot.com",messagingSenderId:"729445267995",appId:"1:729445267995:web:05da6756d66c58b9ccd6be"};
-        
+        const GEMINI_API_KEY = "AIzaSyCVhh967ATShWvPX0jjh2sbruzWTxEGXL4"; // NOTE: This key is invalid and will cause errors if AI is enabled.
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const GAME_NODE = 'wordImposterGame';
@@ -178,54 +174,37 @@
 
         async function getWord(isForImposter = false, mainWord = null) {
             const cfgSnap = await get(ref(db, `${GAME_NODE}/config`));
-            const c = cfgSnap.val() || { category: 'simple', useAI: true };
-            const apiKey = GEMINI_API_KEY;
-
-            if (c.useAI && apiKey) {
-                const category_map = {
-                    'simple': 'a simple, common, everyday word',
-                    'animals': 'a simple, common animal',
-                    'objects': 'a simple, common household or everyday object',
-                    'food': 'a simple, common food item'
-                };
-                const category_desc = category_map[c.category] || category_map['simple'];
+            const c = cfgSnap.val() || { category: 'mixed', useAI: false };
+            
+            if (c.useAI) {
                 let prompt;
-
                 if (isForImposter && mainWord) {
-                    prompt = `The main word for the other players is "${mainWord}", which is in the category of "${category_desc}". Generate a different, but also very simple and common word, from a COMPLETELY DIFFERENT category (e.g., if the category is animals, suggest an object or food). The word must be one word only. Respond with ONLY the word.`;
+                    prompt = `Generate one very simple, basic word that everyone knows, but make it DIFFERENT from "${mainWord}". Avoid words in the same category as "${mainWord}". Examples: dog, cat, tree, car, house, book, sun, water, fire, bird. Respond with ONLY the word, nothing else. Make it simple and common but different.`;
                 } else {
-                    prompt = `Generate one word that is ${category_desc}. It must be a very common, single word that a child would know. Examples: dog, car, apple, house. Respond with ONLY the single word, nothing else.`;
+                    prompt = 'Generate one very simple, basic word that everyone knows. Examples: dog, cat, tree, car, house, book, sun, water, fire, bird. Respond with ONLY the word, nothing else. Make it simple and common.';
                 }
                 
                 try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 10, temperature: 0.9 } })
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 5, temperature: .8 } })
                     });
-                    if (!res.ok) throw new Error(`API request failed with status ${res.status}`);
-                    
                     const data = await res.json();
-                    // Robust check for a valid response from the API
-                    if (data.candidates && data.candidates.length > 0) {
-                        const word = data.candidates[0].content.parts[0].text.trim().toLowerCase().replace(/[^\w\s-]/g, '').split(' ')[0];
-                        if (word) return word;
-                    }
-                    throw new Error("API returned no valid candidates or an empty word.");
-
+                    return data.candidates[0].content.parts[0].text.trim().toLowerCase().replace(/[^\w\s-]/g, '');
                 } catch (e) {
                     console.error("AI word generation failed. Falling back to local list.", e);
-                    statusEl.textContent = 'AI Error! Using backup words.';
-                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
             }
             
-            // Fallback logic
-            const words = ['dog','cat','tree','car','house','book','sun','water','fire','bird','fish','lion','bear','wolf','fox','horse','cow','pig','sheep','chicken','duck','rabbit','mouse','elephant','tiger','monkey','snake','frog','bee','spider','flower','grass','mountain','river','ocean','lake','forest','rock','sand','cloud','rain','snow','wind','moon','star','earth','apple','banana','orange','bread','milk','cheese','pizza','cake','cookie','tea','coffee','juice','chair','table','bed','door','window','phone','computer','bike','bus','train','plane','boat','ball','toy','game','music','love','friend','school','home','work','play','food','drink','sleep','light','dark','up','down','left','right','new','old','good','bad','baby','child','man','woman','boy','girl','mother','father','hand','foot','head','eye','nose','mouth','hair','face','smile','laugh','cry','help'];
+            const words = ['dog', 'cat', 'tree', 'car', 'house', 'book', 'sun', 'water', 'fire', 'bird', 'fish', 'lion', 'bear', 'wolf', 'fox', 'deer', 'horse', 'cow', 'pig', 'sheep', 'chicken', 'duck', 'rabbit', 'mouse', 'elephant', 'tiger', 'monkey', 'snake', 'frog', 'bee', 'spider', 'flower', 'grass', 'mountain', 'river', 'ocean', 'lake', 'forest', 'desert', 'rock', 'sand', 'cloud', 'rain', 'snow', 'wind', 'storm', 'moon', 'star', 'planet', 'earth', 'apple', 'banana', 'orange', 'bread', 'milk', 'cheese', 'pizza', 'cake', 'cookie', 'tea', 'coffee', 'juice', 'chair', 'table', 'bed', 'door', 'window', 'phone', 'computer', 'bike', 'bus', 'train', 'plane', 'boat', 'ball', 'toy', 'game', 'music', 'dance', 'sing', 'run', 'walk', 'jump', 'swim', 'fly', 'red', 'blue', 'green', 'yellow', 'black', 'white', 'pink', 'purple', 'orange', 'brown', 'big', 'small', 'hot', 'cold', 'fast', 'slow', 'happy', 'sad', 'love', 'friend', 'school', 'park', 'shop', 'home', 'work', 'play', 'food', 'drink', 'sleep', 'wake', 'light', 'dark', 'up', 'down', 'left', 'right', 'new', 'old', 'good', 'bad', 'baby', 'child', 'man', 'woman', 'boy', 'girl', 'mother', 'father', 'brother', 'sister', 'hand', 'foot', 'head', 'eye', 'ear', 'nose', 'mouth', 'hair', 'face', 'smile', 'laugh', 'cry', 'help', 'thank', 'sorry', 'please'];
+            
             if (isForImposter && mainWord) {
+                // Filter out the main word and try to avoid similar words
                 const filtered = words.filter(w => w !== mainWord);
                 return filtered[Math.floor(Math.random() * filtered.length)];
             }
+            
             return words[Math.floor(Math.random() * words.length)];
         }
 
@@ -239,10 +218,7 @@
             if (processing) return;
             processing = true;
             try {
-                const cfgSnap = await get(ref(db, `${GAME_NODE}/config`));
-                const c = cfgSnap.val() || { imposters: 1, unknownImposter: true, useAI: true };
-                const AImode = c.useAI && GEMINI_API_KEY ? ' (using AI)' : '';
-                statusEl.innerHTML = `Getting word${AImode}<span class="loading"></span>`;
+                statusEl.innerHTML = 'Getting word<span class="loading"></span>';
                 animationEl.style.display = 'none';
                 
                 const activePlayers = await getActivePlayers();
@@ -253,7 +229,10 @@
                     processing = false;
                     return;
                 }
-                                
+                
+                const cfgSnap = await get(ref(db, `${GAME_NODE}/config`));
+                const c = cfgSnap.val() || { imposters: 1, unknownImposter: true };
+                
                 const shuffled = [...activePlayers].sort(() => Math.random() - .5);
                 let numImposters = Math.min(parseInt(c.imposters || 1), activePlayers.length - 1);
                 if (numImposters < 1) numImposters = 1;
@@ -261,6 +240,7 @@
                 const imposters = shuffled.slice(0, numImposters);
                 const starter = shuffled[Math.floor(Math.random() * shuffled.length)];
                 
+                // Get the main word for normal players
                 const mainWord = await getWord();
                 
                 let gameData = {
@@ -272,6 +252,7 @@
                     unknownImposter: c.unknownImposter || false
                 };
                 
+                // If unknown imposter is enabled, generate different words for imposters
                 if (c.unknownImposter) {
                     gameData.imposterWords = {};
                     for (const imposter of imposters) {
@@ -299,16 +280,26 @@
             let displayWord = gameData.word;
             let showAsImposter = false;
             
+            // Determine what to show based on unknown imposter setting
             if (unknownImposter) {
+                // Unknown imposter mode - imposters get different word but don't know they're imposters
                 if (isImposter && gameData.imposterWords && gameData.imposterWords[deviceId]) {
                     displayWord = gameData.imposterWords[deviceId];
                 }
+                // Everyone appears as normal player in unknown mode
                 showAsImposter = false;
             } else {
+                // Classic mode - imposters know they're imposters
                 showAsImposter = isImposter;
             }
             
-            currentGameData = { word: displayWord, isImposter, isStarter, showAsImposter, unknownImposter };
+            currentGameData = { 
+                word: displayWord, 
+                isImposter, 
+                isStarter, 
+                showAsImposter,
+                unknownImposter
+            };
             
             const starterClass = isStarter ? 'starter' : '';
             const imposterClass = showAsImposter ? 'imposter' : '';
@@ -316,9 +307,11 @@
             
             let roleDisplay = '';
             if (showAsImposter) {
+                // Classic imposter display
                 roleDisplay = '<div><div style="font-size:1.5em;margin-bottom:.3em">🕵️</div><div>IMPOSTER</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Blend in & guess the word!</div></div>';
             } else {
-                roleDisplay = `<div><div style="font-size:.6em;margin-bottom:.3em;opacity:.8">Your Word:</div><div style="text-transform:uppercase">${displayWord}</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Find the imposters!</div></div>`;
+                // Normal player display (including unknown imposters)
+                roleDisplay = `<div><div style="font-size:.6em;margin-bottom:.3em;opacity:.8">Word:</div><div style="text-transform:uppercase">${displayWord}</div><div style="font-size:.6em;margin-top:.3em;opacity:.8">Find the imposters!</div></div>`;
             }
             
             gameEl.innerHTML = `<div class="word ${combinedClass}" id="wordDisplay">${isStarter ? '<div class="turn-indicator">🎯 YOU START FIRST!<br>Give the first hint</div>' : ''}${roleDisplay}</div><div class="status" id="status">Tap to hide/show • Hold for config</div><div class="players" id="players"></div><div class="heartbeat-display" id="heartbeat">♥</div>`;
@@ -366,36 +359,35 @@
                 const c = cfgSnap.val();
                 if (c) {
                     document.getElementById('imposters').value = c.imposters || 1;
-                    document.getElementById('useAI').checked = c.useAI !== undefined ? c.useAI : true;
+                    document.getElementById('useAI').checked = c.useAI || false;
                     document.getElementById('unknownImposter').checked = c.unknownImposter !== undefined ? c.unknownImposter : true;
-                    document.getElementById('category').value = c.category || 'simple';
                     updateRangeDisplay('imposters');
                 } else {
-                     await set(ref(db, `${GAME_NODE}/config`), { imposters: 1, useAI: true, unknownImposter: true, category: 'simple' });
+                    await set(ref(db, `${GAME_NODE}/config`), { imposters: 1, useAI: false, unknownImposter: true });
                 }
             } catch (e) {
-                 await set(ref(db, `${GAME_NODE}/config`), { imposters: 1, useAI: true, unknownImposter: true, category: 'simple' });
+                await set(ref(db, `${GAME_NODE}/config`), { imposters: 1, useAI: false, unknownImposter: true });
             }
         }
 
         function showConfig() { configEl.style.display = 'block'; loadConfig(); }
-        window.closeConfig = function() { configEl.style.display = 'none'; }
+        function closeConfig() { configEl.style.display = 'none'; }
 
         window.saveConfig = async function () {
             const c = { 
                 imposters: parseInt(document.getElementById('imposters').value), 
                 useAI: document.getElementById('useAI').checked,
-                unknownImposter: document.getElementById('unknownImposter').checked,
-                category: document.getElementById('category').value
+                unknownImposter: document.getElementById('unknownImposter').checked
             };
             await set(ref(db, `${GAME_NODE}/config`), c);
-            closeConfig();
+            configEl.style.display = 'none';
         };
 
-        window.startGameFromConfig = function () { closeConfig(); if (!processing) startGame(); };
+        window.closeConfig = closeConfig;
+        window.startGameFromConfig = function () { configEl.style.display = 'none'; if (!processing) startGame(); };
 
         document.getElementById('imposters').addEventListener('input', () => updateRangeDisplay('imposters'));
-        
+
         onValue(ref(db, `${GAME_NODE}/currentGame`), snap => {
             const data = snap.val();
             if (data && Date.now() - data.timestamp < 60000) {
@@ -437,3 +429,5 @@
     </script>
 </body>
 </html>
+
+
