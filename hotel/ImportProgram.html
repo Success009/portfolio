@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory & Import Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee; --secondary: #3f37c9; --danger: #f72585; --success: #38b000;
+            --light: #f8f9fa; --dark: #212529; --gray: #6c757d; --warning: #ff9f1c;
+            --border-radius: 10px; --box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f0f2f5; color: var(--dark); }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; padding: 20px; text-align: center; font-size: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+        .container { max-width: 800px; margin: 25px auto; padding: 15px; }
+        .card {
+            background-color: white; border-radius: var(--border-radius);
+            margin-bottom: 25px; box-shadow: var(--box-shadow); overflow: hidden;
+        }
+        .card-header { padding: 0; }
+        .view-toggle { display: flex; }
+        .view-btn {
+            flex: 1; padding: 15px; border: none; background-color: #f1f1f1;
+            cursor: pointer; font-size: 1rem; font-weight: 500; color: var(--secondary);
+            transition: all 0.3s ease; border-bottom: 3px solid transparent;
+        }
+        .view-btn.active { background-color: white; color: var(--primary); border-bottom-color: var(--primary); }
+        .card-body { padding: 25px; }
+        .form-panel { display: none; }
+        .form-panel.active { display: block; }
+        h2 { margin-bottom: 20px; text-align: center; color: var(--dark); }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid #ced4da;
+            border-radius: var(--border-radius); font-size: 1rem; transition: all 0.3s ease;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.25); }
+        .input-group { display: flex; gap: 10px; align-items: center; }
+        #itemQuantity, #usageQuantity { flex: 2; }
+        #itemUnit, #usageUnitLabel { flex: 1; }
+        .btn {
+            border: none; border-radius: var(--border-radius); padding: 12px 20px;
+            cursor: pointer; font-weight: 500; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px; font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { background-color: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background-color: var(--secondary); transform: translateY(-2px); }
+        .btn-danger { background-color: var(--danger); color: white; padding: 5px 10px; font-size: 0.8rem; }
+        #importedItemsList { list-style-type: none; padding: 0; }
+        .list-item { padding: 15px; border-bottom: 1px solid #eee; }
+        .item-details-grid { display: grid; grid-template-columns: 1fr auto; gap: 5px 15px; }
+        .item-name { font-weight: bold; font-size: 1.1rem; color: var(--dark); grid-column: 1 / 2; }
+        .item-sub-details { font-size: 0.9rem; color: var(--gray); grid-column: 1 / 2; }
+        .item-delete-btn { grid-column: 2 / 3; grid-row: 1 / 3; align-self: center; }
+        .item-inventory {
+            grid-column: 1 / 3; display: flex; justify-content: space-around;
+            margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; font-size: 0.9rem;
+        }
+        .inventory-stat { text-align: center; }
+        .inventory-stat span { display: block; font-weight: bold; }
+        .inventory-stat .remaining { color: var(--success); font-size: 1.1em; }
+    </style>
+</head>
+
+<body>
+    <header><h1>Inventory & Import Management</h1></header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="setView('import')"><i class="fas fa-plus-circle"></i> Add Import Item</button>
+                    <button class="view-btn" onclick="setView('usage')"><i class="fas fa-minus-circle"></i> Record Item Usage</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Add Import Form -->
+                <div id="importPanel" class="form-panel active">
+                    <h2>Add New Import Item</h2>
+                    <form id="importForm">
+                        <div class="form-group"><label class="form-label" for="itemName">Item Name</label><input type="text" id="itemName" class="form-control" placeholder="e.g., Basmati Rice" required></div>
+                        <div class="form-group"><label class="form-label" for="itemType">Item Type</label><input type="text" id="itemType" class="form-control" placeholder="e.g., Groceries" required></div>
+                        <div class="form-group">
+                            <label class="form-label" for="itemQuantity">Quantity & Unit</label>
+                            <div class="input-group">
+                                <input type="number" id="itemQuantity" class="form-control" placeholder="e.g., 10" required step="any">
+                                <select id="itemUnit" class="form-control"><option value="kg">KG</option><option value="Liter">Liter</option><option value="piece">Piece</option><option value="packet">Packet</option><option value="full">Full</option><option value="half">Half</option><option value="quarter">Quarter</option></select>
+                            </div>
+                        </div>
+                        <div class="form-group"><label class="form-label" for="pricePerUnit">Price per Unit (Rs)</label><input type="number" id="pricePerUnit" class="form-control" placeholder="Price for one kg, piece, etc." step="any"></div>
+                        <div class="form-group"><label class="form-label" for="totalPrice">Total Price (Rs)</label><input type="number" id="totalPrice" class="form-control" placeholder="Total cost for the quantity" required step="any"></div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Item</button>
+                    </form>
+                </div>
+                <!-- Record Usage Form -->
+                <div id="usagePanel" class="form-panel">
+                    <h2>Record Item Usage</h2>
+                    <form id="usageForm">
+                        <div class="form-group">
+                            <label class="form-label" for="usageItemSelect">Select Imported Item</label>
+                            <select id="usageItemSelect" class="form-control" required><option value="" disabled selected>Loading inventory...</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="usageQuantity">Quantity Used</label>
+                            <div class="input-group">
+                                <input type="number" id="usageQuantity" class="form-control" placeholder="e.g., 1.5" required step="any">
+                                <span id="usageUnitLabel" class="form-control" style="background:#e9ecef; text-align:center;">Unit</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="background-color: var(--warning);"><i class="fas fa-save"></i> Record Usage</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Current Inventory</h2>
+            <ul id="importedItemsList"><p style="padding: 20px; text-align: center;">Loading inventory...</p></ul>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA", authDomain: "community-canvas-255fa.firebaseapp.com", databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com", projectId: "community-canvas-255fa", storageBucket: "community-canvas-255fa.appspot.com", messagingSenderId: "729445267995", appId: "1:729445267995:web:05da6756d66c58b9ccd6be" };
+        firebase.initializeApp(firebaseConfig);
+        
+        const importRef = firebase.database().ref('import_items');
+        const usageRef = firebase.database().ref('usage_records');
+        let allImportedItems = {};
+
+        const importForm = document.getElementById('importForm');
+        const usageForm = document.getElementById('usageForm');
+        const quantityInput = document.getElementById('itemQuantity');
+        const pricePerUnitInput = document.getElementById('pricePerUnit');
+        const totalPriceInput = document.getElementById('totalPrice');
+        const usageItemSelect = document.getElementById('usageItemSelect');
+        const usageUnitLabel = document.getElementById('usageUnitLabel');
+
+        const setView = (view) => {
+            document.getElementById('importPanel').classList.toggle('active', view === 'import');
+            document.getElementById('usagePanel').classList.toggle('active', view === 'usage');
+            document.querySelector('.view-btn[onclick="setView(\'import\')"]').classList.toggle('active', view === 'import');
+            document.querySelector('.view-btn[onclick="setView(\'usage\')"]').classList.toggle('active', view === 'usage');
+        };
+
+        const updateTotalPrice = () => {
+            const quantity = parseFloat(quantityInput.value);
+            const pricePerUnit = parseFloat(pricePerUnitInput.value);
+            if (quantity > 0 && pricePerUnit >= 0) totalPriceInput.value = (quantity * pricePerUnit).toFixed(2);
+        };
+
+        const updatePricePerUnit = () => {
+            const quantity = parseFloat(quantityInput.value);
+            const total = parseFloat(totalPriceInput.value);
+            if (quantity > 0 && total >= 0) pricePerUnitInput.value = (total / quantity).toFixed(2);
+        };
+
+        quantityInput.addEventListener('input', updateTotalPrice);
+        pricePerUnitInput.addEventListener('input', updateTotalPrice);
+        totalPriceInput.addEventListener('input', updatePricePerUnit);
+
+        importForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const totalCost = parseFloat(totalPriceInput.value);
+            if (totalCost > 0) {
+                importRef.push({
+                    name: document.getElementById('itemName').value,
+                    type: document.getElementById('itemType').value,
+                    quantity: parseFloat(quantityInput.value),
+                    unit: document.getElementById('itemUnit').value,
+                    price: totalCost,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => importForm.reset());
+            } else { alert('Please ensure all fields, especially Total Price, are filled correctly.'); }
+        });
+
+        usageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const importKey = usageItemSelect.value;
+            const quantityUsed = parseFloat(document.getElementById('usageQuantity').value);
+            if (importKey && quantityUsed > 0) {
+                usageRef.push({
+                    importKey: importKey,
+                    quantityUsed: quantityUsed,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => usageForm.reset());
+            } else { alert('Please select an item and enter a valid quantity.'); }
+        });
+
+        const fetchAndDisplayInventory = () => {
+            usageRef.on('value', usageSnapshot => {
+                const usageMap = {};
+                usageSnapshot.forEach(child => {
+                    const usage = child.val();
+                    if (!usageMap[usage.importKey]) usageMap[usage.importKey] = 0;
+                    usageMap[usage.importKey] += usage.quantityUsed;
+                });
+                
+                importRef.orderByChild('createdAt').on('value', importSnapshot => {
+                    const itemsList = document.getElementById('importedItemsList');
+                    itemsList.innerHTML = '';
+                    allImportedItems = {}; // Reset for dropdown
+                    if (!importSnapshot.exists()) {
+                        itemsList.innerHTML = '<p style="padding:20px; text-align:center;">No imported items yet.</p>';
+                        return;
+                    }
+                    importSnapshot.forEach(childSnapshot => {
+                        const item = childSnapshot.val();
+                        const itemKey = childSnapshot.key;
+                        allImportedItems[itemKey] = item; // Store for dropdown
+                        
+                        const totalUsed = usageMap[itemKey] || 0;
+                        const remaining = item.quantity - totalUsed;
+                        const date = new Date(item.createdAt).toLocaleDateString();
+
+                        const listItem = document.createElement('li');
+                        listItem.className = 'list-item';
+                        listItem.innerHTML = `
+                            <div class="item-details-grid">
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-sub-details">${date} - ${item.type}</div>
+                                <div class="item-delete-btn"><button class="btn btn-danger" onclick="deleteItem('${itemKey}')"><i class="fas fa-trash"></i></button></div>
+                                <div class="item-inventory">
+                                    <div class="inventory-stat">Imported<span>${item.quantity} ${item.unit}</span></div>
+                                    <div class="inventory-stat">Used<span>${totalUsed.toFixed(2)} ${item.unit}</span></div>
+                                    <div class="inventory-stat">Remaining<span class="remaining">${remaining.toFixed(2)} ${item.unit}</span></div>
+                                </div>
+                            </div>
+                        `;
+                        itemsList.prepend(listItem);
+                    });
+                    populateUsageDropdown();
+                });
+            });
+        };
+
+        const populateUsageDropdown = () => {
+            usageItemSelect.innerHTML = '<option value="" disabled selected>Select an item to record usage</option>';
+            Object.entries(allImportedItems).reverse().forEach(([key, item]) => {
+                const date = new Date(item.createdAt).toLocaleDateString();
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${item.name} (${item.quantity} ${item.unit} on ${date})`;
+                option.dataset.unit = item.unit; // Store unit for later
+                usageItemSelect.appendChild(option);
+            });
+        };
+        
+        usageItemSelect.addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            usageUnitLabel.textContent = selectedOption.dataset.unit || 'Unit';
+        });
+
+        const deleteItem = (itemKey) => {
+            if (confirm('Are you sure you want to delete this entire import record and its associated usage data? This cannot be undone.')) {
+                // Find and delete all usage records associated with this import
+                usageRef.orderByChild('importKey').equalTo(itemKey).once('value', snapshot => {
+                    const updates = {};
+                    snapshot.forEach(child => { updates[child.key] = null; });
+                    usageRef.update(updates);
+                });
+                // Delete the import record itself
+                importRef.child(itemKey).remove();
+            }
+        };
+
+        fetchAndDisplayInventory();
+    </script>
+</body>
+</html>
