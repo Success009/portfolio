@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="256x123">
-    <title>Bharatpur Bazar</title>
+    <title>Pariwarik Menu</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,7 +23,7 @@
         .logo {
             margin: 20px auto;
             display: block;
-            height: 100px;
+            height: 150px;
         }
 
         .menu-section {
@@ -52,6 +52,7 @@
             padding: 10px;
             text-align: center;
             transition: transform .3s, box-shadow .3s;
+            position: relative; /* Added for banner positioning */
         }
 
         .menu-item:hover {
@@ -71,6 +72,40 @@
         .menu-item button:hover {
             background-color: #495057;
         }
+        
+        /* --- NEW STYLES FOR OUT OF STOCK --- */
+        .menu-item.out-of-stock {
+            filter: grayscale(90%) opacity(0.6);
+            cursor: not-allowed;
+        }
+        .menu-item.out-of-stock:hover {
+            transform: none; /* Disable hover effect */
+            box-shadow: none;
+        }
+        .out-of-stock-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .menu-item .disabled-btn {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .menu-item .disabled-btn:hover {
+            background-color: #6c757d;
+        }
+        /* --- END OF NEW STYLES --- */
 
         .order-section {
             position: fixed;
@@ -166,13 +201,25 @@
             border: none;
         }
         .cart-icon {
-            font-size: 1.5em;
-            position: relative;
+            width: 65px;
+            height: 65px;
+            font-size: 2em;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background-color: #343a40;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .cart-icon::before {
             content: "";
             position: absolute;
-            top: 32px;
+            top: 0px;
             right: 0;
             width: 10px;
             height: 10px;
@@ -548,6 +595,7 @@
         firebase.initializeApp(firebaseConfig);
         const menuRef = firebase.database().ref('menu');
         const storage = firebase.storage();
+
         function toggleCartWindow() {
             const cartWindow = document.getElementById('cartWindow');
             if (cartWindow.style.display === 'none' || !cartWindow.style.display) {
@@ -559,6 +607,7 @@
                 cartWindow.style.display = 'none';
             }
         }
+
         document.addEventListener('click', function (event) {
             const cartWindow = document.getElementById('cartWindow');
             const cartIcon = document.querySelector('.cart-icon');
@@ -569,19 +618,51 @@
                 cartWindow.style.display = 'none';
             }
         });
+
+        // --- Helper function to generate menu item HTML ---
+        function generateMenuItemContent(menuItem, imageUrl = null) {
+            const isAvailable = menuItem.availableCount !== undefined && menuItem.availableCount >= 1;
+
+            const rarityLabel = (menuItem.rarity === 'Premium' || menuItem.rarity === 'Limited Edition') 
+                ? `<div style="color: gold; font-weight: bold; font-style: italic;">${menuItem.rarity}</div>` 
+                : '';
+            
+            const imageHtml = imageUrl 
+                ? `<img src="${imageUrl}" alt="${menuItem.name}" class="menu-item-image" style="width:100%; height:auto;">`
+                : '';
+
+            const buttonHtml = isAvailable
+                ? `<button onclick="addToCart('${menuItem.name}', ${menuItem.totalPrice}, '${menuItem.displayUnit}', ${menuItem.startingValue}, ${menuItem.profit})">Add Cart</button>`
+                : `<button class="disabled-btn" disabled>Out of Stock</button>`;
+            
+            const outOfStockBanner = !isAvailable ? '<div class="out-of-stock-banner">Out of Stock</div>' : '';
+
+            return `
+                ${outOfStockBanner}
+                ${rarityLabel}
+                ${imageHtml}
+                <h3>${menuItem.name}</h3>
+                <p>Rs ${menuItem.totalPrice.toFixed(2)} per ${menuItem.startingValue !== 1 ? menuItem.startingValue + ' ' : ''}${menuItem.displayUnit}</p>
+                <div class="item-controls" id="controls-menu-item-${menuItem.name.replace(/\s+/g, '-')}">
+                    ${buttonHtml}
+                </div>
+            `;
+        }
+
+
         function fetchMenuItems() {
-            menuRef.once('value', (snapshot) => {
+            menuRef.on('value', (snapshot) => { // Use .on() for real-time updates
                 const menuSection = document.getElementById('menuSection');
                 menuSection.innerHTML = '';
                 const categories = {};
                 snapshot.forEach((childSnapshot) => {
                     const menuItem = childSnapshot.val();
-                    const { category, price, profit = 0, unit = 'Item', startingValue = 1, rarity = 'Basic' } = menuItem;
+                    const { category, price, profit = 0, unit = 'Item', startingValue = 1, rarity = 'Basic', availableCount } = menuItem;
                     const totalPrice = price + profit;
                     const displayUnit = unit || 'Item';
 
                     if (!categories[category]) categories[category] = [];
-                    categories[category].push({ ...menuItem, totalPrice, displayUnit });
+                    categories[category].push({ ...menuItem, totalPrice, displayUnit, availableCount });
                 });
                 Object.keys(categories).sort().forEach(category => {
                     categories[category].sort((a, b) => {
@@ -593,40 +674,27 @@
                             <h2>${category}</h2>
                             <div class="menu-items">
                                 ${categories[category].map(menuItem => {
-                                    let rarityLabel = (menuItem.rarity === 'Premium' || menuItem.rarity === 'Limited Edition') ? `<div style="color: gold; font-weight: bold; font-style: italic;">${menuItem.rarity}</div>` : '';
+                                    const isAvailable = menuItem.availableCount !== undefined && menuItem.availableCount >= 1;
+                                    const outOfStockClass = isAvailable ? '' : 'out-of-stock';
                                     const menuItemId = `menu-item-${menuItem.name.replace(/\s+/g, '-')}`;
                                     const imageName = `${menuItem.name.replace(/\s+/g, '')}.jpg`;
                                     const storageRef = storage.ref().child(`images/${imageName}`);
-                                    storageRef.getDownloadURL()
-                                        .then(url => document.getElementById(menuItemId).innerHTML = `
-                                            ${rarityLabel}
-                                            <img src="${url}" alt="${menuItem.name}" class="menu-item-image" style="width:100%; height:auto;">
-                                            <h3>${menuItem.name}</h3>
-                                            <p>Rs ${menuItem.totalPrice.toFixed(2)} per ${menuItem.startingValue !== 1 ? menuItem.startingValue + ' ' : ''}${menuItem.displayUnit}</p>
-                                            <div<div class="item-controls" id="controls-${menuItemId}">
-                                                <button onclick="addToCart('${menuItem.name}', ${menuItem.totalPrice}, '${menuItem.displayUnit}', ${menuItem.startingValue}, ${menuItem.profit})">Add Cart</button>
-                                            </div>
-                                        `).catch(() => {
-                                            document.getElementById(menuItemId).innerHTML = `
-                                                ${rarityLabel}
-                                                <h3>${menuItem.name}</h3>
-                                                <p>Rs ${menuItem.totalPrice.toFixed(2)} per ${menuItem.startingValue !== 1 ? menuItem.startingValue + ' ' : ''}${menuItem.displayUnit}</p>
-                                                <div class="item-controls" id="controls-${menuItemId}">
-                                                    <button onclick="addToCart('${menuItem.name}', ${menuItem.totalPrice}, '${menuItem.displayUnit}', ${menuItem.startingValue}, ${menuItem.profit})">Add Cart</button>
-                                                </div>
-                                            `;
-                                        });
                                     const borderColor = (menuItem.rarity === 'Premium' || menuItem.rarity === 'Limited Edition') ? 'gold' : '#343a40';
-                                    return `
-                                        <div class="menu-item" id="${menuItemId}" style="border-color: ${borderColor};">
-                                            ${rarityLabel}
-                                            <h3>${menuItem.name}</h3>
-                                            <p>Rs ${menuItem.totalPrice.toFixed(2)} per ${menuItem.startingValue !== 1 ? menuItem.startingValue + ' ' : ''}${menuItem.displayUnit}</p>
-                                            <div class="item-controls" id="controls-${menuItemId}">
-                                                <button onclick="addToCart('${menuItem.name}', ${menuItem.totalPrice}, '${menuItem.displayUnit}', ${menuItem.startingValue}, ${menuItem.profit})">Add Cart</button>
-                                            </div>
-                                        </div>
-                                    `;
+                                    
+                                    // Set a placeholder first, then populate it
+                                    setTimeout(() => {
+                                        const element = document.getElementById(menuItemId);
+                                        if (element) {
+                                             storageRef.getDownloadURL()
+                                                .then(url => {
+                                                    element.innerHTML = generateMenuItemContent(menuItem, url);
+                                                }).catch(() => {
+                                                    element.innerHTML = generateMenuItemContent(menuItem, null);
+                                                });
+                                        }
+                                    }, 0);
+
+                                    return `<div class="menu-item ${outOfStockClass}" id="${menuItemId}" style="border-color: ${borderColor};"></div>`;
                                 }).join('')}
                             </div>
                         </div>
@@ -771,7 +839,7 @@
                 const pricePerUnit = price / startingValue;
                 const profitPerUnit = profit / startingValue;
 
-                if (newQuantity <= 0) {
+                if (newQuantity < 0.001) {
                     existingCartItem.remove();
                     if (controlsContainer) {
                         controlsContainer.innerHTML = `
@@ -780,7 +848,6 @@
                     }
                 } else {
                     newQuantity = Math.round(newQuantity * 1000) / 1000;
-                    if (newQuantity < 0.001) newQuantity = 0.001;
 
                     let formattedQuantity = newQuantity % 1 === 0 ? newQuantity.toFixed(0) : newQuantity.toFixed(3).replace(/\.?0+$/, '');
                     quantitySpan.dataset.quantity = newQuantity;
@@ -829,7 +896,7 @@
             });
             const now = new Date();
             const timestamp = now.toISOString();
-            let deviceId = "Hall2"
+            const deviceId = localStorage.getItem('deviceId');
             let totalPrice = parseFloat(document.getElementById('totalPrice').lastElementChild.innerText.replace('Rs ', ''));
             if (isNaN(totalPrice)) totalPrice = 0;
             const finalPrice = totalPrice
@@ -839,6 +906,20 @@
                 timestamp: timestamp,
                 totalPrice: finalPrice,
             }).then(() => {
+                const message = `Please click here to see the order: http://success0.fr.to/hotel/StaffOrder.html`;
+                fetch("https://api.emailjs.com/api/v1.0/email/send", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        service_id: "service_1soz4bp",
+                        template_id: "template_co6wztg",
+                        user_id: "E4mZCOXRrxVjz3iSb",
+                        template_params: {
+                            to_email: "pariwarikfastfood@gmail.com",
+                            message: message
+                        }
+                    })
+                });
                 resetQuantityControlsToAddCart(orderItems);
                 document.getElementById('cartItems').innerHTML = '';
                 adjustSpacerHeight();
@@ -980,6 +1061,5 @@ document.getElementById('searchInput').addEventListener('keydown', function (eve
         }
         fetchMenuItems();
     </script>
-      
 </body>
 </html>
