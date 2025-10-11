@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Management</title>
+    <title>Inventory & Stock Management</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -23,7 +23,17 @@
             background-color: white; border-radius: var(--border-radius);
             margin-bottom: 25px; box-shadow: var(--box-shadow); overflow: hidden;
         }
+        .card-header { padding: 0; }
+        .view-toggle { display: flex; }
+        .view-btn {
+            flex: 1; padding: 15px; border: none; background-color: #f1f1f1;
+            cursor: pointer; font-size: 1rem; font-weight: 500; color: var(--secondary);
+            transition: all 0.3s ease; border-bottom: 3px solid transparent;
+        }
+        .view-btn.active { background-color: white; color: var(--primary); border-bottom-color: var(--primary); }
         .card-body { padding: 25px; }
+        .form-panel { display: none; }
+        .form-panel.active { display: block; }
         h2 { margin-bottom: 20px; text-align: center; color: var(--dark); }
         .form-group { margin-bottom: 20px; position: relative; }
         .form-label { display: block; margin-bottom: 8px; font-weight: 500; }
@@ -37,25 +47,23 @@
             border: none; border-radius: var(--border-radius); padding: 12px 20px;
             cursor: pointer; font-weight: 500; display: inline-flex;
             align-items: center; justify-content: center; gap: 8px; font-size: 1rem;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease; width: 100%;
         }
-        .btn-primary { background-color: var(--primary); color: white; width: 100%; }
+        .btn-primary { background-color: var(--primary); color: white; }
         .btn-primary:hover { background-color: var(--secondary); transform: translateY(-2px); }
-        .btn-danger { background-color: var(--danger); color: white; padding: 5px 10px; font-size: 0.8rem; }
+        .btn-danger { background-color: var(--danger); color: white; padding: 5px 10px; font-size: 0.8rem; width: auto; }
         
-        /* Search Suggestions */
         .suggestions-container {
             display: none; position: absolute; top: 100%; left: 0; right: 0;
             background: white; border: 1px solid #ddd; border-top: none;
             border-radius: 0 0 var(--border-radius) var(--border-radius);
             z-index: 100; max-height: 200px; overflow-y: auto; box-shadow: var(--box-shadow);
         }
-        .suggestion-item {
-            padding: 12px; cursor: pointer; border-bottom: 1px solid #eee;
-        }
+        .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; }
         .suggestion-item:hover { background-color: #f0f2f5; }
         .suggestion-item:last-child { border-bottom: none; }
         .suggestion-item small { color: var(--gray); }
+        #currentStockDisplay { margin-top: -10px; margin-bottom: 20px; text-align: center; color: var(--gray); }
         
         #importedItemsList { list-style-type: none; padding: 0; }
         .list-item { padding: 15px; border-bottom: 1px solid #eee; }
@@ -63,10 +71,7 @@
         .item-name { font-weight: bold; font-size: 1.1rem; grid-column: 1 / 2; }
         .item-sub-details { font-size: 0.9rem; color: var(--gray); grid-column: 1 / 2; }
         .item-delete-btn { grid-column: 2 / 3; grid-row: 1 / 3; align-self: center; }
-        .item-inventory {
-            grid-column: 1 / 3; display: flex; justify-content: space-around;
-            margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; font-size: 0.9rem;
-        }
+        .item-inventory { grid-column: 1 / 3; display: flex; justify-content: space-around; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; font-size: 0.9rem; }
         .inventory-stat { text-align: center; }
         .inventory-stat span { display: block; font-weight: bold; }
         .inventory-stat .remaining { color: var(--success); font-size: 1.1em; }
@@ -74,33 +79,61 @@
 </head>
 
 <body>
-    <header><h1>Inventory Management</h1></header>
+    <header><h1>Inventory & Stock Management</h1></header>
 
     <div class="container">
         <div class="card">
+            <div class="card-header">
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="setView('add')"><i class="fas fa-plus-circle"></i> Add Inventory</button>
+                    <button class="view-btn" onclick="setView('usage')"><i class="fas fa-minus-circle"></i> Record Menu Usage</button>
+                </div>
+            </div>
             <div class="card-body">
-                <h2>Add Inventory</h2>
-                <p style="text-align:center; color: var(--gray); margin-bottom: 20px;">Add raw materials OR search for a menu item to update its available stock.</p>
-                <form id="importForm">
-                    <input type="hidden" id="selectedMenuItemKey">
-                    <div class="form-group">
-                        <label class="form-label" for="itemName">Item Name</label>
-                        <input type="text" id="itemName" class="form-control" placeholder="Search menu item or enter new raw material..." required autocomplete="off">
-                        <div id="menuItemSuggestions" class="suggestions-container"></div>
-                    </div>
-                    <div id="rawMaterialFields">
-                        <div class="form-group"><label class="form-label" for="itemType">Item Type</label><input type="text" id="itemType" class="form-control" placeholder="e.g., Groceries"></div>
-                        <div class="form-group"><label class="form-label" for="totalPrice">Total Price (Rs)</label><input type="number" id="totalPrice" class="form-control" placeholder="Total cost for the quantity" step="any"></div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="itemQuantity">Quantity & Unit</label>
-                        <div class="input-group">
-                            <input type="number" id="itemQuantity" class="form-control" placeholder="e.g., 10" required step="any" style="flex:2;">
-                            <select id="itemUnit" class="form-control" style="flex:1;"><option value="kg">KG</option><option value="Liter">Liter</option><option value="piece">Piece</option><option value="packet">Packet</option></select>
+                <!-- Add Inventory Panel -->
+                <div id="addPanel" class="form-panel active">
+                    <h2>Add Inventory</h2>
+                    <p style="text-align:center; color: var(--gray); margin-bottom: 20px;">Add raw materials OR search for a menu item to increase its stock.</p>
+                    <form id="addForm">
+                        <input type="hidden" id="selectedMenuItemKey_add">
+                        <div class="form-group">
+                            <label class="form-label" for="itemName_add">Item Name</label>
+                            <input type="text" id="itemName_add" class="form-control" placeholder="Search menu item or enter new raw material..." required autocomplete="off">
+                            <div id="suggestions_add" class="suggestions-container"></div>
                         </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add to Inventory</button>
-                </form>
+                        <div id="rawMaterialFields">
+                            <div class="form-group"><label class="form-label" for="itemType">Item Type</label><input type="text" id="itemType" class="form-control" placeholder="e.g., Groceries"></div>
+                            <div class="form-group"><label class="form-label" for="totalPrice">Total Price (Rs)</label><input type="number" id="totalPrice" class="form-control" placeholder="Total cost for the quantity" step="any"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="itemQuantity_add">Quantity to Add</label>
+                            <div class="input-group">
+                                <input type="number" id="itemQuantity_add" class="form-control" placeholder="e.g., 10" required step="any" style="flex:2;">
+                                <select id="itemUnit" class="form-control" style="flex:1;"><option value="kg">KG</option><option value="Liter">Liter</option><option value="piece">Piece</option><option value="packet">Packet</option></select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add to Inventory</button>
+                    </form>
+                </div>
+                <!-- Record Menu Usage Panel -->
+                <div id="usagePanel" class="form-panel">
+                    <h2>Record Menu Item Usage</h2>
+                    <p style="text-align:center; color: var(--gray); margin-bottom: 20px;">Search for a menu item and enter the quantity used or sold.</p>
+                    <form id="menuUsageForm">
+                        <input type="hidden" id="selectedMenuItemKey_usage">
+                        <div class="form-group">
+                            <label class="form-label" for="itemName_usage">Search Menu Item</label>
+                            <input type="text" id="itemName_usage" class="form-control" placeholder="Start typing to find an item..." required autocomplete="off">
+                            <div id="suggestions_usage" class="suggestions-container"></div>
+                        </div>
+                        <p id="currentStockDisplay">Current Stock: <strong>N/A</strong></p>
+                        <div class="form-group">
+                            <label class="form-label" for="itemQuantity_usage">Quantity Used</label>
+                            <input type="number" id="itemQuantity_usage" class="form-control" placeholder="e.g., 1" required step="any">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="background-color: var(--warning);"><i class="fas fa-save"></i> Record Usage</button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -117,166 +150,191 @@
         firebase.initializeApp(firebaseConfig);
         
         const importRef = firebase.database().ref('import_items');
-        const usageRef = firebase.database().ref('usage_records');
         const menuRef = firebase.database().ref('menu');
-        
         let allMenuItems = {};
-        
-        const importForm = document.getElementById('importForm');
-        const itemNameInput = document.getElementById('itemName');
-        const suggestionsContainer = document.getElementById('menuItemSuggestions');
-        const selectedMenuItemKeyInput = document.getElementById('selectedMenuItemKey');
+
+        // --- UI Elements ---
+        const addForm = document.getElementById('addForm');
+        const menuUsageForm = document.getElementById('menuUsageForm');
         const rawMaterialFields = document.getElementById('rawMaterialFields');
 
-        // --- Search and Select Menu Item Logic ---
-        const fetchMenuItems = () => {
-            menuRef.once('value', snapshot => {
-                allMenuItems = snapshot.val() || {};
+        // --- Tab View Logic ---
+        const setView = (view) => {
+            document.getElementById('addPanel').classList.toggle('active', view === 'add');
+            document.getElementById('usagePanel').classList.toggle('active', view === 'usage');
+            document.querySelector('.view-btn[onclick="setView(\'add\')"]').classList.toggle('active', view === 'add');
+            document.querySelector('.view-btn[onclick="setView(\'usage\')"]').classList.toggle('active', view === 'usage');
+        };
+
+        // --- Reusable Search Functionality ---
+        const createSearchHandler = (inputId, suggestionsId, hiddenKeyId, onSelectCallback) => {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+            const hiddenKey = document.getElementById(hiddenKeyId);
+
+            input.addEventListener('input', () => {
+                const query = input.value.toLowerCase();
+                suggestions.innerHTML = '';
+                hiddenKey.value = '';
+                if (onSelectCallback) onSelectCallback(null);
+
+                if (query.length < 1) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+                
+                const matches = Object.entries(allMenuItems).filter(([key, item]) => item.name.toLowerCase().includes(query));
+
+                if (matches.length > 0) {
+                    matches.forEach(([key, item]) => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.innerHTML = `${item.name} <small>(${item.category})</small>`;
+                        div.dataset.key = key;
+                        div.dataset.name = item.name;
+                        suggestions.appendChild(div);
+                    });
+                    suggestions.style.display = 'block';
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            });
+
+            suggestions.addEventListener('click', (e) => {
+                const target = e.target.closest('.suggestion-item');
+                if (target) {
+                    input.value = target.dataset.name;
+                    hiddenKey.value = target.dataset.key;
+                    suggestions.style.display = 'none';
+                    if (onSelectCallback) onSelectCallback(target.dataset.key);
+                }
             });
         };
 
-        itemNameInput.addEventListener('input', () => {
-            const query = itemNameInput.value.toLowerCase();
-            suggestionsContainer.innerHTML = '';
-            selectedMenuItemKeyInput.value = ''; // Clear selection on new input
-            rawMaterialFields.style.display = 'block'; // Show fields by default
-
-            if (query.length < 1) {
-                suggestionsContainer.style.display = 'none';
-                return;
-            }
-            
-            const matches = Object.entries(allMenuItems).filter(([key, item]) => 
-                item.name.toLowerCase().includes(query)
-            );
-
-            if (matches.length > 0) {
-                matches.forEach(([key, item]) => {
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    div.innerHTML = `${item.name} <small>(${item.category})</small>`;
-                    div.dataset.key = key;
-                    div.dataset.name = item.name;
-                    suggestionsContainer.appendChild(div);
-                });
-                suggestionsContainer.style.display = 'block';
-            } else {
-                suggestionsContainer.style.display = 'none';
-            }
-        });
-
-        suggestionsContainer.addEventListener('click', (e) => {
-            if (e.target && e.target.classList.contains('suggestion-item')) {
-                const target = e.target;
-                itemNameInput.value = target.dataset.name;
-                selectedMenuItemKeyInput.value = target.dataset.key;
-                suggestionsContainer.style.display = 'none';
-                rawMaterialFields.style.display = 'none'; // Hide raw material fields for menu items
-            }
+        // --- Initialize Search Handlers for Both Forms ---
+        createSearchHandler('itemName_add', 'suggestions_add', 'selectedMenuItemKey_add', (key) => {
+            rawMaterialFields.style.display = key ? 'none' : 'block';
         });
         
-        document.addEventListener('click', (e) => {
-            if (!importForm.contains(e.target)) {
-                 suggestionsContainer.style.display = 'none';
+        createSearchHandler('itemName_usage', 'suggestions_usage', 'selectedMenuItemKey_usage', (key) => {
+            const stockDisplay = document.getElementById('currentStockDisplay').querySelector('strong');
+            if (key && allMenuItems[key]) {
+                stockDisplay.textContent = allMenuItems[key].availableCount || 0;
+            } else {
+                stockDisplay.textContent = 'N/A';
             }
         });
 
         // --- Form Submission Logic ---
-        importForm.addEventListener('submit', (e) => {
+        addForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const selectedKey = selectedMenuItemKeyInput.value;
-            const quantity = parseFloat(document.getElementById('itemQuantity').value);
+            const selectedKey = document.getElementById('selectedMenuItemKey_add').value;
+            const quantity = parseFloat(document.getElementById('itemQuantity_add').value);
 
-            if (!quantity || quantity <= 0) {
-                alert('Please enter a valid quantity.');
-                return;
-            }
+            if (!quantity || quantity <= 0) return alert('Please enter a valid quantity.');
 
-            if (selectedKey) {
-                // Scenario 1: Update availableCount for a selected menu item
-                const itemRef = menuRef.child(selectedKey);
-                itemRef.transaction(currentItemData => {
-                    if (currentItemData) {
-                        // Safely add to the existing count, or initialize if it doesn't exist
-                        currentItemData.availableCount = (currentItemData.availableCount || 0) + quantity;
-                    }
-                    return currentItemData;
+            if (selectedKey) { // Update menu item stock
+                menuRef.child(selectedKey).transaction(data => {
+                    if (data) data.availableCount = (data.availableCount || 0) + quantity;
+                    return data;
                 }).then(() => {
-                    alert(`Successfully added ${quantity} to ${itemNameInput.value}'s stock.`);
-                    importForm.reset();
+                    alert(`Successfully added ${quantity} to ${document.getElementById('itemName_add').value}'s stock.`);
+                    addForm.reset();
                     rawMaterialFields.style.display = 'block';
+                    fetchMenuItems(); // Refresh local data
                 }).catch(err => alert('Error updating stock: ' + err));
-
-            } else {
-                // Scenario 2: Add a new raw material import record
+            } else { // Add new raw material
                 importRef.push({
-                    name: itemNameInput.value,
+                    name: document.getElementById('itemName_add').value,
                     type: document.getElementById('itemType').value,
                     quantity: quantity,
                     unit: document.getElementById('itemUnit').value,
                     price: parseFloat(document.getElementById('totalPrice').value) || 0,
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 }).then(() => {
-                    alert(`${itemNameInput.value} added to raw material inventory.`);
-                    importForm.reset();
-                }).catch(err => alert('Error adding item: ' + err));
+                    alert(`${document.getElementById('itemName_add').value} added to raw material inventory.`);
+                    addForm.reset();
+                });
             }
         });
 
-        // --- Display Raw Material Inventory (No changes needed here) ---
-        const fetchAndDisplayInventory = () => {
-            usageRef.on('value', usageSnapshot => {
-                const usageMap = {};
-                usageSnapshot.forEach(child => {
-                    const usage = child.val();
-                    if (!usageMap[usage.importKey]) usageMap[usage.importKey] = 0;
-                    usageMap[usage.importKey] += usage.quantityUsed;
-                });
-                
-                importRef.orderByChild('createdAt').on('value', importSnapshot => {
-                    const itemsList = document.getElementById('importedItemsList');
-                    itemsList.innerHTML = '';
-                    if (!importSnapshot.exists()) {
-                        itemsList.innerHTML = '<p style="padding:20px; text-align:center;">No raw materials imported yet.</p>';
-                        return;
-                    }
-                    importSnapshot.forEach(childSnapshot => {
-                        const item = childSnapshot.val();
-                        const itemKey = childSnapshot.key;
-                        const totalUsed = usageMap[itemKey] || 0;
-                        const remaining = item.quantity - totalUsed;
-                        const date = new Date(item.createdAt).toLocaleDateString();
+        menuUsageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const selectedKey = document.getElementById('selectedMenuItemKey_usage').value;
+            const quantityUsed = parseFloat(document.getElementById('itemQuantity_usage').value);
 
-                        const listItem = document.createElement('li');
-                        listItem.className = 'list-item';
-                        listItem.innerHTML = `
-                            <div class="item-details-grid">
-                                <div class="item-name">${item.name}</div>
-                                <div class="item-sub-details">${date} - ${item.type}</div>
-                                <div class="item-delete-btn"><button class="btn btn-danger" onclick="deleteItem('${itemKey}')"><i class="fas fa-trash"></i></button></div>
-                                <div class="item-inventory">
-                                    <div class="inventory-stat">Imported<span>${item.quantity} ${item.unit}</span></div>
-                                    <div class="inventory-stat">Used<span>${totalUsed.toFixed(2)} ${item.unit}</span></div>
-                                    <div class="inventory-stat">Remaining<span class="remaining">${remaining.toFixed(2)} ${item.unit}</span></div>
-                                </div>
+            if (!selectedKey) return alert('Please select a valid menu item from the search results.');
+            if (!quantityUsed || quantityUsed <= 0) return alert('Please enter a valid quantity used.');
+
+            menuRef.child(selectedKey).transaction(data => {
+                if (data) {
+                    const currentStock = data.availableCount || 0;
+                    if (currentStock < quantityUsed) {
+                        // Allow stock to go negative, but warn the user.
+                        alert(`Warning: Recording usage of ${quantityUsed} but only ${currentStock} are in stock. The count will become negative.`);
+                    }
+                    data.availableCount = currentStock - quantityUsed;
+                }
+                return data;
+            }).then(() => {
+                alert(`Successfully recorded usage of ${quantityUsed} for ${document.getElementById('itemName_usage').value}.`);
+                menuUsageForm.reset();
+                document.getElementById('currentStockDisplay').querySelector('strong').textContent = 'N/A';
+                fetchMenuItems(); // Refresh local data
+            }).catch(err => alert('Error recording usage: ' + err));
+        });
+
+        // --- Fetch and Display Data ---
+        const fetchMenuItems = () => {
+            menuRef.once('value', snapshot => {
+                allMenuItems = snapshot.val() || {};
+            });
+        };
+
+        const fetchAndDisplayRawMaterials = () => {
+            importRef.orderByChild('createdAt').on('value', importSnapshot => {
+                const itemsList = document.getElementById('importedItemsList');
+                itemsList.innerHTML = '';
+                if (!importSnapshot.exists()) {
+                    itemsList.innerHTML = '<p style="padding:20px; text-align:center;">No raw materials imported yet.</p>';
+                    return;
+                }
+                importSnapshot.forEach(childSnapshot => {
+                    const item = childSnapshot.val();
+                    const itemKey = childSnapshot.key;
+                    const date = new Date(item.createdAt).toLocaleDateString();
+
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-item';
+                    listItem.innerHTML = `
+                        <div class="item-details-grid">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-sub-details">${date} - ${item.type || 'N/A'}</div>
+                            <div class="item-delete-btn"><button class="btn btn-danger" onclick="deleteRawMaterial('${itemKey}')"><i class="fas fa-trash"></i></button></div>
+                            <div class="item-inventory">
+                                <div class="inventory-stat">Imported<span>${item.quantity} ${item.unit}</span></div>
                             </div>
-                        `;
-                        itemsList.prepend(listItem);
-                    });
+                        </div>
+                    `;
+                    itemsList.prepend(listItem);
                 });
             });
         };
 
-        const deleteItem = (itemKey) => {
-            if (confirm('Are you sure you want to delete this raw material import record? This cannot be undone.')) {
-                // You may also want to delete associated usage records, this example only deletes the import.
+        const deleteRawMaterial = (itemKey) => {
+            if (confirm('Are you sure you want to delete this raw material import record?')) {
                 importRef.child(itemKey).remove();
             }
         };
 
         // --- Initialize Page ---
         fetchMenuItems();
-        fetchAndDisplayInventory();
+        fetchAndDisplayRawMaterials();
+        document.addEventListener('click', (e) => { // Hide suggestions when clicking outside
+            if (!e.target.closest('.form-group')) {
+                document.querySelectorAll('.suggestions-container').forEach(el => el.style.display = 'none');
+            }
+        });
     </script>
 </body>
 </html>
