@@ -215,11 +215,11 @@
                 const memoryContext = sharedMemory.length > 0 ? `Context: [${sharedMemory.join(", ")}]. ` : "";
                 const languageInstruction = language === 'nepali' ? "Respond only in Nepali language." : "Respond only in English language.";
                 const fullQuery = `${memoryContext}${languageInstruction} Core rules:
-                - For formulas, reply only with the formula from Nepal's Class 10 Sangam Book. Mention source if different.
+                - For formulas, reply only with the formula from Nepal's Class 10 Sangam Book. But give answer even if it is different.
                 - For dates, search online and provide the most accurate date with a confidence level.
                 - For grammar tasks (e.g. question tag, passive, indirect, tense, etc.), reply with the correct transformed sentence only, as per Nepal Class 10 English rules. Interpret bracketed hints as instructions.
                 - For all else, respond clearly and concisely.
-                - If I ask you full form fine from class 10 Nepal sangam publication Computer book
+                - If I ask you full form fine from class 10 Nepal sangam publication, If you don't know the exact contents of the book, just provide a correct answer.
                 Question: ${question}`;
                 
                 console.log(`🤖 AI Request (${language}) using ${aiModels[currentModelIndex].displayName}:`, question);
