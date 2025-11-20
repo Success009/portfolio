@@ -6,7 +6,11 @@
     <title>Smart Watch</title>
     <style>
         body{background:#000;color:white;font-family:'Segoe UI',Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:auto;user-select:none}
-        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1)}
+        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition: all 0.4s ease-in-out;}
+        /* --- NEW: Style for the circular view --- */
+        .watch-container.circular-view {
+            border-radius: 50%;
+        }
         #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);margin-bottom:8px;font-weight:300;transition:all 0.3s ease}
         #date{font-size:1.1rem;opacity:0.8;color:#888;margin-bottom:15px;font-weight:300;transition:all 0.3s ease}
         #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7}
@@ -67,7 +71,7 @@
     </div>
 
     <script>
-        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,isMapVisible=false,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=3;
+        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,isMapVisible=false,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=3,isCircularView=false;
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
@@ -345,6 +349,33 @@
                 aiResponse.scrollTop-=scrollAmount;
             }
         }
+        
+        // --- NEW: Function to toggle the circular view ---
+        function toggleCircularView() {
+            isCircularView = !isCircularView;
+            watchContainer.classList.toggle('circular-view');
+
+            let confirmationMessage;
+            if (isCircularView) {
+                const size = Math.min(window.innerHeight, window.innerWidth) * 0.9;
+                watchContainer.style.width = `${size}px`;
+                watchContainer.style.height = `${size}px`;
+                console.log(`🔄 View changed to circular (${size}px)`);
+                confirmationMessage = "Circular view activated.";
+            } else {
+                watchContainer.style.width = '';
+                watchContainer.style.height = '';
+                console.log('🔄 View changed back to default');
+                confirmationMessage = "Default view restored.";
+            }
+            
+            displayResponse(confirmationMessage, false);
+            setTimeout(() => {
+                if (aiResponse.innerHTML === confirmationMessage) {
+                   hideResponse();
+                }
+            }, 2000);
+        }
 
         function updateStatus(status){
             statusDot.className=`status-dot ${status}`;
@@ -365,6 +396,11 @@
         function checkVoiceCommands(transcript){
             const lowerTranscript=transcript.toLowerCase();
             
+            if(lowerTranscript.includes("display view in circle")){
+                console.log("🎤 Voice Command: Display View in Circle");
+                toggleCircularView();
+                return true;
+            }
             if(lowerTranscript.includes("display answer")){
                 console.log("🎤 Voice Command: Display Answer");
                 displayAnswerFromHistory(0);
