@@ -6,39 +6,64 @@
     <title>Smart Watch</title>
     <style>
         :root {
-            --transition-speed: 0.5s;
-            --transition-curve: cubic-bezier(0.645, 0.045, 0.355, 1);
+            --transition-speed: 0.6s;
+            --transition-curve: cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy, organic feel */
         }
         body{background:#000;color:white;font-family:'Segoe UI',Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:auto;user-select:none}
-        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition:border-radius var(--transition-speed) var(--transition-curve), width 0.4s ease, height 0.4s ease;overflow:hidden}
+        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition:border-radius var(--transition-speed) ease-in-out, width 0.4s ease, height 0.4s ease;overflow:hidden}
         
         /* --- CORE UI ELEMENTS --- */
         #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);font-weight:300;transition:transform var(--transition-speed) var(--transition-curve)}
-        #date{font-size:0.9rem;opacity:0.8;color:#888;font-weight:300;position:absolute;top:32%;left:50%;transform:translateX(-50%);transition:opacity var(--transition-speed) var(--transition-curve), transform var(--transition-speed) var(--transition-curve);letter-spacing:1px}
-        #date-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity var(--transition-speed) var(--transition-curve)}
+        #date{font-size:0.9rem;opacity:0.8;color:#888;font-weight:300;position:absolute;top:32%;left:50%;transform:translateX(-50%);transition:opacity 0.3s ease, transform var(--transition-speed) var(--transition-curve);letter-spacing:1px}
+        #date-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity 0.3s ease}
         #date-svg text{font-family:'Segoe UI',Arial,sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888}
         
-        /* --- INFO WIDGETS (Default Square Layout) --- */
-        #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7;transition:all var(--transition-speed) var(--transition-curve)}
-        #model-indicator{position:absolute;bottom:15px;right:20px;font-size:0.7rem;color:#666;opacity:0.8;transition:all var(--transition-speed) var(--transition-curve)}
-        .status-dot{position:absolute;top:15px;left:20px;width:8px;height:8px;background:#888;border-radius:50%;transition:all var(--transition-speed) var(--transition-curve)}
+        /* --- ADAPTIVE INDICATORS --- 
+           Using Top/Left percentages for everything ensures smooth sliding animations 
+           between Square and Circular positions. 
+        */
         
+        /* 1. Battery */
+        #battery{position:absolute;font-size:0.8rem;color:#00ff88;opacity:0.7;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);}
+        /* Square: Top Right */
+        .watch-container:not(.circular-view) #battery { top: 8%; left: 88%; }
+        /* Circle: Bottom Right Curve */
+        .watch-container.circular-view #battery { top: 78%; left: 80%; }
+
+        /* 2. Status Dot */
+        .status-dot{position:absolute;width:8px;height:8px;background:#888;border-radius:50%;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);}
+        /* Square: Top Left */
+        .watch-container:not(.circular-view) .status-dot { top: 8%; left: 8%; }
+        /* Circle: Bottom Left Curve */
+        .watch-container.circular-view .status-dot { top: 78%; left: 20%; }
+
+        /* 3. Model Indicator */
+        #model-indicator{position:absolute;font-size:0.7rem;color:#666;opacity:0.8;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);white-space:nowrap;}
+        /* Square: Bottom Right */
+        .watch-container:not(.circular-view) #model-indicator { top: 92%; left: 85%; }
+        /* Circle: Bottom Center */
+        .watch-container.circular-view #model-indicator { top: 85%; left: 50%; }
+
+
         /* --- AI & MAP DISPLAYS --- */
         #ai-response{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%) scale(0.95);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;word-wrap:break-word;max-height:60%;overflow-y:auto;color:#fff;z-index:10;background:rgba(10,10,10,0.5);border-radius:15px;padding:10px;box-sizing:border-box}
         #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
         .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
 
-        /* --- UI STATE MANAGEMENT (via Container Classes) --- */
+        /* --- UI STATE MANAGEMENT (Content Hiding/Moving) --- */
         .watch-container.ai-visible #clock, .watch-container.map-visible #clock {transform:translateY(-120px) scale(0.5)}
         .watch-container.ai-visible #date, .watch-container.map-visible #date, .watch-container.ai-visible #date-svg, .watch-container.map-visible #date-svg {opacity:0;transform:translateY(-120px)}
+        
+        /* When AI/Map is visible, move indicators out of the way */
         .watch-container.ai-visible #battery, .watch-container.map-visible #battery,
         .watch-container.ai-visible #model-indicator, .watch-container.map-visible #model-indicator,
-        .watch-container.ai-visible .status-dot, .watch-container.map-visible .status-dot {opacity:0;transform:translateY(60px)}
+        .watch-container.ai-visible .status-dot, .watch-container.map-visible .status-dot {opacity:0;transform:translate(-50%, 60px)}
+        
         .watch-container.ai-visible #ai-response {opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
         .watch-container.map-visible #map-display {opacity:1;visibility:visible}
         
-        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none;transition:border-radius var(--transition-speed) var(--transition-curve)}
+        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none;transition:border-radius var(--transition-speed) ease-in-out}
         
         /* --- STATUS DOT ANIMATIONS --- */
         .status-dot.active{background:#00ff88;animation:pulse 2s infinite}
@@ -54,23 +79,11 @@
         .watch-container.circular-view { border-radius: 50%; }
         .watch-container.circular-view .watch-bezel { border-radius: 50%; }
 
-        /* --- Swap to SVG for elegant curved date --- */
+        /* Swap to SVG Date */
         .watch-container.circular-view #date { opacity: 0 !important; visibility: hidden !important; }
         .watch-container.circular-view #date-svg { opacity: 0.8; visibility: visible; }
 
-        /* --- Balanced Info Cluster for Circular View --- */
-        .watch-container.circular-view #battery,
-        .watch-container.circular-view .status-dot,
-        .watch-container.circular-view #model-indicator {
-            top: auto;
-            bottom: 15px;
-            transform: translateX(-50%);
-        }
-        .watch-container.circular-view #battery { left: 30%; right: auto; }
-        .watch-container.circular-view .status-dot { left: 50%; }
-        .watch-container.circular-view #model-indicator { left: 70%; right: auto; }
-        
-        /* --- Elegant AI/Map Focus Shift for Circular View --- */
+        /* AI/Map Focus Shift for Circle */
         .watch-container.circular-view.ai-visible #clock, 
         .watch-container.circular-view.map-visible #clock {
             transform: translateY(-115px) scale(0.6);
@@ -104,6 +117,7 @@
             <img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Nepal Political Map">
         </div>
         
+        <!-- Indicators -->
         <div id="battery">85%</div>
         <div class="status-dot" id="statusDot"></div>
         <div id="model-indicator">M4</div>
@@ -116,7 +130,7 @@
         let currentHistoryIndex = -1;
         let apiAbortController;
         let aiResponseFontSize = 1.0;
-        let wakeLock = null; // --- NEW: Wake Lock Variable ---
+        let wakeLock = null;
 
         // --- DOM Element References ---
         const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel'),dateSvgTextPath=document.querySelector("#date-svg textPath");
@@ -139,22 +153,18 @@
 
             const dateString = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
             date.textContent = dateString;
-            dateSvgTextPath.textContent = dateString;
+            if(dateSvgTextPath) dateSvgTextPath.textContent = dateString;
         }
 
-        // --- NEW: Wake Lock Function ---
+        // --- Wake Lock ---
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
                     console.log('💡 Screen Wake Lock acquired');
-                    wakeLock.addEventListener('release', () => {
-                        console.log('💡 Screen Wake Lock released');
-                    });
+                    wakeLock.addEventListener('release', () => console.log('💡 Screen Wake Lock released'));
                 }
-            } catch (err) {
-                console.error(`Wake Lock Error: ${err.name}, ${err.message}`);
-            }
+            } catch (err) { console.error(`Wake Lock Error: ${err.name}, ${err.message}`); }
         }
 
         // --- UI State Management ---
@@ -187,6 +197,7 @@
         function toggleCircularView() {
             isCircularView = !isCircularView;
             watchContainer.classList.toggle('circular-view');
+            updateTime();
 
             const confirmationMessage = isCircularView ? "Circular view activated." : "Default view restored.";
             displayResponse(confirmationMessage, false);
@@ -526,7 +537,7 @@
         function init(){
             loadPreferences();
             updateTime();
-            requestWakeLock(); // Request wake lock on start
+            requestWakeLock();
             setInterval(updateTime,1000);
             console.log(`🚀 Smart Watch initialized.`);
             console.log(`🚀 Default model set to: Gemini 2.5 Flash-Lite (Model 4)`);
