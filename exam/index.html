@@ -10,7 +10,7 @@
         #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);margin-bottom:8px;font-weight:300;transition:all 0.3s ease}
         #date{font-size:1.1rem;opacity:0.8;color:#888;margin-bottom:15px;font-weight:300;transition:all 0.3s ease}
         #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7;transition:all 0.4s ease-in-out}
-        #ai-response{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all 0.4s ease-in-out;word-wrap:break-word;max-height:220px;overflow-y:auto;color:#fff;z-index:10}
+        #ai-response{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all 0.4s ease-in-out, font-size 0.2s ease;word-wrap:break-word;max-height:220px;overflow-y:auto;color:#fff;z-index:10}
         #ai-response.visible{opacity:1;visibility:visible}
         #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all 0.4s ease-in-out;z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display.visible{opacity:1;visibility:visible}
@@ -45,10 +45,10 @@
         @keyframes spellingGlow{0%{text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2)}100%{text-shadow:0 0 15px rgba(0,255,136,0.6), 0 0 25px rgba(0,255,136,0.3)}}
         .spelling-word{color:#fff;margin-bottom:10px;font-size:4rem;font-weight:bold}
 
-        /* --- NEW: Styles for the circular view --- */
+        /* Styles for the circular view */
         .watch-container.circular-view {
             border-radius: 50%;
-            overflow: hidden; /* Clip content to the circle */
+            overflow: hidden;
         }
         .watch-container.circular-view .watch-bezel {
             border-radius: 50%;
@@ -78,7 +78,7 @@
             border-radius: 50%;
         }
         .watch-container.circular-view #map-display img {
-            object-fit: cover; /* Make the map image fill the circular frame */
+            object-fit: cover;
             border-radius: 50%;
         }
     </style>
@@ -108,6 +108,8 @@
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
+        let aiResponseFontSize = 1.0; // --- NEW: Variable for AI response font size ---
+
         const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel');
 
         const apiKeys = [
@@ -408,6 +410,23 @@
             }, 2000);
         }
 
+        // --- NEW: Function to handle zooming of AI response text ---
+        function adjustZoom(direction) {
+            const step = 0.1;
+            const minSize = 0.6;
+            const maxSize = 2.0;
+
+            if (direction === 'in' && aiResponseFontSize < maxSize) {
+                aiResponseFontSize += step;
+            } else if (direction === 'out' && aiResponseFontSize > minSize) {
+                aiResponseFontSize -= step;
+            }
+            
+            aiResponseFontSize = Math.round(aiResponseFontSize * 10) / 10;
+            aiResponse.style.fontSize = `${aiResponseFontSize}rem`;
+            console.log(`🔎 AI Response font size set to ${aiResponseFontSize}rem`);
+        }
+
         function updateStatus(status){
             statusDot.className=`status-dot ${status}`;
         }
@@ -426,7 +445,17 @@
 
         function checkVoiceCommands(transcript){
             const lowerTranscript=transcript.toLowerCase();
-            
+
+            if (lowerTranscript.includes("zoom in")) {
+                console.log("🎤 Voice Command: Zoom In");
+                adjustZoom('in');
+                return true;
+            }
+            if (lowerTranscript.includes("zoom out")) {
+                console.log("🎤 Voice Command: Zoom Out");
+                adjustZoom('out');
+                return true;
+            }
             if(lowerTranscript.includes("display view in circle")){
                 console.log("🎤 Voice Command: Display View in Circle");
                 toggleCircularView();
