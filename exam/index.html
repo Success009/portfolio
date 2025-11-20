@@ -7,23 +7,19 @@
     <style>
         body{background:#000;color:white;font-family:'Segoe UI',Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:auto;user-select:none}
         .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition: all 0.4s ease-in-out;}
-        /* --- NEW: Style for the circular view --- */
-        .watch-container.circular-view {
-            border-radius: 50%;
-        }
         #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);margin-bottom:8px;font-weight:300;transition:all 0.3s ease}
         #date{font-size:1.1rem;opacity:0.8;color:#888;margin-bottom:15px;font-weight:300;transition:all 0.3s ease}
-        #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7}
-        #ai-response{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all 0.3s ease;word-wrap:break-word;max-height:220px;overflow-y:auto;color:#fff;z-index:10}
+        #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7;transition:all 0.4s ease-in-out}
+        #ai-response{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all 0.4s ease-in-out;word-wrap:break-word;max-height:220px;overflow-y:auto;color:#fff;z-index:10}
         #ai-response.visible{opacity:1;visibility:visible}
-        #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all 0.3s ease;z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
+        #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all 0.4s ease-in-out;z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display.visible{opacity:1;visibility:visible}
-        #map-display img{width:100%;height:100%;object-fit:contain;border-radius:15px}
-        .status-dot{position:absolute;top:15px;left:20px;width:8px;height:8px;background:#888;border-radius:50%;transition:all 0.3s ease}
+        #map-display img{width:100%;height:100%;object-fit:contain;border-radius:15px;transition:all 0.4s ease-in-out}
+        .status-dot{position:absolute;top:15px;left:20px;width:8px;height:8px;background:#888;border-radius:50%;transition:all 0.4s ease-in-out}
         .status-dot.active{background:#00ff88;animation:pulse 2s infinite}
         .status-dot.listening{background:#0066ff;animation:pulse 0.5s infinite}
-        .status-dot.heard{background:#ff9900;animation:flash 0.2s 2} /* --- LED FIX: Flashes orange twice --- */
-        .status-dot.sent{background:#00ff88;animation:none} /* --- LED FIX: Solid green --- */
+        .status-dot.heard{background:#ff9900;animation:flash 0.2s 2}
+        .status-dot.sent{background:#00ff88;animation:none}
         .status-dot.mode-change{background:#ff0000;animation:flash 0.3s 2}
         .status-dot.model-change{background:#ff00ff;animation:flash 0.3s 3}
         @keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
@@ -31,10 +27,10 @@
         #ai-response::-webkit-scrollbar{width:2px}
         #ai-response::-webkit-scrollbar-track{background:rgba(255,255,255,0.1);border-radius:2px}
         #ai-response::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.5);border-radius:2px}
-        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none}
+        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none;transition:all 0.4s ease-in-out}
         .watch-bezel.scrolling{animation:bezel-flash 0.5s ease-out}
         @keyframes bezel-flash{0%,100%{border-color:#444}50%{border-color:#00ff88;box-shadow:0 0 5px #00ff88}}
-        .time-markers{position:absolute;width:100%;height:100%}
+        .time-markers{position:absolute;width:100%;height:100%;transition:opacity 0.4s ease-in-out}
         .marker{position:absolute;background:#333;opacity:0.5}
         .marker.hour{width:2px;height:12px}
         .marker:nth-child(1){top:8px;left:50%;transform:translateX(-50%)}
@@ -42,12 +38,49 @@
         .marker:nth-child(3){bottom:8px;left:50%;transform:translateX(-50%)}
         .marker:nth-child(4){top:50%;left:8px;transform:translateY(-50%)}
         .hidden{opacity:0!important;visibility:hidden!important}
-        #model-indicator{position:absolute;bottom:15px;right:20px;font-size:0.7rem;color:#666;opacity:0.8}
+        #model-indicator{position:absolute;bottom:15px;right:20px;font-size:0.7rem;color:#666;opacity:0.8;transition:all 0.4s ease-in-out}
         .model-list{text-align:left;font-size:0.9rem;line-height:1.6}
         .model-list .current{color:#00ff88;font-weight:bold}
         .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
         @keyframes spellingGlow{0%{text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2)}100%{text-shadow:0 0 15px rgba(0,255,136,0.6), 0 0 25px rgba(0,255,136,0.3)}}
         .spelling-word{color:#fff;margin-bottom:10px;font-size:4rem;font-weight:bold}
+
+        /* --- NEW: Styles for the circular view --- */
+        .watch-container.circular-view {
+            border-radius: 50%;
+            overflow: hidden; /* Clip content to the circle */
+        }
+        .watch-container.circular-view .watch-bezel {
+            border-radius: 50%;
+        }
+        .watch-container.circular-view #battery {
+            top: 12%;
+            right: 18%;
+        }
+        .watch-container.circular-view #statusDot {
+            top: 12%;
+            left: 18%;
+        }
+        .watch-container.circular-view #model-indicator {
+            bottom: 12%;
+            right: 18%;
+        }
+        .watch-container.circular-view .time-markers {
+            opacity: 0;
+        }
+        .watch-container.circular-view #ai-response {
+            width: 80%;
+            max-height: 65%;
+        }
+        .watch-container.circular-view #map-display {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+        .watch-container.circular-view #map-display img {
+            object-fit: cover; /* Make the map image fill the circular frame */
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body>
@@ -118,7 +151,6 @@
             modelIndicator.textContent = aiModels[currentModelIndex].indicator;
         }
 
-        // --- UPGRADE: Removed Nepali localization from notifications ---
         function showApiChangeNotification() {
             const message = `API Changed (${currentApiKeyIndex + 1}/${apiKeys.length})`;
             displayResponse(message, false);
@@ -197,7 +229,7 @@
         async function tryApiRequest(fullQuery, apiKey) {
             const currentModel = aiModels[currentModelIndex].name;
             apiAbortController = new AbortController();
-            updateStatus('sent'); // LED STATUS: Solid Green
+            updateStatus('sent');
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -350,7 +382,6 @@
             }
         }
         
-        // --- NEW: Function to toggle the circular view ---
         function toggleCircularView() {
             isCircularView = !isCircularView;
             watchContainer.classList.toggle('circular-view');
@@ -474,7 +505,6 @@
             return false;
         }
 
-        // --- LED FIX: Rewritten for perfect state transitions ---
         function initSpeechRecognition(){
             if(!micActive||!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;
             recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
@@ -482,16 +512,15 @@
             recognition.interimResults=false;
             recognition.lang=currentMode==='nepali'?'ne-NP':'en-US';
 
-            recognition.onstart = () => updateStatus('listening'); // LED: Blinking Blue
+            recognition.onstart = () => updateStatus('listening');
 
             recognition.onresult = (event)=>{
                 const transcript=event.results[event.results.length-1][0].transcript.trim();
                 isProcessing = true;
-                updateStatus('heard'); // LED: Flash Orange Twice
+                updateStatus('heard');
 
-                // Wait for the orange flash to finish before sending the request
                 setTimeout(async () => {
-                    if (!isProcessing) return; // In case it was cancelled during the flash
+                    if (!isProcessing) return;
 
                     if(checkVoiceCommands(transcript)){
                         isProcessing = false;
@@ -513,8 +542,8 @@
                     }
                     
                     isProcessing = false;
-                    updateStatus(micActive?'active':''); // LED: Back to Pulsing Green
-                }, 400); // 400ms = 2 flashes of 0.2s
+                    updateStatus(micActive?'active':'');
+                }, 400);
             };
 
             recognition.onerror=()=>{
@@ -558,7 +587,7 @@
                 if (isProcessing) {
                     if (apiAbortController) apiAbortController.abort();
                     isProcessing = false;
-                    updateStatus(micActive ? 'active' : ''); // LED: Back to Pulsing Green
+                    updateStatus(micActive ? 'active' : '');
                     console.log('🚫 User tapped to cancel processing.');
                     return;
                 }
