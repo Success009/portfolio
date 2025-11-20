@@ -30,7 +30,7 @@
         .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none;transition:all 0.4s ease-in-out}
         .watch-bezel.scrolling{animation:bezel-flash 0.5s ease-out}
         @keyframes bezel-flash{0%,100%{border-color:#444}50%{border-color:#00ff88;box-shadow:0 0 5px #00ff88}}
-        .time-markers{position:absolute;width:100%;height:100%;transition:opacity 0.4s ease-in-out}
+        .time-markers{position:absolute;width:100%;height:100%;transition:opacity 0.4s ease-in-out, visibility 0.4s ease-in-out}
         .marker{position:absolute;background:#333;opacity:0.5}
         .marker.hour{width:2px;height:12px}
         .marker:nth-child(1){top:8px;left:50%;transform:translateX(-50%)}
@@ -41,36 +41,44 @@
         #model-indicator{position:absolute;bottom:15px;right:20px;font-size:0.7rem;color:#666;opacity:0.8;transition:all 0.4s ease-in-out}
         .model-list{text-align:left;font-size:0.9rem;line-height:1.6}
         .model-list .current{color:#00ff88;font-weight:bold}
-        .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
+        .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate;transition:all 0.4s ease-in-out}
         @keyframes spellingGlow{0%{text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2)}100%{text-shadow:0 0 15px rgba(0,255,136,0.6), 0 0 25px rgba(0,255,136,0.3)}}
         .spelling-word{color:#fff;margin-bottom:10px;font-size:4rem;font-weight:bold}
 
-        /* Styles for the circular view */
+        /* --- REFINED: Styles for a polished circular view --- */
         .watch-container.circular-view {
             border-radius: 50%;
-            overflow: hidden;
+            overflow: hidden; /* Essential for clipping content */
         }
         .watch-container.circular-view .watch-bezel {
             border-radius: 50%;
         }
+        /* Move corner elements further inward for a better fit */
         .watch-container.circular-view #battery {
-            top: 12%;
-            right: 18%;
+            top: 15%;
+            right: 15%;
         }
         .watch-container.circular-view #statusDot {
-            top: 12%;
-            left: 18%;
+            top: 15%;
+            left: 15%;
         }
         .watch-container.circular-view #model-indicator {
-            bottom: 12%;
-            right: 18%;
+            bottom: 15%;
+            right: 15%;
         }
         .watch-container.circular-view .time-markers {
-            opacity: 0;
+            opacity: 0; /* Hide square-based markers */
+            visibility: hidden;
         }
+        /* Create a safer, more centered text area */
         .watch-container.circular-view #ai-response {
-            width: 80%;
-            max-height: 65%;
+            width: 75%;
+            max-height: 60%;
+        }
+        /* Ensure the spelling display also fits cleanly */
+        .watch-container.circular-view .spelling-display {
+            font-size: 1.5rem; /* Reduce font size to prevent clipping */
+            letter-spacing: 2px;
         }
         .watch-container.circular-view #map-display {
             width: 100%;
@@ -78,7 +86,7 @@
             border-radius: 50%;
         }
         .watch-container.circular-view #map-display img {
-            object-fit: cover;
+            object-fit: cover; /* Ensures the map fills the circle */
             border-radius: 50%;
         }
     </style>
@@ -108,7 +116,7 @@
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
-        let aiResponseFontSize = 1.0; // --- NEW: Variable for AI response font size ---
+        let aiResponseFontSize = 1.0;
 
         const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel');
 
@@ -410,7 +418,6 @@
             }, 2000);
         }
 
-        // --- NEW: Function to handle zooming of AI response text ---
         function adjustZoom(direction) {
             const step = 0.1;
             const minSize = 0.6;
