@@ -5,200 +5,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Watch</title>
     <style>
+        :root {
+            --transition-speed: 0.5s;
+            --transition-curve: cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
         body{background:#000;color:white;font-family:'Segoe UI',Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:auto;user-select:none}
-        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition: all 0.4s ease-in-out;}
-        #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);margin-bottom:8px;font-weight:300;transition:all 0.3s ease}
-        #date{font-size:1.1rem;opacity:0.8;color:#888;margin-bottom:15px;font-weight:300;transition:all 0.3s ease}
-        #battery{position:absolute;top:15px;right:20px;font-size:0.8rem;color:#00ff88;opacity:0.7;transition:all 0.4s ease-in-out}
-        #ai-response{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all 0.4s ease-in-out, font-size 0.2s ease;word-wrap:break-word;max-height:220px;overflow-y:auto;color:#fff;z-index:10}
-        #ai-response.visible{opacity:1;visibility:visible}
-        #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all 0.4s ease-in-out;z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
-        #map-display.visible{opacity:1;visibility:visible}
-        #map-display img{width:100%;height:100%;object-fit:contain;border-radius:15px;transition:all 0.4s ease-in-out}
-        .status-dot{position:absolute;top:15px;left:20px;width:8px;height:8px;background:#888;border-radius:50%;transition:all 0.4s ease-in-out}
+        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition:border-radius var(--transition-speed) var(--transition-curve), width 0.4s ease, height 0.4s ease;overflow:hidden}
+        
+        /* --- CORE UI ELEMENTS --- */
+        #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);font-weight:300;transition:transform var(--transition-speed) var(--transition-curve)}
+        #date{font-size:0.9rem;opacity:0.8;color:#888;font-weight:300;position:absolute;top:32%;left:50%;transform:translateX(-50%);transition:opacity var(--transition-speed) var(--transition-curve), transform var(--transition-speed) var(--transition-curve);letter-spacing:1px}
+        #date-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity var(--transition-speed) var(--transition-curve)}
+        #date-svg text{font-family:'Segoe UI',Arial,sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888}
+        
+        #info-cluster{position:absolute;bottom:15px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 20px;box-sizing:border-box;transition:opacity var(--transition-speed) var(--transition-curve), transform var(--transition-speed) var(--transition-curve)}
+        #battery{font-size:0.8rem;color:#00ff88;opacity:0.7}
+        #model-indicator{font-size:0.7rem;color:#666;opacity:0.8}
+        .status-dot{width:8px;height:8px;background:#888;border-radius:50%;transition:all 0.4s ease-in-out}
+        
+        /* --- AI & MAP DISPLAYS --- */
+        #ai-response{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%) scale(0.95);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;word-wrap:break-word;max-height:60%;overflow-y:auto;color:#fff;z-index:10;background:rgba(10,10,10,0.5);border-radius:15px;padding:10px;box-sizing:border-box}
+        #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
+        #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
+        .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
+
+        /* --- UI STATE MANAGEMENT (via Container Classes) --- */
+        .watch-container.ai-visible #clock, .watch-container.map-visible #clock {transform:translateY(-120px) scale(0.5)}
+        .watch-container.ai-visible #date, .watch-container.map-visible #date, .watch-container.ai-visible #date-svg, .watch-container.map-visible #date-svg {opacity:0;transform:translateY(-120px)}
+        .watch-container.ai-visible #info-cluster, .watch-container.map-visible #info-cluster {opacity:0;transform:translateY(60px)}
+        .watch-container.ai-visible #ai-response {opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+        .watch-container.map-visible #map-display {opacity:1;visibility:visible}
+        
+        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none;transition:border-radius var(--transition-speed) var(--transition-curve)}
+        
+        /* --- STATUS DOT ANIMATIONS --- */
         .status-dot.active{background:#00ff88;animation:pulse 2s infinite}
         .status-dot.listening{background:#0066ff;animation:pulse 0.5s infinite}
         .status-dot.heard{background:#ff9900;animation:flash 0.2s 2}
         .status-dot.sent{background:#00ff88;animation:none}
-        .status-dot.mode-change{background:#ff0000;animation:flash 0.3s 2}
-        .status-dot.model-change{background:#ff00ff;animation:flash 0.3s 3}
         @keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
         @keyframes flash{0%,100%{opacity:0.3}50%{opacity:1}}
-        #ai-response::-webkit-scrollbar{width:2px}
-        #ai-response::-webkit-scrollbar-track{background:rgba(255,255,255,0.1);border-radius:2px}
-        #ai-response::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.5);border-radius:2px}
-        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none;transition:all 0.4s ease-in-out}
-        .watch-bezel.scrolling{animation:bezel-flash 0.5s ease-out}
-        @keyframes bezel-flash{0%,100%{border-color:#444}50%{border-color:#00ff88;box-shadow:0 0 5px #00ff88}}
-        .time-markers{position:absolute;width:100%;height:100%;transition:opacity 0.4s ease-in-out, visibility 0.4s ease-in-out}
-        .marker{position:absolute;background:#333;opacity:0.5}
-        .marker.hour{width:2px;height:12px}
-        .marker:nth-child(1){top:8px;left:50%;transform:translateX(-50%)}
-        .marker:nth-child(2){top:50%;right:8px;transform:translateY(-50%)}
-        .marker:nth-child(3){bottom:8px;left:50%;transform:translateX(-50%)}
-        .marker:nth-child(4){top:50%;left:8px;transform:translateY(-50%)}
-        .hidden{opacity:0!important;visibility:hidden!important}
-        #model-indicator{position:absolute;bottom:15px;right:20px;font-size:0.7rem;color:#666;opacity:0.8;transition:all 0.4s ease-in-out}
-        .model-list{text-align:left;font-size:0.9rem;line-height:1.6}
-        .model-list .current{color:#00ff88;font-weight:bold}
-        .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate;transition:all 0.4s ease-in-out}
-        @keyframes spellingGlow{0%{text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2)}100%{text-shadow:0 0 15px rgba(0,255,136,0.6), 0 0 25px rgba(0,255,136,0.3)}}
-        .spelling-word{color:#fff;margin-bottom:10px;font-size:4rem;font-weight:bold}
+        
+        /* =================================================================== */
+        /* ---               PURPOSE-BUILT CIRCULAR UI                   --- */
+        /* =================================================================== */
+        .watch-container.circular-view { border-radius: 50%; }
+        .watch-container.circular-view .watch-bezel { border-radius: 50%; }
 
-        /* --- REFINED: Styles for a polished circular view --- */
-        .watch-container.circular-view {
-            border-radius: 50%;
-            overflow: hidden; /* Essential for clipping content */
-        }
-        .watch-container.circular-view .watch-bezel {
-            border-radius: 50%;
-        }
-        /* Move corner elements further inward for a better fit */
-        .watch-container.circular-view #battery {
-            top: 15%;
-            right: 15%;
-        }
-        .watch-container.circular-view #statusDot {
-            top: 15%;
+        /* --- Swap to SVG for elegant curved date --- */
+        .watch-container.circular-view #date { opacity: 0 !important; visibility: hidden !important; }
+        .watch-container.circular-view #date-svg { opacity: 0.8; visibility: visible; }
+
+        /* --- Balanced Info Cluster for Circular View --- */
+        .watch-container.circular-view #info-cluster {
+            width: 70%;
             left: 15%;
+            bottom: 5px;
+            justify-content: space-between;
         }
-        .watch-container.circular-view #model-indicator {
-            bottom: 15%;
-            right: 15%;
+        
+        /* --- Elegant AI/Map Focus Shift for Circular View --- */
+        .watch-container.circular-view.ai-visible #clock, 
+        .watch-container.circular-view.map-visible #clock {
+            transform: translateY(-115px) scale(0.6);
         }
-        .watch-container.circular-view .time-markers {
-            opacity: 0; /* Hide square-based markers */
-            visibility: hidden;
-        }
-        /* Create a safer, more centered text area */
-        .watch-container.circular-view #ai-response {
-            width: 75%;
-            max-height: 60%;
-        }
-        /* Ensure the spelling display also fits cleanly */
-        .watch-container.circular-view .spelling-display {
-            font-size: 1.5rem; /* Reduce font size to prevent clipping */
-            letter-spacing: 2px;
-        }
-        .watch-container.circular-view #map-display {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-        }
-        .watch-container.circular-view #map-display img {
-            object-fit: cover; /* Ensures the map fills the circle */
-            border-radius: 50%;
-        }
+        .watch-container.circular-view #ai-response { width: 80%; height: 65%; top: 52%; }
+        .watch-container.circular-view #map-display { width: 100%; height: 100%; border-radius: 50%; }
+        .watch-container.circular-view #map-display img { border-radius: 50%; }
     </style>
 </head>
 <body>
     <div class="watch-container" id="watchContainer">
         <div class="watch-bezel" id="watchBezel"></div>
-        <div class="time-markers">
-            <div class="marker hour"></div>
-            <div class="marker hour"></div>
-            <div class="marker hour"></div>
-            <div class="marker hour"></div>
-        </div>
-        <div class="status-dot" id="statusDot"></div>
-        <div id="battery">85%</div>
-        <div id="model-indicator">M4</div>
+        
         <div id="clock"></div>
         <div id="date"></div>
+
+        <!-- Efficient SVG for curved date text in circular mode -->
+        <svg id="date-svg" viewBox="0 0 300 300">
+            <defs>
+                <path id="datePath" d="M 60 150 a 90 90 0 1 1 180 0" fill="none" />
+            </defs>
+            <text>
+                <textPath xlink:href="#datePath" startOffset="50%" text-anchor="middle">
+                    LOADING...
+                </textPath>
+            </text>
+        </svg>
+
         <div id="ai-response"></div>
         <div id="map-display">
             <img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Nepal Political Map">
         </div>
+        
+        <div id="info-cluster">
+            <div id="battery">85%</div>
+            <div class="status-dot" id="statusDot"></div>
+            <div id="model-indicator">M4</div>
+        </div>
     </div>
 
     <script>
-        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,isResponseVisible=false,isMapVisible=false,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=3,isCircularView=false;
+        // --- State Variables ---
+        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=3,isCircularView=false;
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
         let aiResponseFontSize = 1.0;
 
-        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel');
-
-        const apiKeys = [
-            'AIzaSyCVhh967ATShWvPX0jjh2sbruzWTxEGXL4',
-            'AIzaSyAydVv1BnKnKIsjXkBqqlqC3YJ8Z7R2J2c',
-            'AIzaSyBfsnu2FEGgCha2Q2W6-pRJEh4xU0prjZY'
-        ];
+        // --- DOM Element References ---
+        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel'),dateSvgTextPath=document.querySelector("#datePath + text textPath");
+        
+        const apiKeys = [ 'AIzaSyCVhh967ATShWvPX0jjh2sbruzWTxEGXL4', 'AIzaSyAydVv1BnKnKIsjXkBqqlqC3YJ8Z7R2J2c', 'AIzaSyBfsnu2FEGgCha2Q2W6-pRJEh4xU0prjZY' ];
         let currentApiKeyIndex = 0;
 
+        // --- UPDATED AI MODELS ---
         const aiModels = [
-            { name: 'gemini-2.5-pro', displayName: 'gemini-2.5-pro', indicator: 'M1' },
-            { name: 'gemini-2.5-flash', displayName: 'gemini-2.5-flash', indicator: 'M2' },
-            { name: 'gemini-1.5-pro', displayName: 'gemini-1.5-pro', indicator: 'M3' },
-            { name: 'gemini-1.5-flash', displayName: 'gemini-1.5-flash', indicator: 'M4' },
-            { name: 'gemini-1.5-flash-latest', displayName: 'gemini-1.5-flash-latest', indicator: 'M5' }
+            { name: 'gemini-3-pro-preview', displayName: 'Gemini 3 Pro', indicator: 'M1' },
+            { name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', indicator: 'M2' },
+            { name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', indicator: 'M3' },
+            { name: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Flash-Lite', indicator: 'M4' },
+            { name: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash', indicator: 'M5' }
         ];
 
-        function loadPreferences() {
-            const savedApiIndex = localStorage.getItem('smartwatch_api_key_index');
-            const savedModelIndex = localStorage.getItem('smartwatch_model_index');
-            
-            if (savedApiIndex !== null) {
-                currentApiKeyIndex = parseInt(savedApiIndex);
-                console.log(`📦 Loaded API Key Index: ${currentApiKeyIndex + 1}/${apiKeys.length}`);
+        // --- Core Functions ---
+        function updateTime() {
+            const now = new Date();
+            clock.textContent = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+            const dateString = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+            date.textContent = dateString;
+            dateSvgTextPath.textContent = dateString;
+        }
+
+        // --- UI State Management ---
+        function displayResponse(text, addToHistory = true){
+            watchContainer.classList.remove('map-visible');
+            if (addToHistory && text) {
+                answerHistory.unshift(text);
+                if (answerHistory.length > 20) answerHistory.pop();
+                currentHistoryIndex = 0;
             }
-            
-            if (savedModelIndex !== null) {
-                currentModelIndex = parseInt(savedModelIndex);
-                console.log(`📦 Loaded Model Index: ${currentModelIndex + 1}/${aiModels.length} (${aiModels[currentModelIndex].displayName})`);
+            aiResponse.innerHTML = text;
+            watchContainer.classList.add('ai-visible');
+            aiResponse.scrollTop = 0;
+        }
+
+        function hideResponse(){
+            watchContainer.classList.remove('ai-visible');
+        }
+
+        function displayMap(){
+            watchContainer.classList.remove('ai-visible');
+            watchContainer.classList.add('map-visible');
+            console.log('🗺️ Map displayed');
+        }
+
+        function hideMap(){
+            watchContainer.classList.remove('map-visible');
+        }
+
+        function toggleCircularView() {
+            isCircularView = !isCircularView;
+            watchContainer.classList.toggle('circular-view');
+
+            const confirmationMessage = isCircularView ? "Circular view activated." : "Default view restored.";
+            displayResponse(confirmationMessage, false);
+            setTimeout(() => {
+                if (aiResponse.innerHTML === confirmationMessage) {
+                   hideResponse();
+                }
+            }, 1500);
+        }
+
+        // --- Feature Functions ---
+        function loadPreferences(){
+            const savedApiIndex=localStorage.getItem('smartwatch_api_key_index');
+            const savedModelIndex=localStorage.getItem('smartwatch_model_index');
+            if(savedApiIndex!==null){
+                currentApiKeyIndex=parseInt(savedApiIndex);
+                console.log(`📦 Loaded API Key Index: ${currentApiKeyIndex+1}/${apiKeys.length}`);
             }
-            
+            if(savedModelIndex!==null){
+                currentModelIndex=parseInt(savedModelIndex);
+                console.log(`📦 Loaded Model Index: ${currentModelIndex+1}/${aiModels.length} (${aiModels[currentModelIndex].displayName})`);
+            }
             updateModelIndicator();
         }
 
-        function savePreferences() {
-            localStorage.setItem('smartwatch_api_key_index', currentApiKeyIndex.toString());
-            localStorage.setItem('smartwatch_model_index', currentModelIndex.toString());
+        function savePreferences(){
+            localStorage.setItem('smartwatch_api_key_index',currentApiKeyIndex.toString());
+            localStorage.setItem('smartwatch_model_index',currentModelIndex.toString());
+        }
+        
+        function updateModelIndicator(){
+            modelIndicator.textContent=aiModels[currentModelIndex].indicator;
+        }
+        
+        function showApiChangeNotification(){
+            const message=`API Changed (${currentApiKeyIndex+1}/${apiKeys.length})`;
+            displayResponse(message,false);
+            setTimeout(()=>{if(aiResponse.innerHTML===message){hideResponse()}},2000);
         }
 
-        function updateModelIndicator() {
-            modelIndicator.textContent = aiModels[currentModelIndex].indicator;
+        function showModelChangeNotification(){
+            statusDot.className='status-dot model-change';
+            const modelName=aiModels[currentModelIndex].displayName;
+            const message=`Model Changed: ${modelName}`;
+            displayResponse(message,false);
+            setTimeout(()=>{statusDot.className=micActive?'status-dot active':'status-dot';if(aiResponse.innerHTML===message){hideResponse()}},2500);
         }
 
-        function showApiChangeNotification() {
-            const message = `API Changed (${currentApiKeyIndex + 1}/${apiKeys.length})`;
-            displayResponse(message, false);
-            setTimeout(() => {
-                if (aiResponse.innerHTML === message) {
-                    hideResponse();
-                }
-            }, 2000);
-        }
-
-        function showModelChangeNotification() {
-            statusDot.className = 'status-dot model-change';
-            const modelName = aiModels[currentModelIndex].displayName;
-            const message = `Model Changed: ${modelName}`;
-            displayResponse(message, false);
-            setTimeout(() => {
-                statusDot.className = micActive ? 'status-dot active' : 'status-dot';
-                if (aiResponse.innerHTML === message) {
-                    hideResponse();
-                }
-            }, 2500);
-        }
-
-        function displayModels() {
-            let modelList = '';
-            aiModels.forEach((model, index) => {
-                const isCurrent = index === currentModelIndex;
-                const prefix = isCurrent ? `<span class="current">${index + 1}  ${model.displayName}</span>` : `${index + 1}  ${model.displayName}`;
-                modelList += prefix + '\n';
+        function displayModels(){
+            let modelList='';
+            aiModels.forEach((model,index)=>{
+                const isCurrent=index===currentModelIndex;
+                const prefix=isCurrent?`<span class="current">${index+1}  ${model.displayName}</span>`:`${index+1}  ${model.displayName}`;
+                modelList+=prefix+'\n';
             });
-            
             displayResponse(`<div class="model-list">${modelList}</div>`);
         }
 
-        function selectModel(modelNumber) {
-            const index = modelNumber - 1;
-            if (index >= 0 && index < aiModels.length) {
-                currentModelIndex = index;
+        function selectModel(modelNumber){
+            const index=modelNumber-1;
+            if(index>=0&&index<aiModels.length){
+                currentModelIndex=index;
                 updateModelIndicator();
                 savePreferences();
                 showModelChangeNotification();
@@ -206,24 +237,14 @@
             }
         }
         
-        function displaySpelling(word) {
-            const cleanWord = word.trim().toLowerCase();
+        function displaySpelling(word){
+            const cleanWord=word.trim().toLowerCase();
             hideMap();
-            const spellingHtml = `<div class="spelling-display">${cleanWord}</div>`;
+            const spellingHtml=`<div class="spelling-display">${cleanWord}</div>`;
             displayResponse(spellingHtml);
             console.log(`✏️ Spelling displayed: ${cleanWord}`);
         }
-
-        function updateTime(){
-            const now=new Date();
-            clock.textContent=now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
-            date.textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-            if(Math.random()<0.001){
-                batteryLevel=Math.max(20,batteryLevel-1);
-                battery.textContent=`${batteryLevel}%`;
-            }
-        }
-
+        
         function switchMode(){
             currentMode=currentMode==='english'?'nepali':'english';
             statusDot.className='status-dot mode-change';
@@ -236,204 +257,119 @@
             },600);
         }
         
-        async function tryApiRequest(fullQuery, apiKey) {
-            const currentModel = aiModels[currentModelIndex].name;
-            apiAbortController = new AbortController();
+        async function tryApiRequest(fullQuery,apiKey){
+            const currentModel=aiModels[currentModelIndex].name;
+            apiAbortController=new AbortController();
             updateStatus('sent');
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: fullQuery }] }]
-                }),
-                signal: apiAbortController.signal
+            const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({contents:[{parts:[{text:fullQuery}]}]}),
+                signal:apiAbortController.signal
             });
-            
-            if (!response.ok) {
+            if(!response.ok){
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
             return response;
         }
 
-        async function getAIResponse(question, language) {
-            try {
-                const memoryContext = sharedMemory.length > 0 ? `Context: [${sharedMemory.join(", ")}]. ` : "";
-                const languageInstruction = language === 'nepali' ? "Respond only in Nepali language." : "Respond only in English language.";
-                const fullQuery = `${memoryContext}${languageInstruction} Core rules:
-                - For formulas, reply only with the formula from Nepal's Class 10 Sangam Book. But give answer even if it is different.
-                - For dates, search online and provide the most accurate date with a confidence level.
-                - For grammar tasks (e.g. question tag, passive, indirect, tense, etc.), reply with the correct transformed sentence only, as per Nepal Class 10 English rules. Interpret bracketed hints as instructions.
-                - For all else, respond clearly and concisely.
-                - If I ask you full form fine from class 10 Nepal sangam publication, If you don't know the exact contents of the book, just provide a correct answer.
-                Question: ${question}`;
-                
-                console.log(`🤖 AI Request (${language}) using ${aiModels[currentModelIndex].displayName}:`, question);
-                console.log(`🔑 Using API Key Index: ${currentApiKeyIndex + 1}/${apiKeys.length}`);
-
+        async function getAIResponse(question,language){
+            try{
+                const memoryContext=sharedMemory.length>0?`Context: [${sharedMemory.join(", ")}]. `:"";
+                const languageInstruction=language==='nepali'?"Respond only in Nepali language.":"Respond only in English language.";
+                const fullQuery=`${memoryContext}${languageInstruction} Core rules:\n- For formulas, reply only with the formula from Nepal's Class 10 Sangam Book. But give answer even if it is different.\n- For dates, search online and provide the most accurate date with a confidence level.\n- For grammar tasks (e.g. question tag, passive, indirect, tense, etc.), reply with the correct transformed sentence only, as per Nepal Class 10 English rules. Interpret bracketed hints as instructions.\n- For all else, respond clearly and concisely.\n- If I ask you full form fine from class 10 Nepal sangam publication, If you don't know the exact contents of the book, just provide a correct answer.\nQuestion: ${question}`;
+                console.log(`🤖 AI Request (${language}) using ${aiModels[currentModelIndex].displayName}:`,question);
+                console.log(`🔑 Using API Key Index: ${currentApiKeyIndex+1}/${apiKeys.length}`);
                 let response;
-                let attempts = 0;
-                const maxAttempts = apiKeys.length;
-
-                while (attempts < maxAttempts) {
-                    try {
-                        response = await tryApiRequest(fullQuery, apiKeys[currentApiKeyIndex]);
+                let attempts=0;
+                const maxAttempts=apiKeys.length;
+                while(attempts<maxAttempts){
+                    try{
+                        response=await tryApiRequest(fullQuery,apiKeys[currentApiKeyIndex]);
                         break;
-                    } catch (error) {
-                        if (error.name === 'AbortError') { return null; }
-                        console.log(`❌ API Key ${currentApiKeyIndex + 1} failed:`, error.message);
-                        
-                        if (error.message.includes('429')) {
+                    }catch(error){
+                        if(error.name==='AbortError'){return null}
+                        console.log(`❌ API Key ${currentApiKeyIndex+1} failed:`,error.message);
+                        if(error.message.includes('429')){
                             console.log(`🔄 Switching to next API key due to rate limit...`);
-                            currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
+                            currentApiKeyIndex=(currentApiKeyIndex+1)%apiKeys.length;
                             savePreferences();
                             attempts++;
                             showApiChangeNotification();
-                            if (attempts < maxAttempts) {
-                                console.log(`🔑 Trying API Key Index: ${currentApiKeyIndex + 1}/${apiKeys.length}`);
+                            if(attempts<maxAttempts){
+                                console.log(`🔑 Trying API Key Index: ${currentApiKeyIndex+1}/${apiKeys.length}`);
                                 continue;
                             }
-                        } else { throw error; }
+                        }else{
+                            throw error;
+                        }
                     }
                 }
-
-                if (!response) { throw new Error('All API keys exhausted due to rate limits'); }
-
-                const data = await response.json();
-                const aiAnswer = data.candidates[0].content.parts[0].text.trim();
-                
-                console.log(`🤖 AI Response:`, aiAnswer);
-                console.log(`✅ Successfully used API Key Index: ${currentApiKeyIndex + 1} with Model: ${aiModels[currentModelIndex].displayName}`);
+                if(!response){throw new Error('All API keys exhausted due to rate limits')}
+                const data=await response.json();
+                const aiAnswer=data.candidates[0].content.parts[0].text.trim();
+                console.log(`🤖 AI Response:`,aiAnswer);
+                console.log(`✅ Successfully used API Key Index: ${currentApiKeyIndex+1} with Model: ${aiModels[currentModelIndex].displayName}`);
                 return aiAnswer;
-            } catch (error) {
-                if (error.name === 'AbortError') { return null; }
-                console.log(`🤖 AI Error:`, error.message);
-                
-                if (error.message.includes('All API keys exhausted')) {
-                    return "All API keys rate limited. Please try again later.";
-                } else {
-                    return "Service unavailable.";
+            }catch(error){
+                if(error.name==='AbortError'){return null}
+                console.log(`🤖 AI Error:`,error.message);
+                if(error.message.includes('All API keys exhausted')){
+                    return"All API keys rate limited. Please try again later.";
+                }else{
+                    return"Service unavailable.";
                 }
-            }
-        }
-
-        function displayResponse(text, addToHistory = true){
-            hideMap();
-            if (addToHistory && text) {
-                answerHistory.unshift(text);
-                if (answerHistory.length > 20) answerHistory.pop();
-                currentHistoryIndex = 0;
-            }
-            aiResponse.innerHTML = text;
-            aiResponse.classList.add('visible');
-            clock.classList.add('hidden');
-            date.classList.add('hidden');
-            isResponseVisible = true;
-            aiResponse.scrollTop = 0;
-        }
-
-        function displayAnswerFromHistory(index) {
-            if (answerHistory.length > 0 && index >= 0 && index < answerHistory.length) {
-                currentHistoryIndex = index;
-                displayResponse(answerHistory[index], false);
-                console.log(`📚 Displaying answer from history, index: ${index}`);
-            } else {
-                console.log(`📚 History navigation limit reached.`);
-                const message = 'No older answers.';
-                displayResponse(message, false);
-                 setTimeout(() => {
-                    if (currentHistoryIndex !== -1 && answerHistory[currentHistoryIndex]) {
-                        displayResponse(answerHistory[currentHistoryIndex], false);
-                    } else if (answerHistory.length > 0) {
-                        displayResponse(answerHistory[0], false);
-                    } else {
-                        hideResponse();
-                    }
-                }, 1500);
-            }
-        }
-
-        function hideResponse(){
-            aiResponse.classList.remove('visible');
-            clock.classList.remove('hidden');
-            date.classList.remove('hidden');
-            isResponseVisible=false;
-        }
-
-        function displayMap(){
-            hideResponse();
-            mapDisplay.classList.add('visible');
-            clock.classList.add('hidden');
-            date.classList.add('hidden');
-            isMapVisible=true;
-            console.log('🗺️ Map displayed');
-        }
-
-        function hideMap(){
-            mapDisplay.classList.remove('visible');
-            if(!isResponseVisible){
-                clock.classList.remove('hidden');
-                date.classList.remove('hidden');
-            }
-            isMapVisible=false;
-        }
-
-        function scrollResponse(direction){
-            if(!isResponseVisible) return;
-            watchBezel.classList.add('scrolling');
-            setTimeout(() => watchBezel.classList.remove('scrolling'), 500);
-
-            const lineHeight=parseInt(window.getComputedStyle(aiResponse).lineHeight)||20;
-            const scrollAmount=lineHeight*3;
-            if(direction==='down'){
-                aiResponse.scrollTop+=scrollAmount;
-            }else if(direction==='up'){
-                aiResponse.scrollTop-=scrollAmount;
             }
         }
         
-        function toggleCircularView() {
-            isCircularView = !isCircularView;
-            watchContainer.classList.toggle('circular-view');
-
-            let confirmationMessage;
-            if (isCircularView) {
-                const size = Math.min(window.innerHeight, window.innerWidth) * 0.9;
-                watchContainer.style.width = `${size}px`;
-                watchContainer.style.height = `${size}px`;
-                console.log(`🔄 View changed to circular (${size}px)`);
-                confirmationMessage = "Circular view activated.";
-            } else {
-                watchContainer.style.width = '';
-                watchContainer.style.height = '';
-                console.log('🔄 View changed back to default');
-                confirmationMessage = "Default view restored.";
+        function displayAnswerFromHistory(index){
+            if(answerHistory.length>0&&index>=0&&index<answerHistory.length){
+                currentHistoryIndex=index;
+                displayResponse(answerHistory[index],false);
+                console.log(`📚 Displaying answer from history, index: ${index}`);
+            }else{
+                console.log(`📚 History navigation limit reached.`);
+                const message='No older answers.';
+                displayResponse(message,false);
+                setTimeout(()=>{
+                    if(currentHistoryIndex!==-1&&answerHistory[currentHistoryIndex]){
+                        displayResponse(answerHistory[currentHistoryIndex],false)
+                    }else if(answerHistory.length>0){
+                        displayResponse(answerHistory[0],false)
+                    }else{
+                        hideResponse()
+                    }
+                },1500);
             }
-            
-            displayResponse(confirmationMessage, false);
-            setTimeout(() => {
-                if (aiResponse.innerHTML === confirmationMessage) {
-                   hideResponse();
-                }
-            }, 2000);
+        }
+        
+        function scrollResponse(direction){
+            if(!watchContainer.classList.contains('ai-visible'))return;
+            watchBezel.classList.add('scrolling');
+            setTimeout(()=>watchBezel.classList.remove('scrolling'),500);
+            const lineHeight=parseInt(window.getComputedStyle(aiResponse).lineHeight)||20;
+            const scrollAmount=lineHeight*3;
+            if(direction==='down'){
+                aiResponse.scrollTop+=scrollAmount
+            }else if(direction==='up'){
+                aiResponse.scrollTop-=scrollAmount
+            }
         }
 
-        function adjustZoom(direction) {
-            const step = 0.1;
-            const minSize = 0.6;
-            const maxSize = 2.0;
-
-            if (direction === 'in' && aiResponseFontSize < maxSize) {
-                aiResponseFontSize += step;
-            } else if (direction === 'out' && aiResponseFontSize > minSize) {
-                aiResponseFontSize -= step;
+        function adjustZoom(direction){
+            const step=0.1;
+            const minSize=0.6;
+            const maxSize=2.0;
+            if(direction==='in'&&aiResponseFontSize<maxSize){
+                aiResponseFontSize+=step
+            }else if(direction==='out'&&aiResponseFontSize>minSize){
+                aiResponseFontSize-=step
             }
-            
-            aiResponseFontSize = Math.round(aiResponseFontSize * 10) / 10;
-            aiResponse.style.fontSize = `${aiResponseFontSize}rem`;
+            aiResponseFontSize=Math.round(aiResponseFontSize*10)/10;
+            aiResponse.style.fontSize=`${aiResponseFontSize}rem`;
             console.log(`🔎 AI Response font size set to ${aiResponseFontSize}rem`);
         }
-
+        
         function updateStatus(status){
             statusDot.className=`status-dot ${status}`;
         }
@@ -449,161 +385,78 @@
                 if(recognition)recognition.stop();
             }
         }
-
+        
         function checkVoiceCommands(transcript){
             const lowerTranscript=transcript.toLowerCase();
-
-            if (lowerTranscript.includes("zoom in")) {
-                console.log("🎤 Voice Command: Zoom In");
-                adjustZoom('in');
-                return true;
-            }
-            if (lowerTranscript.includes("zoom out")) {
-                console.log("🎤 Voice Command: Zoom Out");
-                adjustZoom('out');
-                return true;
-            }
-            if(lowerTranscript.includes("display view in circle")){
-                console.log("🎤 Voice Command: Display View in Circle");
-                toggleCircularView();
-                return true;
-            }
-            if(lowerTranscript.includes("display answer")){
-                console.log("🎤 Voice Command: Display Answer");
-                displayAnswerFromHistory(0);
-                return true;
-            }
-            if(lowerTranscript.includes("previous answer")){
-                console.log("🎤 Voice Command: Previous Answer");
-                displayAnswerFromHistory(currentHistoryIndex + 1);
-                return true;
-            }
-            if(lowerTranscript.includes("next answer")){
-                console.log("🎤 Voice Command: Next Answer");
-                displayAnswerFromHistory(currentHistoryIndex - 1);
-                return true;
-            }
-            if(lowerTranscript.includes("display map")){
-                console.log("🎤 Voice Command: Display Map");
-                displayMap();
-                return true;
-            }
-            if(lowerTranscript.includes("scroll down")){
-                console.log("🎤 Voice Command: Scroll Down");
-                scrollResponse('down');
-                return true;
-            }
-            if(lowerTranscript.includes("scroll up")){
-                console.log("🎤 Voice Command: Scroll Up");
-                scrollResponse('up');
-                return true;
-            }
-            if(lowerTranscript.includes("spelling of")){
-                const word = transcript.replace(/spelling of\s+/i, "").trim();
-                if(word) {
-                    console.log(`🎤 Voice Command: Spelling of "${word}"`);
-                    displaySpelling(word);
-                }
-                return true;
-            }
-            if(lowerTranscript.includes("display models")){
-                console.log("🎤 Voice Command: Display Models");
-                displayModels();
-                return true;
-            }
-            const selectModelMatch = lowerTranscript.match(/select model (one|first|second|third|fourth|fifth|\d+)/);
-            if (selectModelMatch) {
-                const identifier = selectModelMatch[1];
-                const ordinals = { 'one': 1, 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5 };
-                let modelNumber = ordinals[identifier] || parseInt(identifier);
-                if (!isNaN(modelNumber)) {
-                    console.log(`🎤 Voice Command: Select Model ${modelNumber} (from "${identifier}")`);
-                    selectModel(modelNumber);
-                    return true;
-                }
-            }
-            if(lowerTranscript.includes("remember ")){
-                const memoryContent=transcript.replace(/remember\s+/i,"").trim();
-                if(memoryContent){
-                    sharedMemory.push(memoryContent);
-                    if(sharedMemory.length>15)sharedMemory.shift();
-                    console.log("🧠 Memory Added:", memoryContent);
-                    displayResponse(`Remembered: "${memoryContent}"`);
-                }
-                return true;
-            }  
-            if(lowerTranscript.includes("clear memory")){
-                sharedMemory=[];
-                console.log("🧠 Memory Cleared");
-                displayResponse("Memory cleared.");
-                return true;
-            }
+            if(lowerTranscript.includes("zoom in")){console.log("🎤 Voice Command: Zoom In");adjustZoom('in');return true}
+            if(lowerTranscript.includes("zoom out")){console.log("🎤 Voice Command: Zoom Out");adjustZoom('out');return true}
+            if(lowerTranscript.includes("display view in circle")){console.log("🎤 Voice Command: Display View in Circle");toggleCircularView();return true}
+            if(lowerTranscript.includes("display answer")){console.log("🎤 Voice Command: Display Answer");displayAnswerFromHistory(0);return true}
+            if(lowerTranscript.includes("previous answer")){console.log("🎤 Voice Command: Previous Answer");displayAnswerFromHistory(currentHistoryIndex+1);return true}
+            if(lowerTranscript.includes("next answer")){console.log("🎤 Voice Command: Next Answer");displayAnswerFromHistory(currentHistoryIndex-1);return true}
+            if(lowerTranscript.includes("display map")){console.log("🎤 Voice Command: Display Map");displayMap();return true}
+            if(lowerTranscript.includes("scroll down")){console.log("🎤 Voice Command: Scroll Down");scrollResponse('down');return true}
+            if(lowerTranscript.includes("scroll up")){console.log("🎤 Voice Command: Scroll Up");scrollResponse('up');return true}
+            if(lowerTranscript.includes("spelling of")){const word=transcript.replace(/spelling of\s+/i,"").trim();if(word){console.log(`🎤 Voice Command: Spelling of "${word}"`);displaySpelling(word)}return true}
+            if(lowerTranscript.includes("display models")){console.log("🎤 Voice Command: Display Models");displayModels();return true}
+            const selectModelMatch=lowerTranscript.match(/select model (one|first|second|third|fourth|fifth|\d+)/);
+            if(selectModelMatch){const identifier=selectModelMatch[1];const ordinals={'one':1,'first':1,'second':2,'third':3,'fourth':4,'fifth':5};let modelNumber=ordinals[identifier]||parseInt(identifier);if(!isNaN(modelNumber)){console.log(`🎤 Voice Command: Select Model ${modelNumber} (from "${identifier}")`);selectModel(modelNumber);return true}}
+            if(lowerTranscript.includes("remember ")){const memoryContent=transcript.replace(/remember\s+/i,"").trim();if(memoryContent){sharedMemory.push(memoryContent);if(sharedMemory.length>15)sharedMemory.shift();console.log("🧠 Memory Added:",memoryContent);displayResponse(`Remembered: "${memoryContent}"`)}return true}
+            if(lowerTranscript.includes("clear memory")){sharedMemory=[];console.log("🧠 Memory Cleared");displayResponse("Memory cleared.");return true}
             return false;
         }
 
         function initSpeechRecognition(){
-            if(!micActive||!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window))return;
+            if(!micActive||!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
             recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
             recognition.continuous=true;
             recognition.interimResults=false;
             recognition.lang=currentMode==='nepali'?'ne-NP':'en-US';
-
-            recognition.onstart = () => updateStatus('listening');
-
-            recognition.onresult = (event)=>{
+            recognition.onstart=()=>updateStatus('listening');
+            recognition.onresult=(event)=>{
                 const transcript=event.results[event.results.length-1][0].transcript.trim();
-                isProcessing = true;
+                isProcessing=true;
                 updateStatus('heard');
-
-                setTimeout(async () => {
-                    if (!isProcessing) return;
-
+                setTimeout(async()=>{
+                    if(!isProcessing)return;
                     if(checkVoiceCommands(transcript)){
-                        isProcessing = false;
+                        isProcessing=false;
                         updateStatus(micActive?'active':'');
                         return;
                     }
-
-                    let question = '';
-                    if(currentMode === 'nepali' && transcript.includes('मलाई भन')){
-                        question = transcript.replace(/मलाई भन/gi,'').trim();
-                    } else if (transcript.toLowerCase().startsWith('listen')) {
-                        question = transcript.substring('listen'.length).trim();
+                    let question='';
+                    if(currentMode==='nepali'&&transcript.includes('मलाई भन')){
+                        question=transcript.replace(/मलाई भन/gi,'').trim();
+                    }else if(transcript.toLowerCase().startsWith('listen')){
+                        question=transcript.substring('listen'.length).trim();
                     }
-
-                    if (question) {
+                    if(question){
                         console.log(`🎤 Question (${currentMode} Mode): ${question}`);
-                        const answer = await getAIResponse(question, currentMode);
-                        if (answer !== null) displayResponse(answer);
+                        const answer=await getAIResponse(question,currentMode);
+                        if(answer!==null)displayResponse(answer);
                     }
-                    
-                    isProcessing = false;
+                    isProcessing=false;
                     updateStatus(micActive?'active':'');
-                }, 400);
+                },400);
             };
-
             recognition.onerror=()=>{
-                isProcessing = false;
+                isProcessing=false;
                 updateStatus(micActive?'active':'');
             };
-
             recognition.onend=()=>{
                 if(micActive&&!isHolding){
                     setTimeout(()=>{
-                        if(micActive && !isProcessing) try{ recognition.start() } catch(e){}
-                    }, 500);
+                        if(micActive&&!isProcessing)try{recognition.start()}catch(e){}
+                    },500);
                 }else{
                     updateStatus(micActive?'active':'');
                 }
             };
-
             try{recognition.start()}catch(e){}
         }
-
-        mapDisplay.addEventListener('click', function() {
-            hideMap();
-        });
-
+        
+        // --- Event Listeners ---
+        mapDisplay.addEventListener('click', hideMap);
         let touchStartTime=0;
         function startHold(e){
             e.preventDefault();
@@ -613,26 +466,28 @@
                 if(isHolding)switchMode();
             },5000);
         }
-
         function endHold(e){
             e.preventDefault();
             isHolding=false;
             if(holdTimeout)clearTimeout(holdTimeout);
             const holdDuration=Date.now()-touchStartTime;
             if(holdDuration<500){
-                if (isProcessing) {
-                    if (apiAbortController) apiAbortController.abort();
-                    isProcessing = false;
-                    updateStatus(micActive ? 'active' : '');
+                if(isProcessing){
+                    if(apiAbortController)apiAbortController.abort();
+                    isProcessing=false;
+                    updateStatus(micActive?'active':'');
                     console.log('🚫 User tapped to cancel processing.');
                     return;
                 }
-                if(isResponseVisible){ hideResponse(); }
-                else if(isMapVisible){ hideMap(); }
-                else{ toggleMic(); }
+                if(watchContainer.classList.contains('ai-visible')){
+                    hideResponse();
+                }else if(watchContainer.classList.contains('map-visible')){
+                    hideMap();
+                }else{
+                    toggleMic();
+                }
             }
         }
-
         watchContainer.addEventListener('touchstart',startHold,{passive:false});
         watchContainer.addEventListener('touchend',endHold,{passive:false});
         watchContainer.addEventListener('touchcancel',endHold,{passive:false});
@@ -640,17 +495,14 @@
         watchContainer.addEventListener('mouseup',endHold);
         watchContainer.addEventListener('mouseleave',endHold);
         watchContainer.addEventListener('contextmenu',e=>e.preventDefault());
-
+        
+        // --- Initialization ---
         function init(){
             loadPreferences();
             updateTime();
             setInterval(updateTime,1000);
-            console.log(`🚀 Smart Watch initialized with ${apiKeys.length} API keys and ${aiModels.length} AI models`);
-            console.log(`🔑 Starting with API Key Index: ${currentApiKeyIndex + 1}/${apiKeys.length}`);
-            console.log(`🤖 Starting with Model: ${aiModels[currentModelIndex].displayName} (${aiModels[currentModelIndex].indicator})`);
-            console.log(`🚀 Default model set to: gemini-1.5-flash (Model 4)`);
-            console.log(`🗺️ Map display feature enabled`);
-            console.log(`✏️ Enhanced spelling command feature enabled with bold display`);
+            console.log(`🚀 Smart Watch initialized.`);
+            console.log(`🚀 Default model set to: gemini-2.5-flash-lite (Model 4)`);
         }
         init();
     </script>
