@@ -420,7 +420,7 @@
             const lowerTranscript=transcript.toLowerCase();
             if(lowerTranscript.includes("zoom in")){console.log("🎤 Voice Command: Zoom In");adjustZoom('in');return true}
             if(lowerTranscript.includes("zoom out")){console.log("🎤 Voice Command: Zoom Out");adjustZoom('out');return true}
-            if(lowerTranscript.includes("display view in circle")){console.log("🎤 Voice Command: Display View in Circle");toggleCircularView();return true}
+            if(lowerTranscript.includes("display view change")){console.log("🎤 Voice Command: Display View Change");toggleCircularView();return true}
             if(lowerTranscript.includes("display answer")){console.log("🎤 Voice Command: Display Answer");displayAnswerFromHistory(0);return true}
             if(lowerTranscript.includes("previous answer")){console.log("🎤 Voice Command: Previous Answer");displayAnswerFromHistory(currentHistoryIndex+1);return true}
             if(lowerTranscript.includes("next answer")){console.log("🎤 Voice Command: Next Answer");displayAnswerFromHistory(currentHistoryIndex-1);return true}
