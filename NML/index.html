@@ -4,16 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nepal Minecraft League</title>
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -28,8 +22,8 @@
                 bg: '#0f0c29',
                 mid: '#302b63',
                 light: '#24243e',
-                cyan: '#00f2ff', // Neon Cyan
-                gold: '#ffd700', // Gold
+                cyan: '#00f2ff',
+                gold: '#ffd700',
               }
             },
             animation: {
@@ -51,275 +45,171 @@
       }
     </script>
     <style>
-      /* Custom scrollbar for webkit */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #0f0c29; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #302b63; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #00f2ff; 
-      }
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #0f0c29; }
+      ::-webkit-scrollbar-thumb { background: #302b63; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
       
-      /* Hexagon background pattern overlay */
-      .bg-hex-pattern {
-        background-color: #0f0c29;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%23302b63' fill-opacity='0.2'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      .glitch { position: relative; }
+      .glitch::before, .glitch::after {
+        content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0f0c29;
+      }
+      .glitch::before {
+        left: 2px; text-shadow: -1px 0 #00f2ff; clip: rect(44px, 450px, 56px, 0); animation: glitch-anim 5s infinite linear alternate-reverse;
+      }
+      .glitch::after {
+        left: -2px; text-shadow: -1px 0 #ff00c1; clip: rect(44px, 450px, 56px, 0); animation: glitch-anim2 5s infinite linear alternate-reverse;
+      }
+      @keyframes glitch-anim {
+        0% { clip: rect(38px, 9999px, 84px, 0); transform: skew(0.55deg); }
+        5% { clip: rect(37px, 9999px, 12px, 0); transform: skew(0.53deg); }
+        10% { clip: rect(74px, 9999px, 83px, 0); transform: skew(0.79deg); }
+        15% { clip: rect(10px, 9999px, 94px, 0); transform: skew(0.55deg); }
+        20% { clip: rect(2px, 9999px, 40px, 0); transform: skew(0.8deg); }
+        25% { clip: rect(6px, 9999px, 4px, 0); transform: skew(0.04deg); }
+        30% { clip: rect(11px, 9999px, 44px, 0); transform: skew(0.53deg); }
+        35% { clip: rect(51px, 9999px, 10px, 0); transform: skew(0.79deg); }
+        40% { clip: rect(65px, 9999px, 85px, 0); transform: skew(0.18deg); }
+        45% { clip: rect(8px, 9999px, 63px, 0); transform: skew(0.17deg); }
+        50% { clip: rect(79px, 9999px, 89px, 0); transform: skew(0.85deg); }
+        55% { clip: rect(13px, 9999px, 44px, 0); transform: skew(0.97deg); }
+        60% { clip: rect(36px, 9999px, 3px, 0); transform: skew(0.06deg); }
+        65% { clip: rect(53px, 9999px, 7px, 0); transform: skew(0.48deg); }
+        70% { clip: rect(8px, 9999px, 76px, 0); transform: skew(0.35deg); }
+        75% { clip: rect(45px, 9999px, 86px, 0); transform: skew(0.19deg); }
+        80% { clip: rect(13px, 9999px, 32px, 0); transform: skew(0.64deg); }
+        85% { clip: rect(71px, 9999px, 14px, 0); transform: skew(0.81deg); }
+        90% { clip: rect(60px, 9999px, 20px, 0); transform: skew(0.88deg); }
+        95% { clip: rect(66px, 9999px, 5px, 0); transform: skew(0.2deg); }
+        100% { clip: rect(31px, 9999px, 93px, 0); transform: skew(0.15deg); }
+      }
+      @keyframes glitch-anim2 {
+        0% { clip: rect(11px, 9999px, 82px, 0); transform: skew(0.07deg); }
+        100% { clip: rect(89px, 9999px, 9px, 0); transform: skew(0.98deg); }
       }
     </style>
   </head>
-  <body class="bg-nml-bg text-white font-inter antialiased overflow-x-hidden selection:bg-nml-cyan selection:text-nml-bg">
+  <body class="bg-nml-bg text-white font-inter antialiased overflow-x-hidden selection:bg-nml-cyan selection:text-nml-bg min-h-screen relative">
     
-    <!-- Overlay Gradient for depth -->
+    <div id="parallax-container" class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="parallax-layer absolute -inset-10 bg-cover bg-bottom opacity-40 transition-transform duration-75 ease-out" data-speed="0.02" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1440 320\'><path fill=\'%23302b63\' fill-opacity=\'1\' d=\'M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,261.3C960,256,1056,224,1152,197.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z\'></path></svg>');"></div>
+        <div class="parallax-layer absolute -inset-10 bg-cover bg-bottom opacity-30 transition-transform duration-75 ease-out" data-speed="0.04" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1440 320\'><path fill=\'%2324243e\' fill-opacity=\'1\' d=\'M0,96L48,122.7C96,149,192,203,288,208C384,213,480,171,576,144C672,117,768,107,864,122.7C960,139,1056,181,1152,186.7C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z\'></path></svg>');"></div>
+        <div class="parallax-layer absolute -inset-10 bg-cover bg-bottom opacity-20 transition-transform duration-75 ease-out" data-speed="0.06" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1440 320\'><path fill=\'%2300f2ff\' fill-opacity=\'0.2\' d=\'M0,192L48,208C96,224,192,256,288,234.7C384,213,480,139,576,117.3C672,96,768,128,864,154.7C960,181,1056,203,1152,192C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z\'></path></svg>');"></div>
+    </div>
+    
+    <canvas id="particles-canvas" class="fixed inset-0 pointer-events-none z-0 w-full h-full"></canvas>
+    
     <div class="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-nml-mid/20 to-nml-bg/90 z-0"></div>
 
-    <!-- MAIN CONTENT CONTAINER -->
     <div id="app" class="relative z-10">
-        
-        <!-- --- HERO SECTION --- -->
-        <header class="relative flex min-h-screen flex-col items-center justify-center px-4 py-20 text-center">
-            
-            <!-- Animated Glow Behind Logo -->
+        <header class="relative flex min-h-screen flex-col items-center justify-center px-4 py-20 text-center perspective-1000">
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-nml-cyan/20 blur-[100px] rounded-full animate-pulse-slow pointer-events-none"></div>
             
-            <!-- LOGO -->
             <div class="relative mb-8 transform transition-transform hover:scale-105 duration-500">
             <div class="relative mx-auto h-[250px] w-[250px] md:h-[300px] md:w-[300px]">
-                <img 
-                id="logo-img"
-                src="" 
-                alt="Logo" 
-                class="h-full w-full rounded-full border-4 border-nml-cyan/50 object-cover shadow-[0_0_50px_rgba(0,242,255,0.3)] bg-nml-bg"
-                />
-                <!-- Logo Ring Effect -->
+                <img id="logo-img" src="" alt="Logo" class="h-full w-full rounded-full border-4 border-nml-cyan/50 object-cover shadow-[0_0_50px_rgba(0,242,255,0.3)] bg-nml-bg" />
                 <div class="absolute inset-0 rounded-full border border-nml-cyan/30 animate-[spin_10s_linear_infinite]"></div>
                 <div class="absolute -inset-4 rounded-full border border-dashed border-nml-gold/20 animate-[spin_15s_linear_infinite_reverse]"></div>
             </div>
             </div>
 
-            <!-- Main Headings -->
-            <h1 id="hero-title" class="mb-2 font-orbitron text-4xl font-black uppercase tracking-tighter text-white drop-shadow-lg md:text-6xl lg:text-7xl">
-            <!-- Title populated by JS -->
-            </h1>
+            <h1 id="hero-title" class="glitch mb-2 font-orbitron text-4xl font-black uppercase tracking-tighter text-white drop-shadow-lg md:text-6xl lg:text-7xl" data-text=""></h1>
             
             <div class="mb-8 flex items-center justify-center gap-4">
             <div class="h-[2px] w-8 md:w-12 bg-nml-gold"></div>
-            <h2 id="hero-subtitle" class="font-orbitron text-lg font-bold uppercase tracking-[0.2em] text-nml-gold md:text-2xl">
-                <!-- Subtitle populated by JS -->
-            </h2>
+            <h2 id="hero-subtitle" class="font-orbitron text-lg font-bold uppercase tracking-[0.2em] text-nml-gold md:text-2xl"></h2>
             <div class="h-[2px] w-8 md:w-12 bg-nml-gold"></div>
             </div>
 
-            <p id="hero-desc" class="mb-10 max-w-lg font-inter text-gray-300 md:text-lg">
-                <!-- Description populated by JS -->
-            </p>
+            <p id="hero-desc" class="mb-10 max-w-lg font-inter text-gray-300 md:text-lg"></p>
 
-            <!-- CTA Button -->
-            <button 
-            id="discord-btn"
-            class="group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-full 
-            bg-indigo-600 px-8 py-4 font-orbitron text-lg font-bold uppercase tracking-wider text-white 
-            transition-all duration-300 hover:bg-indigo-500 
-            hover:shadow-[0_0_20px_rgba(0,242,255,0.6)]
-            active:scale-95
-            animate-glow cursor-pointer"
-            onclick="window.open(CONFIG.discordUrl, '_blank')"
-            >
-            <span class="relative z-10 flex items-center gap-2">
-                <i class="fa-brands fa-discord text-2xl"></i>
-                Join the Discord
-            </span>
-            <!-- Shine Effect -->
+            <button id="discord-btn" class="group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-full bg-indigo-600 px-8 py-4 font-orbitron text-lg font-bold uppercase tracking-wider text-white transition-all duration-300 hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(0,242,255,0.6)] active:scale-95 animate-glow cursor-pointer" onclick="window.open(CONFIG.discordUrl, '_blank')">
+            <span class="relative z-10 flex items-center gap-2"><i class="fa-brands fa-discord text-2xl"></i> Join the Discord</span>
             <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer"></div>
             </button>
         </header>
 
-        <!-- --- STATS GRID SECTION --- -->
         <section class="mx-auto max-w-7xl px-4 py-12 -mt-20">
-            <div id="stats-grid" class="grid gap-6 md:grid-cols-3">
-            <!-- Cards populated by JS -->
-            </div>
+            <div id="stats-grid" class="grid gap-6 md:grid-cols-3"></div>
         </section>
 
-        <!-- --- ABOUT / DETAILS SECTION --- -->
         <section class="bg-nml-bg/50 px-4 py-24 backdrop-blur-sm">
             <div class="mx-auto max-w-4xl text-center">
-            <h2 id="about-heading" class="mb-8 font-orbitron text-3xl font-bold uppercase text-white md:text-5xl">
-                <!-- About Heading populated by JS -->
-            </h2>
-            
+            <h2 id="about-heading" class="mb-8 font-orbitron text-3xl font-bold uppercase text-white md:text-5xl"></h2>
             <div class="rounded-3xl border border-white/5 bg-white/5 p-8 md:p-12 shadow-2xl backdrop-blur-md">
-                <p id="about-desc" class="mb-10 font-inter text-lg leading-relaxed text-gray-300">
-                <!-- About Desc populated by JS -->
-                </p>
-
+                <p id="about-desc" class="mb-10 font-inter text-lg leading-relaxed text-gray-300"></p>
                 <div class="grid gap-8 text-left md:grid-cols-2">
-                <!-- Rules Column -->
                 <div>
-                    <h4 class="mb-4 flex items-center gap-2 font-orbitron text-lg font-bold text-nml-gold">
-                    <i class="fa-solid fa-gavel text-sm"></i> The Rules
-                    </h4>
-                    <ul id="rules-list" class="space-y-3 font-inter text-sm text-gray-400">
-                    <!-- populated by JS -->
-                    </ul>
+                    <h4 class="mb-4 flex items-center gap-2 font-orbitron text-lg font-bold text-nml-gold"><i class="fa-solid fa-gavel text-sm"></i> The Rules</h4>
+                    <ul id="rules-list" class="space-y-3 font-inter text-sm text-gray-400"></ul>
                 </div>
-
-                <!-- Server Info Column -->
                 <div>
-                    <h4 class="mb-4 flex items-center gap-2 font-orbitron text-lg font-bold text-nml-gold">
-                    <i class="fa-solid fa-server text-sm"></i> Server Info
-                    </h4>
-                    <ul id="server-list" class="space-y-3 font-inter text-sm text-gray-400">
-                    <!-- populated by JS -->
-                    </ul>
+                    <h4 class="mb-4 flex items-center gap-2 font-orbitron text-lg font-bold text-nml-gold"><i class="fa-solid fa-server text-sm"></i> Server Info</h4>
+                    <ul id="server-list" class="space-y-3 font-inter text-sm text-gray-400"></ul>
                 </div>
                 </div>
-                
                 <div class="mt-10 pt-8 border-t border-white/10">
-                <button 
-                    onclick="window.open(CONFIG.discordUrl, '_blank')"
-                    class="text-sm font-semibold uppercase tracking-widest text-nml-cyan hover:text-white transition-colors"
-                >
-                    Register Now on Discord &rarr;
-                </button>
+                <button onclick="window.open(CONFIG.discordUrl, '_blank')" class="text-sm font-semibold uppercase tracking-widest text-nml-cyan hover:text-white transition-colors">Register Now on Discord &rarr;</button>
                 </div>
             </div>
             </div>
         </section>
 
-        <!-- --- FOOTER --- -->
         <footer class="border-t border-white/10 bg-[#0a081c] py-12 text-center">
             <div class="mx-auto max-w-7xl px-4">
             <div class="mb-8 flex justify-center gap-8">
-                <a href="#" class="group flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-gray-400 transition-all hover:bg-nml-cyan hover:text-nml-bg hover:-translate-y-1">
-                <i class="fa-brands fa-facebook-f text-xl"></i>
-                </a>
-                <a href="#" class="group flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-gray-400 transition-all hover:bg-pink-600 hover:text-white hover:-translate-y-1">
-                <i class="fa-brands fa-instagram text-xl"></i>
-                </a>
-                <a href="#" class="group flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-gray-400 transition-all hover:bg-red-600 hover:text-white hover:-translate-y-1">
-                <i class="fa-brands fa-youtube text-xl"></i>
-                </a>
+                <a href="#" class="group flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-gray-400 transition-all hover:bg-nml-cyan hover:text-nml-bg hover:-translate-y-1"><i class="fa-brands fa-facebook-f text-xl"></i></a>
+                <a href="#" class="group flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-gray-400 transition-all hover:bg-pink-600 hover:text-white hover:-translate-y-1"><i class="fa-brands fa-instagram text-xl"></i></a>
+                <a href="#" class="group flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-gray-400 transition-all hover:bg-red-600 hover:text-white hover:-translate-y-1"><i class="fa-brands fa-youtube text-xl"></i></a>
             </div>
-            
             <h3 id="footer-title" class="mb-2 font-orbitron text-xl font-bold text-white"></h3>
             <p class="mb-6 text-xs text-gray-500">EST. 2082 • NEPAL</p>
-            
-            <p class="text-xs text-gray-600">
-                &copy; <span id="year"></span> Nepal Minecraft League. Not affiliated with Mojang Studios.
-            </p>
+            <p class="text-xs text-gray-600">&copy; <span id="year"></span> Nepal Minecraft League. Not affiliated with Mojang Studios.</p>
             </div>
         </footer>
-
     </div>
 
-    <!-- ========================================== -->
-    <!-- 🔧 SITE CONFIGURATION SCRIPT -->
-    <!-- ========================================== -->
     <script>
-        // EDIT THIS SECTION TO CHANGE CONTENT
         const CONFIG = {
-            // 1. LINKS & ASSETS
             logoUrl: "https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/NML.png",
             discordUrl: "https://discord.gg/NtVFxbj23X",
-
-            // 2. HERO SECTION
             title: "Nepal Minecraft League",
             subtitle: "Season 1: Battle Royale",
             shortDescription: "Open for everyone. Teams of 2 spread across the map. Fight for your spot. One life. One winning duo.",
-
-            // 3. TOURNAMENT STATS
             stats: [
-                {
-                    icon: "fa-solid fa-trophy",
-                    label: "Grand Prize",
-                    value: "Rs. 8,000",
-                    color: "gold" // gold, cyan, or white
-                },
-                {
-                    icon: "fa-solid fa-ticket",
-                    label: "Entry Fee",
-                    value: "Rs. 50",
-                    color: "cyan"
-                },
-                {
-                    icon: "fa-regular fa-calendar-check",
-                    label: "Event Date",
-                    value: "2082 Poush 18",
-                    color: "white"
-                }
+                { icon: "fa-solid fa-trophy", label: "Grand Prize", value: "Rs. 8,000", color: "gold" },
+                { icon: "fa-solid fa-ticket", label: "Entry Fee", value: "Rs. 50", color: "cyan" },
+                { icon: "fa-regular fa-calendar-check", label: "Event Date", value: "2082 Poush 18", color: "white" }
             ],
-
-            // 4. ABOUT SECTION
             aboutHeading: "Survival of the Fittest",
             aboutDescription: "This isn't your standard survival world. It's a Battle Royale. You and your teammate spawn randomly spread across the map. The goal? Survive and dominate. Fight for your spot as the border shrinks. Last duo standing takes the prize.",
-
-            // 5. LISTS (Rules & Details)
-            rulesList: [
-                "Version 1.20.4 (Java Edition)",
-                "Format: Duo (Team of 2)",
-                "Mechanic: Random Spread Spawn",
-                "One Life Only: No respawns"
-            ],
-            serverList: [
-                "IP will be announced on Discord",
-                "Foreign Server Hosting",
-                "Fair Play strictly enforced",
-                "Registration required to join"
-            ]
+            rulesList: ["Version 1.20.4 (Java Edition)", "Format: Duo (Team of 2)", "Mechanic: Random Spread Spawn", "One Life Only: No respawns"],
+            serverList: ["IP will be announced on Discord", "Foreign Server Hosting", "Fair Play strictly enforced", "Registration required to join"]
         };
 
-        // ==========================================
-        // ⚡ DO NOT EDIT BELOW THIS LINE
-        // ==========================================
+        const setText = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
         
-        // Helper to set text
-        const setText = (id, text) => {
-            const el = document.getElementById(id);
-            if(el) el.textContent = text;
-        };
-
-        // 1. Init Hero
         document.getElementById('logo-img').src = CONFIG.logoUrl;
-        setText('hero-title', CONFIG.title);
+        const titleEl = document.getElementById('hero-title');
+        titleEl.textContent = CONFIG.title;
+        titleEl.setAttribute('data-text', CONFIG.title);
+        
         setText('hero-subtitle', CONFIG.subtitle);
         setText('hero-desc', CONFIG.shortDescription);
         
-        // 2. Init Stats Grid
         const grid = document.getElementById('stats-grid');
         CONFIG.stats.forEach(stat => {
             let colorClass = 'text-white';
             if(stat.color === 'gold') colorClass = 'text-nml-gold drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]';
             if(stat.color === 'cyan') colorClass = 'text-nml-cyan drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]';
-
             const card = document.createElement('div');
             card.className = "group relative overflow-hidden rounded-2xl bg-white/5 p-8 backdrop-blur-md border border-white/10 shadow-xl transition-all duration-300 hover:scale-105 hover:bg-white/10 hover:border-nml-cyan/30 hover:shadow-[0_0_30px_rgba(0,242,255,0.15)]";
-            card.innerHTML = `
-                <div class="absolute inset-0 bg-gradient-to-br from-nml-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div class="relative z-10 flex flex-col items-center text-center">
-                    <div class="mb-4 text-4xl ${colorClass}">
-                        <i class="${stat.icon}"></i>
-                    </div>
-                    <h3 class="mb-2 font-orbitron text-sm uppercase tracking-widest text-gray-400">
-                        ${stat.label}
-                    </h3>
-                    <p class="font-orbitron text-2xl font-bold md:text-3xl ${colorClass}">
-                        ${stat.value}
-                    </p>
-                </div>
-            `;
+            card.innerHTML = `<div class="absolute inset-0 bg-gradient-to-br from-nml-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div><div class="relative z-10 flex flex-col items-center text-center"><div class="mb-4 text-4xl ${colorClass}"><i class="${stat.icon}"></i></div><h3 class="mb-2 font-orbitron text-sm uppercase tracking-widest text-gray-400">${stat.label}</h3><p class="font-orbitron text-2xl font-bold md:text-3xl ${colorClass}">${stat.value}</p></div>`;
             grid.appendChild(card);
         });
 
-        // 3. Init About
         setText('about-heading', CONFIG.aboutHeading);
         setText('about-desc', CONFIG.aboutDescription);
-
         const renderList = (id, items) => {
             const ul = document.getElementById(id);
             items.forEach(item => {
@@ -331,11 +221,75 @@
         };
         renderList('rules-list', CONFIG.rulesList);
         renderList('server-list', CONFIG.serverList);
-
-        // 4. Init Footer
         setText('footer-title', CONFIG.title);
         setText('year', new Date().getFullYear());
 
+        document.addEventListener('mousemove', (e) => {
+            const layers = document.querySelectorAll('.parallax-layer');
+            const x = (window.innerWidth - e.pageX * 2) / 100;
+            const y = (window.innerHeight - e.pageY * 2) / 100;
+            layers.forEach(layer => {
+                const speed = layer.getAttribute('data-speed');
+                layer.style.transform = `translateX(${x * speed * 20}px) translateY(${y * speed * 20}px)`;
+            });
+        });
+
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        const resize = () => { 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight; 
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                // Initial spawn: anywhere on screen
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                
+                this.size = Math.random() * 3 + 1;
+                this.speedY = Math.random() * 1 + 0.3; // Upward speed
+                this.speedX = (Math.random() - 0.5) * 0.5; // Slight drift
+                this.color = `rgba(168, 85, 247, ${Math.random() * 0.5 + 0.1})`; // Purple tint
+            }
+            
+            resetBottom() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 10;
+                this.size = Math.random() * 3 + 1;
+                this.speedY = Math.random() * 1 + 0.3;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                
+                // Wrap around logic
+                if (this.y < -10) {
+                    this.resetBottom();
+                }
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+            }
+        }
+
+        // Initialize particles
+        for(let i=0; i<70; i++) particles.push(new Particle());
+
+        const animate = () => {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        };
+        animate();
     </script>
   </body>
 </html>
