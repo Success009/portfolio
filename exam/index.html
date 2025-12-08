@@ -445,14 +445,14 @@
             const lowerTranscript=transcript.toLowerCase();
             
             // --- NEW LENGTH COMMANDS ---
-            if(lowerTranscript.includes("select answer")) {
-                if(lowerTranscript.includes("for very short question")) {
+            if(lowerTranscript.includes("answer length")) {
+                if(lowerTranscript.includes("very short question")) {
                     responseLength = "max 1 sentence";
                     displayResponse("Length:Very Short");
-                } else if(lowerTranscript.includes("for short question")) {
+                } else if(lowerTranscript.includes("short question")) {
                     responseLength = "concise";
                     displayResponse("Length: Standard");
-                } else if(lowerTranscript.includes("for long question")) {
+                } else if(lowerTranscript.includes("long question")) {
                     responseLength = "comprehensive";
                     displayResponse("Length: Detailed");
                 }
