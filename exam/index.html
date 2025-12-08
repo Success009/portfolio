@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Watch - Gemini 3.0 Integrated</title>
+    <title>Smart Watch - Optimized AI</title>
     <style>
         :root {
             --transition-speed: 0.6s;
@@ -36,6 +36,9 @@
         #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
         .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
+        
+        .model-list { text-align: left; font-size: 0.8rem; padding: 5px; }
+        .model-list .current { color: #00ff88; font-weight: bold; }
 
         /* STATES */
         .watch-container.ai-visible #clock, .watch-container.map-visible #clock {transform:translateY(-120px) scale(0.5)}
@@ -90,7 +93,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 1. Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
             authDomain: "community-canvas-255fa.firebaseapp.com",
@@ -102,11 +104,9 @@
             measurementId: "G-FW93CB5QL7"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 2. Fetch Keys for the App
         async function fetchApiKeys() {
             try {
                 const snapshot = await get(child(ref(db), 'api_keys'));
@@ -117,14 +117,12 @@
                     window.dispatchEvent(new Event('keysLoaded'));
                 } else {
                     console.error("🔥 Firebase: No keys found in 'api_keys' node.");
-                    // Signal error to main app
                     window.dispatchEvent(new Event('keysMissing'));
                 }
             } catch (error) {
                 console.error("🔥 Firebase Connection Error:", error);
             }
         }
-
         fetchApiKeys();
     </script>
 
@@ -141,6 +139,9 @@
         let aiResponseFontSize = 1.0;
         let wakeLock = null;
         let keysReady = false;
+        
+        // Default answer length
+        let responseLength = "concise"; 
 
         const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel'),dateSvgTextPath=document.querySelector("#date-svg textPath");
         
@@ -148,19 +149,18 @@
 
         // --- UPDATED AI MODELS ---
         const aiModels = [
-            { name: 'gemini-3-pro-image-preview', displayName: 'Gemini 3 Pro', indicator: 'M1' },
-            { name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', indicator: 'M2' },
-            { name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', indicator: 'M3' },
-            { name: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Lite', indicator: 'M4' },
-            { name: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash', indicator: 'M5' }
+            { name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', indicator: 'M1' },
+            { name: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Lite', indicator: 'M2' },
+            { name: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash', indicator: 'M3' },
+            { name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', indicator: 'M4' },
+            { name: 'gemini-3-pro-image-preview', displayName: 'Gemini 3 Pro', indicator: 'M5' }
         ];
 
-        // --- Firebase Event Listeners ---
         window.addEventListener('keysLoaded', () => {
             apiKeys = window.globalApiKeys;
             keysReady = true;
             statusDot.classList.remove('loading-keys');
-            console.log("✅ App: System ready.");
+            console.log("✅ App: System ready. Default: Gemini 2.5 Flash");
         });
 
         window.addEventListener('keysMissing', () => {
@@ -169,7 +169,6 @@
             displayResponse("Error: No API Keys found in database.", false);
         });
 
-        // --- Core Functions ---
         function updateTime() {
             const now = new Date();
             clock.textContent = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
@@ -262,8 +261,8 @@
             let modelList='';
             aiModels.forEach((model,index)=>{
                 const isCurrent=index===currentModelIndex;
-                const prefix=isCurrent?`<span class="current">${index+1}  ${model.displayName}</span>`:`${index+1}  ${model.displayName}`;
-                modelList+=prefix+'\n';
+                const prefix=isCurrent?`<span class="current">${index+1}. ${model.displayName}</span>`:`${index+1}. ${model.displayName}`;
+                modelList+=prefix+'<br>';
             });
             displayResponse(`<div class="model-list">${modelList}</div>`);
         }
@@ -275,7 +274,7 @@
                 updateModelIndicator();
                 savePreferences();
                 showModelChangeNotification();
-                console.log(`🤖 Model changed to: ${aiModels[currentModelIndex].displayName} (${aiModels[currentModelIndex].name})`);
+                console.log(`🤖 Model changed to: ${aiModels[currentModelIndex].displayName}`);
             }
         }
         
@@ -298,76 +297,81 @@
             },600);
         }
         
-        async function tryApiRequest(fullQuery,apiKey){
-            const currentModel=aiModels[currentModelIndex].name;
-            apiAbortController=new AbortController();
-            updateStatus('sent');
-            
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
-            
-            const response=await fetch(url,{
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({contents:[{parts:[{text:fullQuery}]}]}),
-                signal:apiAbortController.signal
+        // Simplified Request Function
+        async function fetchGenerateContent(modelName, apiKey, fullQuery, signal) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({contents: [{parts: [{text: fullQuery}]}]}),
+                signal: signal
             });
-            
-            if(!response.ok){
-                const errJson = await response.json().catch(()=>({}));
-                console.warn(`API Error for ${currentModel}:`, errJson);
-                throw new Error(`HTTP ${response.status} - ${JSON.stringify(errJson)}`);
-            }
             return response;
         }
 
-        async function getAIResponse(question,language){
+        async function getAIResponse(question, language){
             if(!keysReady || apiKeys.length === 0) {
                 return "Connecting to database... please wait.";
             }
 
-            try{
-                const memoryContext=sharedMemory.length>0?`Context: [${sharedMemory.join(", ")}]. `:"";
-                const languageInstruction=language==='nepali'?"Respond only in Nepali language.":"Respond only in English language.";
-                const fullQuery=`${memoryContext}${languageInstruction} Core rules:\n- For formulas, reply only with the formula from Nepal's Class 10 Sangam Book. But give answer even if it is different.\n- For dates, search online and provide the most accurate date with a confidence level.\n- For grammar tasks (e.g. question tag, passive, indirect, tense, etc.), reply with the correct transformed sentence only, as per Nepal Class 10 English rules. Interpret bracketed hints as instructions.\n- For all else, respond clearly and concisely.\n- If I ask you full form fine from class 10 Nepal sangam publication, If you don't know the exact contents of the book, just provide a correct answer.\nQuestion: ${question}`;
-                
-                console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName}...`);
-                
-                let response;
-                let attempts=0;
-                const maxAttempts=apiKeys.length;
-                
-                if(currentApiKeyIndex >= apiKeys.length) currentApiKeyIndex = 0;
+            // --- OPTIMIZED PROMPT ---
+            // 1. Removes fluff to save tokens.
+            // 2. Explicitly allows "General Knowledge" if book content is unknown.
+            // 3. Injects 'responseLength' variable.
+            const mem = sharedMemory.length>0 ? `Ctx:${sharedMemory.join('|')}` : "";
+            const langInstr = language==='nepali' ? "Nepali" : "English";
+            
+            const fullQuery = `System:Nepal Class 10 context.
+            General: Your creator/owner is success adhikari. He is 17. lives in Nepal, Chitan Bharatpur. He is a programmer.(Don't reveal all at once)
+            Rules:
+            1.Lang:${langInstr}.
+            2.Length of answer:${responseLength}.
+            3.Scope:Prioritize Nepal Class 10 curriculum. If specific book content unknown, PROVIDE CORRECT GENERAL ANSWER. Do not refuse.
+            4.Grammar:Output transformed sentence only.
+            5.Date:Search/Verify.
+            Your memory:${mem}
+            Q:${question}`;
 
-                while(attempts<maxAttempts){
-                    try{
-                        response=await tryApiRequest(fullQuery, apiKeys[currentApiKeyIndex]);
-                        break;
-                    }catch(error){
-                        if(error.name==='AbortError'){return null}
-                        console.log(`❌ API Key Index ${currentApiKeyIndex} failed:`,error.message);
-                        
-                        console.log(`🔄 Switching to next API key...`);
-                        currentApiKeyIndex=(currentApiKeyIndex+1)%apiKeys.length;
-                        savePreferences();
-                        attempts++;
-                        showApiChangeNotification();
-                        if(attempts<maxAttempts) continue;
+            let attempts = 0;
+            const maxAttempts = apiKeys.length;
+            if(currentApiKeyIndex >= apiKeys.length) currentApiKeyIndex = 0;
+            
+            // Loop for key rotation ONLY (No model fallback)
+            while(attempts < maxAttempts) {
+                try {
+                    apiAbortController = new AbortController();
+                    updateStatus('sent');
+                    
+                    const currentModel = aiModels[currentModelIndex].name;
+                    console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Key ${currentApiKeyIndex+1})...`);
+                    
+                    const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal);
+
+                    if (!response.ok) {
+                        const errJson = await response.json().catch(()=>({}));
+                        console.warn("API Error:", errJson);
+                        throw new Error(`HTTP ${response.status}`);
                     }
-                }
-                if(!response){throw new Error('All API keys exhausted')}
-                const data=await response.json();
-                
-                if(!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                    return "Model returned no content (Check Safety/Preview status).";
-                }
 
-                const aiAnswer=data.candidates[0].content.parts[0].text.trim();
-                return aiAnswer;
-            }catch(error){
-                if(error.name==='AbortError'){return null}
-                console.error(`🤖 AI Fatal Error:`,error);
-                return "Service unavailable (Check Model/Key).";
+                    const data = await response.json();
+                    if(!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                        return "Model returned no content (Check Safety Settings).";
+                    }
+                    return data.candidates[0].content.parts[0].text.trim();
+
+                } catch (error) {
+                    if(error.name === 'AbortError') return null;
+                    console.log(`❌ Attempt failed: ${error.message}`);
+                    
+                    // Rotate Key only
+                    currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
+                    savePreferences();
+                    attempts++;
+                    if (attempts < maxAttempts) console.log(`🔄 Switching API Key...`);
+                }
             }
+
+            return "Service unavailable (Rate Limit / Quota Exceeded).";
         }
         
         function displayAnswerFromHistory(index){
@@ -439,6 +443,23 @@
         
         function checkVoiceCommands(transcript){
             const lowerTranscript=transcript.toLowerCase();
+            
+            // --- NEW LENGTH COMMANDS ---
+            if(lowerTranscript.includes("answer length")) {
+                if(lowerTranscript.includes("very short")) {
+                    responseLength = "max 1 sentence";
+                    displayResponse("Length: Very Short");
+                } else if(lowerTranscript.includes("short")) {
+                    responseLength = "concise";
+                    displayResponse("Length: Standard");
+                } else if(lowerTranscript.includes("long")) {
+                    responseLength = "comprehensive";
+                    displayResponse("Length: Detailed");
+                }
+                setTimeout(hideResponse, 1500);
+                return true;
+            }
+
             if(lowerTranscript.includes("zoom in")){adjustZoom('in');return true}
             if(lowerTranscript.includes("zoom out")){adjustZoom('out');return true}
             if(lowerTranscript.includes("display view change")){toggleCircularView();return true}
