@@ -31,8 +31,9 @@
         .watch-container:not(.circular-view) #model-indicator { top: 92%; left: 85%; }
         .watch-container.circular-view #model-indicator { top: 85%; left: 50%; }
 
-        /* DISPLAYS */
-        #ai-response{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%) scale(0.95);width:85%;text-align:center;font-size:1rem;line-height:1.3;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;word-wrap:break-word;max-height:60%;overflow-y:auto;color:#fff;z-index:10;background:rgba(10,10,10,0.5);border-radius:15px;padding:10px;box-sizing:border-box}
+        /* DISPLAYS - CHANGED font-size here from 1rem to 1.2rem */
+        #ai-response{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%) scale(0.95);width:85%;text-align:center;font-size:1.2rem;line-height:1.3;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;word-wrap:break-word;max-height:60%;overflow-y:auto;color:#fff;z-index:10;background:rgba(10,10,10,0.5);border-radius:15px;padding:10px;box-sizing:border-box}
+        
         #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
         .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
@@ -133,14 +134,14 @@
         // --- State Variables ---
         let apiKeys = []; 
         
-        // --- CHANGE: DEFAULT MODE SET TO NEPALI ---
         let currentMode='nepali'; 
         
         let sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=0,isCircularView=false;
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
-        let aiResponseFontSize = 1.0;
+        // CHANGED: Base font size from 1.0 to 1.2
+        let aiResponseFontSize = 1.2;
         let wakeLock = null;
         let keysReady = false;
         
@@ -319,9 +320,6 @@
             }
 
             // --- OPTIMIZED PROMPT ---
-            // 1. Removes fluff to save tokens.
-            // 2. Explicitly allows "General Knowledge" if book content is unknown.
-            // 3. Injects 'responseLength' variable.
             const mem = sharedMemory.length>0 ? `Ctx:${sharedMemory.join('|')}` : "";
             const langInstr = language==='nepali' ? "Nepali" : "English";
             
@@ -505,9 +503,6 @@
                     }
                     let question='';
                     
-                    // --- CHANGED: ACTIVATION COMMAND LOGIC ---
-                    // Since default is now Nepali, this block will run.
-                    // It checks for "मलाई भन"
                     if(currentMode==='nepali'&&transcript.includes('मलाई भन')){
                         question=transcript.replace(/मलाई भन/gi,'').trim();
                     }else if(transcript.toLowerCase().startsWith('listen')){
