@@ -132,7 +132,11 @@
     <script>
         // --- State Variables ---
         let apiKeys = []; 
-        let currentMode='english',sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=0,isCircularView=false;
+        
+        // --- CHANGE: DEFAULT MODE SET TO NEPALI ---
+        let currentMode='nepali'; 
+        
+        let sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=0,isCircularView=false;
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
@@ -483,7 +487,10 @@
             recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
             recognition.continuous=true;
             recognition.interimResults=false;
+            
+            // Ensure default lang is based on currentMode (now defaults to nepali)
             recognition.lang=currentMode==='nepali'?'ne-NP':'en-US';
+            
             recognition.onstart=()=>updateStatus('listening');
             recognition.onresult=(event)=>{
                 const transcript=event.results[event.results.length-1][0].transcript.trim();
@@ -497,11 +504,16 @@
                         return;
                     }
                     let question='';
+                    
+                    // --- CHANGED: ACTIVATION COMMAND LOGIC ---
+                    // Since default is now Nepali, this block will run.
+                    // It checks for "मलाई भन"
                     if(currentMode==='nepali'&&transcript.includes('मलाई भन')){
                         question=transcript.replace(/मलाई भन/gi,'').trim();
                     }else if(transcript.toLowerCase().startsWith('listen')){
                         question=transcript.substring('listen'.length).trim();
                     }
+                    
                     if(question){
                         const answer=await getAIResponse(question,currentMode);
                         if(answer!==null)displayResponse(answer);
