@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Watch - Search Control</title>
+    <title>Smart Watch - Priority Key</title>
     <style>
         :root {
             --transition-speed: 0.6s;
@@ -69,8 +69,16 @@
         #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
         .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
         
-        /* Clean List Styles */
-        .simple-list { text-align: center; font-size: 0.85rem; line-height: 1.6; color: #ddd; }
+        /* Ultra Compact List Styles */
+        .simple-list { 
+            text-align: center; 
+            font-size: 0.75rem; 
+            line-height: 1.3; 
+            color: #ddd; 
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
 
         .watch-container.ai-visible #clock, .watch-container.map-visible #clock {transform:translateY(-120px) scale(0.5)}
         .watch-container.ai-visible #date, .watch-container.map-visible #date, .watch-container.ai-visible #date-svg, .watch-container.map-visible #date-svg {opacity:0;transform:translateY(-120px)}
@@ -136,44 +144,49 @@
         const db = getDatabase(app);
 
         async function fetchApiKeys() {
+            // YOUR HARDCODED KEY HERE
+            const hardcodedKey = "AIzaSyD7IchZ1N1ZhqRshf_FLekr0zyMZ-vRwfo";
+            let dbKeys = [];
+
             try {
                 const snapshot = await get(child(ref(db), 'api_keys'));
                 if (snapshot.exists()) {
-                    const keys = snapshot.val();
-                    window.globalApiKeys = keys; 
-                    window.dispatchEvent(new Event('keysLoaded'));
-                } else {
-                    window.dispatchEvent(new Event('keysMissing'));
+                    dbKeys = snapshot.val();
                 }
             } catch (error) {
                 console.error("🔥 Firebase Connection Error:", error);
             }
+
+            // MERGE: Hardcoded Key FIRST, then Firebase keys
+            // Filter duplicates just in case
+            const allKeys = [hardcodedKey, ...dbKeys.filter(k => k !== hardcodedKey)];
+            
+            window.globalApiKeys = allKeys; 
+            window.dispatchEvent(new Event('keysLoaded'));
         }
         fetchApiKeys();
     </script>
 
     <script>
-        // --- ACTIVATION CODES LIST ---
+        // --- ACTIVATION CODES LIST (Compact & Centered) ---
         const FUNCTIONS_LIST_HTML = `
         <div class="simple-list">
-            LISTEN [Question]<br>
-            WITH GOOGLE [Question]<br>
-            CONTEXT [0-9]<br>
-            SIZE [1-9]<br>
-            ANSWER LENGTH [SHORT/LONG] QUESTION<br>
-            SELECT MODEL [1-5]<br>
-            DISPLAY MODELS<br>
-            REMEMBER [Text]<br>
-            CLEAR MEMORY<br>
-            DISPLAY FUNCTIONS<br>
-            DISPLAY VIEW CHANGE<br>
-            ZOOM [IN/OUT]<br>
-            SCROLL [UP/DOWN]<br>
-            DISPLAY MAP<br>
-            SPELLING OF [Word]<br>
-            DISPLAY ANSWER<br>
-            PREVIOUS ANSWER<br>
-            NEXT ANSWER
+            <span>LISTEN [Question]</span>
+            <span>WITH GOOGLE [Question]</span>
+            <span>CONTEXT [0-9]</span>
+            <span>SIZE [1-9]</span>
+            <span>ANSWER LENGTH [SHORT/LONG]</span>
+            <span>SELECT MODEL [1-5]</span>
+            <span>DISPLAY MODELS</span>
+            <span>REMEMBER [Text]</span>
+            <span>CLEAR MEMORY</span>
+            <span>DISPLAY FUNCTIONS</span>
+            <span>DISPLAY VIEW CHANGE</span>
+            <span>SCROLL [UP/DOWN]</span>
+            <span>DISPLAY MAP</span>
+            <span>SPELLING OF [Word]</span>
+            <span>DISPLAY ANSWER</span>
+            <span>PREV/NEXT ANSWER</span>
         </div>`;
 
         // --- State Variables ---
@@ -195,8 +208,8 @@
         let currentApiKeyIndex = 0;
 
         const aiModels = [
-            { name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', indicator: 'M1' },
-            { name: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Lite', indicator: 'M2' },
+            { name: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Lite', indicator: 'M1' },
+            { name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', indicator: 'M2' },
             { name: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash', indicator: 'M3' },
             { name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', indicator: 'M4' },
             { name: 'gemini-3-pro-image-preview', displayName: 'Gemini 3 Pro', indicator: 'M5' }
@@ -419,14 +432,12 @@
             setTimeout(() => { if(aiResponse.innerHTML.includes(`Context: ${level}`)) hideResponse(); }, 1000);
         }
 
-        // --- FETCH WITH SEARCH TOGGLE ---
         async function fetchGenerateContent(modelName, apiKey, fullQuery, signal, useSearch) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
             const requestBody = {
                 contents: [{parts: [{text: fullQuery}]}]
             };
             
-            // Conditionally add search tool
             if (useSearch) {
                 requestBody.tools = [{ googleSearch: {} }];
             }
@@ -460,10 +471,9 @@
             const langInstr = language==='nepali' ? "Nepali" : "English";
             const currentTime = new Date().toString();
 
-            // Dynamic Search Prompt Rule
             const searchRule = useSearch 
                 ? "5.Search: Use Google Search tool for Dates, Events, and Facts." 
-                : "5.Search: DO NOT USE EXTERNAL SEARCH. Use internal knowledge only.";
+                : "5.Search: Use internal knowledge only.";
 
             const fullQuery = `System:Nepal Class 10 context. CurrentTime:${currentTime}.
             Rules:
@@ -488,7 +498,6 @@
                     const currentModel = aiModels[currentModelIndex].name;
                     console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Search: ${useSearch})...`);
                     
-                    // PASS useSearch here
                     const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
 
                     if (!response.ok) {
@@ -566,19 +575,6 @@
             }
         }
 
-        function adjustZoom(direction){
-            const step=0.1;
-            const minSize=0.6;
-            const maxSize=2.0;
-            if(direction==='in'&&aiResponseFontSize<maxSize){
-                aiResponseFontSize+=step
-            }else if(direction==='out'&&aiResponseFontSize>minSize){
-                aiResponseFontSize-=step
-            }
-            aiResponseFontSize=Math.round(aiResponseFontSize*10)/10;
-            aiResponse.style.fontSize=`${aiResponseFontSize}rem`;
-        }
-        
         function updateStatus(status){
             statusDot.className=`status-dot ${status}`;
         }
@@ -644,8 +640,6 @@
                 return true;
             }
 
-            if(lowerTranscript.includes("zoom in")){adjustZoom('in');return true}
-            if(lowerTranscript.includes("zoom out")){adjustZoom('out');return true}
             if(lowerTranscript.includes("display view change")){toggleCircularView();return true}
             if(lowerTranscript.includes("display answer")){displayAnswerFromHistory(0);return true}
             if(lowerTranscript.includes("previous answer")){displayAnswerFromHistory(currentHistoryIndex+1);return true}
@@ -688,26 +682,24 @@
                     }
                     
                     let question='';
-                    let useSearch = false; // Default: No Search
+                    let useSearch = false; 
 
                     const lowerTranscript = transcript.toLowerCase();
 
-                    // --- COMMAND PARSING ---
                     if(currentMode==='nepali' && transcript.includes('मलाई भन')){
                         question = transcript.replace(/मलाई भन/gi,'').trim();
-                        useSearch = false; // Default Nepali = No Search (unless added)
+                        useSearch = false; 
                     } 
                     else if(lowerTranscript.startsWith("with google")) {
                         question = transcript.substring("with google".length).trim();
-                        useSearch = true; // ENABLE SEARCH
+                        useSearch = true; 
                     }
                     else if(lowerTranscript.startsWith("listen")) {
                         question = transcript.substring("listen".length).trim();
-                        useSearch = false; // DISABLE SEARCH
+                        useSearch = false; 
                     }
                     
                     if(question){
-                        // PASS useSearch
                         const answer = await getAIResponse(question, currentMode, useSearch);
                         if(answer !== null) displayResponse(answer);
                     }
