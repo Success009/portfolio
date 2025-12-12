@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Watch - Accurate BS Date</title>
+    <title>Smart Watch - Search Control</title>
     <style>
         :root {
             --transition-speed: 0.6s;
@@ -32,7 +32,6 @@
         .watch-container.circular-view #model-indicator { top: 85%; left: 50%; }
 
         /* DISPLAYS */
-        /* Enable Touch Scrolling here */
         #ai-response{
             position:absolute;
             top:55%;
@@ -47,17 +46,15 @@
             transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;
             word-wrap:break-word;
             max-height:60%;
-            overflow-y:auto; /* Native Scroll */
+            overflow-y:auto; 
             color:#fff;
             z-index:10;
             background:rgba(10,10,10,0.5);
             border-radius:15px;
             padding:10px;
             box-sizing:border-box;
-            
-            /* Ensure touches work */
             pointer-events: auto; 
-            touch-action: pan-y; /* Allow vertical scroll */
+            touch-action: pan-y;
         }
         
         #ai-response b, #ai-response strong { color: #00ff88; font-weight: 700; text-shadow: 0 0 5px rgba(0,255,136,0.3); }
@@ -160,6 +157,7 @@
         const FUNCTIONS_LIST_HTML = `
         <div class="simple-list">
             LISTEN [Question]<br>
+            WITH GOOGLE [Question]<br>
             CONTEXT [0-9]<br>
             SIZE [1-9]<br>
             ANSWER LENGTH [SHORT/LONG] QUESTION<br>
@@ -237,21 +235,16 @@
             return html;
         }
 
-        // --- ACCURATE AD TO BS DATE CONVERTER ---
         function getAccurateNepaliDate() {
-            // Reference: Baisakh 1, 2081 BS = April 13, 2024 AD
             const refEngYear = 2024;
-            const refEngMonth = 3; // April (0-index)
+            const refEngMonth = 3; 
             const refEngDay = 13;
             
             const refBsYear = 2081;
-            const refBsMonth = 0; // Baisakh (0-index)
+            const refBsMonth = 0; 
             const refBsDay = 1;
 
-            // Days in each month for 2081 BS (Source: Hamro Patro)
-            // Baisakh, Jestha, Ashadh, Shrawan, Bhadra, Ashwin, Kartik, Mangsir, Poush, Magh, Falgun, Chaitra
             const daysInMonth2081 = [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31];
-            // Days in each month for 2082 BS (Projected)
             const daysInMonth2082 = [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 30, 30]; 
 
             const bsMonths = ["BAISAKH", "JESTHA", "ASHADH", "SHRAWAN", "BHADRA", "ASHWIN", "KARTIK", "MANGSIR", "POUSH", "MAGH", "FALGUN", "CHAITRA"];
@@ -259,7 +252,6 @@
             const now = new Date();
             const refDate = new Date(refEngYear, refEngMonth, refEngDay);
             
-            // Calculate difference in days
             const diffTime = now.getTime() - refDate.getTime();
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
@@ -267,17 +259,14 @@
             let currentBsMonth = refBsMonth;
             let currentBsDay = refBsDay + diffDays;
 
-            // Determine which array to use based on year
             let currentMonthData = daysInMonth2081;
 
-            // Roll forward dates
             while (currentBsDay > currentMonthData[currentBsMonth]) {
                 currentBsDay -= currentMonthData[currentBsMonth];
                 currentBsMonth++;
                 if (currentBsMonth > 11) {
                     currentBsMonth = 0;
                     currentBsYear++;
-                    // Switch to 2082 data if year increments
                     if(currentBsYear === 2082) currentMonthData = daysInMonth2082;
                 }
             }
@@ -430,12 +419,17 @@
             setTimeout(() => { if(aiResponse.innerHTML.includes(`Context: ${level}`)) hideResponse(); }, 1000);
         }
 
-        async function fetchGenerateContent(modelName, apiKey, fullQuery, signal) {
+        // --- FETCH WITH SEARCH TOGGLE ---
+        async function fetchGenerateContent(modelName, apiKey, fullQuery, signal, useSearch) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
             const requestBody = {
-                contents: [{parts: [{text: fullQuery}]}],
-                tools: [{ googleSearch: {} }]
+                contents: [{parts: [{text: fullQuery}]}]
             };
+            
+            // Conditionally add search tool
+            if (useSearch) {
+                requestBody.tools = [{ googleSearch: {} }];
+            }
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -446,7 +440,7 @@
             return response;
         }
 
-        async function getAIResponse(question, language){
+        async function getAIResponse(question, language, useSearch) {
             if(!keysReady || apiKeys.length === 0) {
                 return "Connecting to database...";
             }
@@ -466,13 +460,18 @@
             const langInstr = language==='nepali' ? "Nepali" : "English";
             const currentTime = new Date().toString();
 
+            // Dynamic Search Prompt Rule
+            const searchRule = useSearch 
+                ? "5.Search: Use Google Search tool for Dates, Events, and Facts." 
+                : "5.Search: DO NOT USE EXTERNAL SEARCH. Use internal knowledge only.";
+
             const fullQuery = `System:Nepal Class 10 context. CurrentTime:${currentTime}.
             Rules:
             1.Lang:${langInstr}.
             2.Length:${responseLength}.
             3.Format: USE MARKDOWN (bold **text**, lists - item).
-            4.Scope: Class 10 Nepal. If specific book unknown, use General Knowledge/Search.
-            5.Search: Use Google Search tool for Dates, Events, and Facts.
+            4.Scope: Class 10 Nepal.
+            ${searchRule}
             ${mem}
             ${historyText}
             Current Question:${question}`;
@@ -487,9 +486,10 @@
                     updateStatus('sent');
                     
                     const currentModel = aiModels[currentModelIndex].name;
-                    console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Key ${currentApiKeyIndex+1})...`);
+                    console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Search: ${useSearch})...`);
                     
-                    const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal);
+                    // PASS useSearch here
+                    const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
 
                     if (!response.ok) {
                         const errJson = await response.json().catch(()=>({}));
@@ -688,14 +688,27 @@
                     }
                     
                     let question='';
+                    let useSearch = false; // Default: No Search
+
+                    const lowerTranscript = transcript.toLowerCase();
+
+                    // --- COMMAND PARSING ---
                     if(currentMode==='nepali' && transcript.includes('मलाई भन')){
                         question = transcript.replace(/मलाई भन/gi,'').trim();
-                    } else if(transcript.toLowerCase().startsWith('listen')){
-                        question = transcript.substring('listen'.length).trim();
+                        useSearch = false; // Default Nepali = No Search (unless added)
+                    } 
+                    else if(lowerTranscript.startsWith("with google")) {
+                        question = transcript.substring("with google".length).trim();
+                        useSearch = true; // ENABLE SEARCH
+                    }
+                    else if(lowerTranscript.startsWith("listen")) {
+                        question = transcript.substring("listen".length).trim();
+                        useSearch = false; // DISABLE SEARCH
                     }
                     
                     if(question){
-                        const answer = await getAIResponse(question, currentMode);
+                        // PASS useSearch
+                        const answer = await getAIResponse(question, currentMode, useSearch);
                         if(answer !== null) displayResponse(answer);
                     }
                     isProcessing = false;
@@ -724,19 +737,15 @@
         
         mapDisplay.addEventListener('click', hideMap);
         
-        // --- IMPROVED TOUCH HANDLING FOR SCROLLING ---
         let touchStartTime = 0;
         let isScrolling = false;
 
         function startHold(e){
-            // If checking the text box, allow scrolling
             if(e.target.closest('#ai-response')) {
                 isScrolling = false;
-                // DO NOT prevent default here so scroll works
             } else {
                 e.preventDefault();
             }
-            
             isHolding=true;
             touchStartTime=Date.now();
             holdTimeout=setTimeout(()=>{
@@ -745,7 +754,6 @@
         }
 
         function checkScroll(e) {
-            // If moving finger inside text box, it's scrolling, cancel hold
             if(e.target.closest('#ai-response')) {
                 isScrolling = true;
                 if(holdTimeout) clearTimeout(holdTimeout);
@@ -753,11 +761,9 @@
         }
 
         function endHold(e){
-            // If we weren't scrolling, do the hold logic
             if(!e.target.closest('#ai-response')) {
                 e.preventDefault();
             }
-            
             isHolding=false;
             if(holdTimeout)clearTimeout(holdTimeout);
             
