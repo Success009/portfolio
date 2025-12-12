@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Watch - Optimized AI</title>
+    <title>Smart Watch - Accurate BS Date</title>
     <style>
         :root {
             --transition-speed: 0.6s;
@@ -14,9 +14,9 @@
         
         /* UI ELEMENTS */
         #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);font-weight:300;transition:transform var(--transition-speed) var(--transition-curve)}
-        #date{font-size:0.9rem;opacity:0.8;color:#888;font-weight:300;position:absolute;top:32%;left:50%;transform:translateX(-50%);transition:opacity 0.3s ease, transform var(--transition-speed) var(--transition-curve);letter-spacing:1px}
+        #date{font-size:0.9rem;opacity:0.8;color:#888;font-weight:300;position:absolute;top:32%;left:50%;transform:translateX(-50%);transition:opacity 0.3s ease, transform var(--transition-speed) var(--transition-curve);letter-spacing:1px;text-transform: uppercase;}
         #date-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity 0.3s ease}
-        #date-svg text{font-family:'Segoe UI',Arial,sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888}
+        #date-svg text{font-family:'Segoe UI',Arial,sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888;text-transform: uppercase;}
         
         /* INDICATORS */
         #battery{position:absolute;font-size:0.8rem;color:#00ff88;opacity:0.7;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);}
@@ -31,17 +31,50 @@
         .watch-container:not(.circular-view) #model-indicator { top: 92%; left: 85%; }
         .watch-container.circular-view #model-indicator { top: 85%; left: 50%; }
 
-        /* DISPLAYS - CHANGED font-size here from 1rem to 1.2rem */
-        #ai-response{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%) scale(0.95);width:85%;text-align:center;font-size:1.2rem;line-height:1.3;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;word-wrap:break-word;max-height:60%;overflow-y:auto;color:#fff;z-index:10;background:rgba(10,10,10,0.5);border-radius:15px;padding:10px;box-sizing:border-box}
+        /* DISPLAYS */
+        /* Enable Touch Scrolling here */
+        #ai-response{
+            position:absolute;
+            top:55%;
+            left:50%;
+            transform:translate(-50%,-50%) scale(0.95);
+            width:85%;
+            text-align:center;
+            font-size:1.2rem;
+            line-height:1.3;
+            opacity:0;
+            visibility:hidden;
+            transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;
+            word-wrap:break-word;
+            max-height:60%;
+            overflow-y:auto; /* Native Scroll */
+            color:#fff;
+            z-index:10;
+            background:rgba(10,10,10,0.5);
+            border-radius:15px;
+            padding:10px;
+            box-sizing:border-box;
+            
+            /* Ensure touches work */
+            pointer-events: auto; 
+            touch-action: pan-y; /* Allow vertical scroll */
+        }
         
+        #ai-response b, #ai-response strong { color: #00ff88; font-weight: 700; text-shadow: 0 0 5px rgba(0,255,136,0.3); }
+        #ai-response ul { text-align: left; padding-left: 15px; margin: 5px 0; }
+        #ai-response li { margin-bottom: 3px; }
+        #ai-response br { display: block; margin: 5px 0; }
+
+        /* Grounding Tag */
+        .grounding-tag { display: inline-block; font-size: 0.6rem; background: rgba(66, 133, 244, 0.2); color: #8ab4f8; padding: 2px 6px; border-radius: 10px; margin-top: 8px; border: 1px solid rgba(66, 133, 244, 0.4); }
+
         #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
         .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
         
-        .model-list { text-align: left; font-size: 0.8rem; padding: 5px; }
-        .model-list .current { color: #00ff88; font-weight: bold; }
+        /* Clean List Styles */
+        .simple-list { text-align: center; font-size: 0.85rem; line-height: 1.6; color: #ddd; }
 
-        /* STATES */
         .watch-container.ai-visible #clock, .watch-container.map-visible #clock {transform:translateY(-120px) scale(0.5)}
         .watch-container.ai-visible #date, .watch-container.map-visible #date, .watch-container.ai-visible #date-svg, .watch-container.map-visible #date-svg {opacity:0;transform:translateY(-120px)}
         .watch-container.ai-visible #battery, .watch-container.map-visible #battery,
@@ -87,9 +120,6 @@
         <div id="model-indicator">M1</div>
     </div>
 
-    <!-- ======================================================= -->
-    <!--           FIREBASE & KEY MANAGEMENT (MODULE)            -->
-    <!-- ======================================================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -114,10 +144,8 @@
                 if (snapshot.exists()) {
                     const keys = snapshot.val();
                     window.globalApiKeys = keys; 
-                    console.log(`🔥 Firebase: Loaded ${keys.length} API keys from database.`);
                     window.dispatchEvent(new Event('keysLoaded'));
                 } else {
-                    console.error("🔥 Firebase: No keys found in 'api_keys' node.");
                     window.dispatchEvent(new Event('keysMissing'));
                 }
             } catch (error) {
@@ -127,32 +155,47 @@
         fetchApiKeys();
     </script>
 
-    <!-- ======================================================= -->
-    <!--                 MAIN APPLICATION LOGIC                  -->
-    <!-- ======================================================= -->
     <script>
+        // --- ACTIVATION CODES LIST ---
+        const FUNCTIONS_LIST_HTML = `
+        <div class="simple-list">
+            LISTEN [Question]<br>
+            CONTEXT [0-9]<br>
+            SIZE [1-9]<br>
+            ANSWER LENGTH [SHORT/LONG] QUESTION<br>
+            SELECT MODEL [1-5]<br>
+            DISPLAY MODELS<br>
+            REMEMBER [Text]<br>
+            CLEAR MEMORY<br>
+            DISPLAY FUNCTIONS<br>
+            DISPLAY VIEW CHANGE<br>
+            ZOOM [IN/OUT]<br>
+            SCROLL [UP/DOWN]<br>
+            DISPLAY MAP<br>
+            SPELLING OF [Word]<br>
+            DISPLAY ANSWER<br>
+            PREVIOUS ANSWER<br>
+            NEXT ANSWER
+        </div>`;
+
         // --- State Variables ---
         let apiKeys = []; 
-        
-        let currentMode='nepali'; 
+        let currentMode='english'; 
+        let fullConversationHistory = []; 
+        let contextLevel = 1; 
         
         let sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=0,isCircularView=false;
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
-        // CHANGED: Base font size from 1.0 to 1.2
-        let aiResponseFontSize = 1.2;
+        let aiResponseFontSize = 1.2; 
         let wakeLock = null;
         let keysReady = false;
-        
-        // Default answer length
         let responseLength = "concise"; 
-
-        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel'),dateSvgTextPath=document.querySelector("#date-svg textPath");
         
+        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel'),dateSvgTextPath=document.querySelector("#date-svg textPath");
         let currentApiKeyIndex = 0;
 
-        // --- UPDATED AI MODELS ---
         const aiModels = [
             { name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', indicator: 'M1' },
             { name: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Lite', indicator: 'M2' },
@@ -161,25 +204,94 @@
             { name: 'gemini-3-pro-image-preview', displayName: 'Gemini 3 Pro', indicator: 'M5' }
         ];
 
+        const wordToNumber = {
+            'zero':0, 'one':1, 'two':2, 'three':3, 'four':4, 'five':5,
+            'six':6, 'seven':7, 'eight':8, 'nine':9,
+            '0':0, '1':1, '2':2, '3':3, '4':4, '5':5,
+            '6':6, '7':7, '8':8, '9':9
+        };
+
         window.addEventListener('keysLoaded', () => {
             apiKeys = window.globalApiKeys;
             keysReady = true;
             statusDot.classList.remove('loading-keys');
+            const savedHistory = localStorage.getItem('smartwatch_full_history');
+            if(savedHistory) {
+                fullConversationHistory = JSON.parse(savedHistory);
+            }
             console.log("✅ App: System ready. Default: Gemini 2.5 Flash");
         });
 
         window.addEventListener('keysMissing', () => {
             statusDot.classList.remove('loading-keys');
             statusDot.style.background = 'red';
-            displayResponse("Error: No API Keys found in database.", false);
+            displayResponse("Error: No API Keys.", false);
         });
+
+        function parseMarkdown(text) {
+            if(!text) return "";
+            let html = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            html = html.replace(/\*(.*?)\*/g, '<b>$1</b>');
+            html = html.replace(/^[\*\-]\s+(.*)$/gm, '<li>$1</li>');
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
+
+        // --- ACCURATE AD TO BS DATE CONVERTER ---
+        function getAccurateNepaliDate() {
+            // Reference: Baisakh 1, 2081 BS = April 13, 2024 AD
+            const refEngYear = 2024;
+            const refEngMonth = 3; // April (0-index)
+            const refEngDay = 13;
+            
+            const refBsYear = 2081;
+            const refBsMonth = 0; // Baisakh (0-index)
+            const refBsDay = 1;
+
+            // Days in each month for 2081 BS (Source: Hamro Patro)
+            // Baisakh, Jestha, Ashadh, Shrawan, Bhadra, Ashwin, Kartik, Mangsir, Poush, Magh, Falgun, Chaitra
+            const daysInMonth2081 = [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31];
+            // Days in each month for 2082 BS (Projected)
+            const daysInMonth2082 = [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 30, 30]; 
+
+            const bsMonths = ["BAISAKH", "JESTHA", "ASHADH", "SHRAWAN", "BHADRA", "ASHWIN", "KARTIK", "MANGSIR", "POUSH", "MAGH", "FALGUN", "CHAITRA"];
+
+            const now = new Date();
+            const refDate = new Date(refEngYear, refEngMonth, refEngDay);
+            
+            // Calculate difference in days
+            const diffTime = now.getTime() - refDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            let currentBsYear = refBsYear;
+            let currentBsMonth = refBsMonth;
+            let currentBsDay = refBsDay + diffDays;
+
+            // Determine which array to use based on year
+            let currentMonthData = daysInMonth2081;
+
+            // Roll forward dates
+            while (currentBsDay > currentMonthData[currentBsMonth]) {
+                currentBsDay -= currentMonthData[currentBsMonth];
+                currentBsMonth++;
+                if (currentBsMonth > 11) {
+                    currentBsMonth = 0;
+                    currentBsYear++;
+                    // Switch to 2082 data if year increments
+                    if(currentBsYear === 2082) currentMonthData = daysInMonth2082;
+                }
+            }
+
+            return `${bsMonths[currentBsMonth]} ${currentBsDay}`;
+        }
 
         function updateTime() {
             const now = new Date();
-            clock.textContent = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-            const dateString = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
-            date.textContent = dateString;
-            if(dateSvgTextPath) dateSvgTextPath.textContent = dateString;
+            clock.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit' }).replace(" AM","").replace(" PM","");
+            
+            const nepaliDateStr = getAccurateNepaliDate();
+            date.textContent = nepaliDateStr;
+            if(dateSvgTextPath) dateSvgTextPath.textContent = nepaliDateStr;
         }
 
         async function requestWakeLock() {
@@ -198,7 +310,8 @@
                 if (answerHistory.length > 20) answerHistory.pop();
                 currentHistoryIndex = 0;
             }
-            aiResponse.innerHTML = text;
+            aiResponse.innerHTML = parseMarkdown(text);
+            aiResponse.style.fontSize = `${aiResponseFontSize}rem`;
             watchContainer.classList.add('ai-visible');
             aiResponse.scrollTop = 0;
         }
@@ -222,7 +335,7 @@
             updateTime();
             const confirmationMessage = isCircularView ? "Circular view activated." : "Default view restored.";
             displayResponse(confirmationMessage, false);
-            setTimeout(() => { if (aiResponse.innerHTML === confirmationMessage) hideResponse(); }, 1500);
+            setTimeout(() => { if (aiResponse.innerHTML.includes(confirmationMessage)) hideResponse(); }, 1500);
         }
 
         function loadPreferences(){
@@ -251,7 +364,7 @@
             if(!apiKeys || apiKeys.length === 0) return;
             const message=`API Changed (${currentApiKeyIndex+1}/${apiKeys.length})`;
             displayResponse(message,false);
-            setTimeout(()=>{if(aiResponse.innerHTML===message){hideResponse()}},2000);
+            setTimeout(()=>{if(aiResponse.innerHTML.includes(message)){hideResponse()}},2000);
         }
 
         function showModelChangeNotification(){
@@ -259,17 +372,16 @@
             const modelName=aiModels[currentModelIndex].displayName;
             const message=`Model Changed: ${modelName}`;
             displayResponse(message,false);
-            setTimeout(()=>{statusDot.className=micActive?'status-dot active':'status-dot';if(aiResponse.innerHTML===message){hideResponse()}},2500);
+            setTimeout(()=>{statusDot.className=micActive?'status-dot active':'status-dot';if(aiResponse.innerHTML.includes(message)){hideResponse()}},2500);
         }
 
         function displayModels(){
             let modelList='';
             aiModels.forEach((model,index)=>{
-                const isCurrent=index===currentModelIndex;
-                const prefix=isCurrent?`<span class="current">${index+1}. ${model.displayName}</span>`:`${index+1}. ${model.displayName}`;
+                const prefix=`${index+1}. ${model.displayName}`;
                 modelList+=prefix+'<br>';
             });
-            displayResponse(`<div class="model-list">${modelList}</div>`);
+            displayResponse(`<div class="simple-list">${modelList}</div>`);
         }
 
         function selectModel(modelNumber){
@@ -279,7 +391,6 @@
                 updateModelIndicator();
                 savePreferences();
                 showModelChangeNotification();
-                console.log(`🤖 Model changed to: ${aiModels[currentModelIndex].displayName}`);
             }
         }
         
@@ -297,18 +408,39 @@
                 statusDot.className=micActive?'status-dot active':'status-dot';
                 if(recognition){
                     recognition.stop();
-                    setTimeout(()=>{if(micActive)initSpeechRecognition()},500);
                 }
             },600);
         }
         
-        // Simplified Request Function
+        function setTextSize(level) {
+            if(level < 1) level = 1;
+            if(level > 9) level = 9;
+            const sizeMap = { 1: 0.6, 2: 0.75, 3: 0.9, 4: 1.05, 5: 1.2, 6: 1.4, 7: 1.6, 8: 1.8, 9: 2.0 };
+            aiResponseFontSize = sizeMap[level];
+            aiResponse.style.fontSize = `${aiResponseFontSize}rem`;
+            displayResponse(`Size: ${level}`, false);
+            setTimeout(() => { if(aiResponse.innerHTML.includes(`Size: ${level}`)) hideResponse(); }, 1000);
+        }
+        
+        function setContextLevel(level) {
+            if(level < 0) level = 0;
+            if(level > 9) level = 9;
+            contextLevel = level;
+            displayResponse(`Context: ${level}`, false);
+            setTimeout(() => { if(aiResponse.innerHTML.includes(`Context: ${level}`)) hideResponse(); }, 1000);
+        }
+
         async function fetchGenerateContent(modelName, apiKey, fullQuery, signal) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const requestBody = {
+                contents: [{parts: [{text: fullQuery}]}],
+                tools: [{ googleSearch: {} }]
+            };
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({contents: [{parts: [{text: fullQuery}]}]}),
+                body: JSON.stringify(requestBody),
                 signal: signal
             });
             return response;
@@ -316,29 +448,39 @@
 
         async function getAIResponse(question, language){
             if(!keysReady || apiKeys.length === 0) {
-                return "Connecting to database... please wait.";
+                return "Connecting to database...";
             }
 
-            // --- OPTIMIZED PROMPT ---
-            const mem = sharedMemory.length>0 ? `Ctx:${sharedMemory.join('|')}` : "";
-            const langInstr = language==='nepali' ? "Nepali" : "English";
+            const mem = sharedMemory.length>0 ? `Permanent Memory:${sharedMemory.join('|')}` : "";
             
-            const fullQuery = `System:Nepal Class 10 context.
-            General: Your creator/owner is success adhikari. He is 17. lives in Nepal, Chitan Bharatpur. He is a programmer.(Don't reveal all at once)
+            let historyText = "";
+            if(contextLevel > 0 && fullConversationHistory.length > 0) {
+                const sliceStart = Math.max(0, fullConversationHistory.length - contextLevel);
+                const recentHistory = fullConversationHistory.slice(sliceStart);
+                historyText = "Recent History:\n";
+                recentHistory.forEach((item, i) => {
+                    historyText += `Q:${item.q} A:${item.a}\n`;
+                });
+            }
+
+            const langInstr = language==='nepali' ? "Nepali" : "English";
+            const currentTime = new Date().toString();
+
+            const fullQuery = `System:Nepal Class 10 context. CurrentTime:${currentTime}.
             Rules:
             1.Lang:${langInstr}.
-            2.Length of answer:${responseLength}.
-            3.Scope:Prioritize Nepal Class 10 curriculum. If specific book content unknown, PROVIDE CORRECT GENERAL ANSWER. Do not refuse.
-            4.Grammar:Output transformed sentence only.
-            5.Date:Search/Verify.
-            Your memory:${mem}
-            Q:${question}`;
+            2.Length:${responseLength}.
+            3.Format: USE MARKDOWN (bold **text**, lists - item).
+            4.Scope: Class 10 Nepal. If specific book unknown, use General Knowledge/Search.
+            5.Search: Use Google Search tool for Dates, Events, and Facts.
+            ${mem}
+            ${historyText}
+            Current Question:${question}`;
 
             let attempts = 0;
             const maxAttempts = apiKeys.length;
             if(currentApiKeyIndex >= apiKeys.length) currentApiKeyIndex = 0;
             
-            // Loop for key rotation ONLY (No model fallback)
             while(attempts < maxAttempts) {
                 try {
                     apiAbortController = new AbortController();
@@ -356,24 +498,40 @@
                     }
 
                     const data = await response.json();
-                    if(!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                        return "Model returned no content (Check Safety Settings).";
+                    let answerText = "";
+                    let isGrounded = false;
+
+                    if(data.candidates && data.candidates[0]) {
+                        if(data.candidates[0].content) {
+                            answerText = data.candidates[0].content.parts[0].text.trim();
+                        }
+                        if(data.candidates[0].groundingMetadata && data.candidates[0].groundingMetadata.searchEntryPoint) {
+                            isGrounded = true;
+                        }
+                    } else {
+                        return "No content returned.";
                     }
-                    return data.candidates[0].content.parts[0].text.trim();
+
+                    fullConversationHistory.push({ q: question, a: answerText });
+                    if(fullConversationHistory.length > 50) fullConversationHistory.shift();
+                    localStorage.setItem('smartwatch_full_history', JSON.stringify(fullConversationHistory));
+
+                    if(isGrounded) {
+                        answerText += '<br><span class="grounding-tag">🔍 Search</span>';
+                    }
+
+                    return answerText;
 
                 } catch (error) {
                     if(error.name === 'AbortError') return null;
                     console.log(`❌ Attempt failed: ${error.message}`);
-                    
-                    // Rotate Key only
                     currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
                     savePreferences();
                     attempts++;
-                    if (attempts < maxAttempts) console.log(`🔄 Switching API Key...`);
                 }
             }
 
-            return "Service unavailable (Rate Limit / Quota Exceeded).";
+            return "Service unavailable (Quota Exceeded).";
         }
         
         function displayAnswerFromHistory(index){
@@ -428,7 +586,7 @@
         function toggleMic(){
             if(isProcessing)return;
             if(!keysReady) {
-                displayResponse("Loading Database Keys...");
+                displayResponse("Loading Keys...");
                 setTimeout(hideResponse, 1500);
                 return;
             }
@@ -446,7 +604,31 @@
         function checkVoiceCommands(transcript){
             const lowerTranscript=transcript.toLowerCase();
             
-            // --- NEW LENGTH COMMANDS ---
+            if(lowerTranscript.includes("display functions")) {
+                displayResponse(FUNCTIONS_LIST_HTML, false);
+                return true;
+            }
+
+            const contextMatch = lowerTranscript.match(/context\s+(\w+|\d+)/);
+            if (contextMatch) {
+                const value = contextMatch[1];
+                const number = wordToNumber[value];
+                if (number !== undefined) {
+                    setContextLevel(number);
+                    return true;
+                }
+            }
+
+            const sizeMatch = lowerTranscript.match(/size\s+(\w+|\d+)/);
+            if (sizeMatch) {
+                const value = sizeMatch[1];
+                const number = wordToNumber[value];
+                if (number) {
+                    setTextSize(number);
+                    return true;
+                }
+            }
+
             if(lowerTranscript.includes("answer length")) {
                 if(lowerTranscript.includes("very short question")) {
                     responseLength = "max 1 sentence";
@@ -482,89 +664,126 @@
 
         function initSpeechRecognition(){
             if(!micActive||!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
-            recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
-            recognition.continuous=true;
-            recognition.interimResults=false;
             
-            // Ensure default lang is based on currentMode (now defaults to nepali)
-            recognition.lang=currentMode==='nepali'?'ne-NP':'en-US';
+            recognition = new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+            recognition.continuous = true; 
+            recognition.interimResults = false;
+            recognition.lang = currentMode==='nepali'?'ne-NP':'en-US';
             
-            recognition.onstart=()=>updateStatus('listening');
-            recognition.onresult=(event)=>{
-                const transcript=event.results[event.results.length-1][0].transcript.trim();
-                isProcessing=true;
+            recognition.onstart = () => {
+                updateStatus('listening');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length-1][0].transcript.trim();
+                isProcessing = true;
                 updateStatus('heard');
+                
                 setTimeout(async()=>{
-                    if(!isProcessing)return;
+                    if(!isProcessing) return;
                     if(checkVoiceCommands(transcript)){
+                        isProcessing = false;
+                        updateStatus('active');
+                        return;
+                    }
+                    
+                    let question='';
+                    if(currentMode==='nepali' && transcript.includes('मलाई भन')){
+                        question = transcript.replace(/मलाई भन/gi,'').trim();
+                    } else if(transcript.toLowerCase().startsWith('listen')){
+                        question = transcript.substring('listen'.length).trim();
+                    }
+                    
+                    if(question){
+                        const answer = await getAIResponse(question, currentMode);
+                        if(answer !== null) displayResponse(answer);
+                    }
+                    isProcessing = false;
+                    updateStatus('active');
+                }, 400);
+            };
+            
+            recognition.onerror = (e) => {
+                isProcessing = false;
+            };
+            
+            recognition.onend = () => {
+                if(micActive && !isHolding){
+                    setTimeout(() => {
+                        if(micActive && !isProcessing) {
+                            try { recognition.start(); } catch(e) { }
+                        }
+                    }, 200);
+                } else {
+                    updateStatus('');
+                }
+            };
+            
+            try { recognition.start(); } catch(e) { }
+        }
+        
+        mapDisplay.addEventListener('click', hideMap);
+        
+        // --- IMPROVED TOUCH HANDLING FOR SCROLLING ---
+        let touchStartTime = 0;
+        let isScrolling = false;
+
+        function startHold(e){
+            // If checking the text box, allow scrolling
+            if(e.target.closest('#ai-response')) {
+                isScrolling = false;
+                // DO NOT prevent default here so scroll works
+            } else {
+                e.preventDefault();
+            }
+            
+            isHolding=true;
+            touchStartTime=Date.now();
+            holdTimeout=setTimeout(()=>{
+                if(isHolding && !isScrolling) switchMode();
+            },5000);
+        }
+
+        function checkScroll(e) {
+            // If moving finger inside text box, it's scrolling, cancel hold
+            if(e.target.closest('#ai-response')) {
+                isScrolling = true;
+                if(holdTimeout) clearTimeout(holdTimeout);
+            }
+        }
+
+        function endHold(e){
+            // If we weren't scrolling, do the hold logic
+            if(!e.target.closest('#ai-response')) {
+                e.preventDefault();
+            }
+            
+            isHolding=false;
+            if(holdTimeout)clearTimeout(holdTimeout);
+            
+            if(!isScrolling) {
+                const holdDuration=Date.now()-touchStartTime;
+                if(holdDuration<500){
+                    if(isProcessing){
+                        if(apiAbortController)apiAbortController.abort();
                         isProcessing=false;
                         updateStatus(micActive?'active':'');
                         return;
                     }
-                    let question='';
-                    
-                    if(currentMode==='nepali'&&transcript.includes('मलाई भन')){
-                        question=transcript.replace(/मलाई भन/gi,'').trim();
-                    }else if(transcript.toLowerCase().startsWith('listen')){
-                        question=transcript.substring('listen'.length).trim();
+                    if(watchContainer.classList.contains('ai-visible')){
+                        hideResponse();
+                    }else if(watchContainer.classList.contains('map-visible')){
+                        hideMap();
+                    }else{
+                        toggleMic();
                     }
-                    
-                    if(question){
-                        const answer=await getAIResponse(question,currentMode);
-                        if(answer!==null)displayResponse(answer);
-                    }
-                    isProcessing=false;
-                    updateStatus(micActive?'active':'');
-                },400);
-            };
-            recognition.onerror=()=>{
-                isProcessing=false;
-                updateStatus(micActive?'active':'');
-            };
-            recognition.onend=()=>{
-                if(micActive&&!isHolding){
-                    setTimeout(()=>{
-                        if(micActive&&!isProcessing)try{recognition.start()}catch(e){}
-                    },500);
-                }else{
-                    updateStatus(micActive?'active':'');
-                }
-            };
-            try{recognition.start()}catch(e){}
-        }
-        
-        mapDisplay.addEventListener('click', hideMap);
-        let touchStartTime=0;
-        function startHold(e){
-            e.preventDefault();
-            isHolding=true;
-            touchStartTime=Date.now();
-            holdTimeout=setTimeout(()=>{
-                if(isHolding)switchMode();
-            },5000);
-        }
-        function endHold(e){
-            e.preventDefault();
-            isHolding=false;
-            if(holdTimeout)clearTimeout(holdTimeout);
-            const holdDuration=Date.now()-touchStartTime;
-            if(holdDuration<500){
-                if(isProcessing){
-                    if(apiAbortController)apiAbortController.abort();
-                    isProcessing=false;
-                    updateStatus(micActive?'active':'');
-                    return;
-                }
-                if(watchContainer.classList.contains('ai-visible')){
-                    hideResponse();
-                }else if(watchContainer.classList.contains('map-visible')){
-                    hideMap();
-                }else{
-                    toggleMic();
                 }
             }
+            isScrolling = false;
         }
+
         watchContainer.addEventListener('touchstart',startHold,{passive:false});
+        watchContainer.addEventListener('touchmove',checkScroll,{passive:false});
         watchContainer.addEventListener('touchend',endHold,{passive:false});
         watchContainer.addEventListener('touchcancel',endHold,{passive:false});
         watchContainer.addEventListener('mousedown',startHold);
