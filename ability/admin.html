@@ -121,9 +121,9 @@
             rules: db.ref('Ability/rules'), announcements: db.ref('Ability/announcements')
         };
         
-        // TEMPLATE FIX: Changed howToUse to skills for abilities
+        // TEMPLATE: Cleaned up. No skills or restrictions for abilities.
         const templates = {
-            abilities: { id: 0, name: '', color: '#2ecc71', type: '', description: '', details: '', skills: [], restrictions: '' },
+            abilities: { id: 0, name: '', color: '#2ecc71', type: '', description: '', details: '' },
             subAbilities: { id: 0, name: '', color: '#3498db', type: '', rarity: '', description: '', skills: [], drawbacks: [] },
             rules: { order: 0, title: '', description: '' },
             announcements: { title: '', content: '' }
@@ -177,26 +177,29 @@
         const generateForm = (item) => {
             const form = document.getElementById('modal-form');
             form.innerHTML = '';
+            
+            // Uses the clean template, so old database fields (like skills/restrictions) won't show up in the form
             const fullItem = { ...templates[item.formType], ...item };
+            const templateKeys = Object.keys(templates[item.formType]);
 
-            for(const key in fullItem) {
+            for(const key of templateKeys) {
                 if (key === 'formType') continue;
+                
                 const value = fullItem[key];
                 const label = `<label for="form-${key}">${formatTitle(key)}</label>`;
                 let inputHtml;
-                const valueIsArray = Array.isArray(value);
-                const valueIsStringButShouldBeArray = !valueIsArray && Array.isArray(templates[item.formType][key]);
+                const templateValueIsArray = Array.isArray(templates[item.formType][key]);
 
                 if (key === 'content') {
                     inputHtml = `<textarea id="editor-content" name="content">${value}</textarea>`;
                 } else if (key === 'color') {
                     inputHtml = `<input type="color" id="form-${key}" name="${key}" value="${value}">`;
-                } else if (valueIsArray || valueIsStringButShouldBeArray) { // Check if it IS an array or SHOULD BE an array
-                    const textValue = valueIsArray ? value.join('\n') : (value || '');
+                } else if (templateValueIsArray) {
+                    const textValue = Array.isArray(value) ? value.join('\n') : (value || '');
                     inputHtml = `<textarea id="form-${key}" name="${key}" placeholder="Enter each item on a new line">${textValue}</textarea>`;
                 } else if (typeof value === 'string' && (value.length > 100 || ['description', 'details'].includes(key))) {
                     inputHtml = `<textarea id="form-${key}" name="${key}">${value}</textarea>`;
-                } else if (typeof value === 'number') {
+                } else if (typeof templates[item.formType][key] === 'number') {
                     inputHtml = `<input type="number" id="form-${key}" name="${key}" value="${value}">`;
                 } else {
                     inputHtml = `<input type="text" id="form-${key}" name="${key}" value="${value || ''}">`;
@@ -232,7 +235,6 @@
             });
         };
         
-        // SMARTER SAVE FUNCTION
         const saveItem = (type, key) => {
             const form = document.getElementById('modal-form');
             const formData = new FormData(form);
@@ -242,17 +244,17 @@
             for (const [fieldName, value] of formData.entries()) {
                 if(fieldName === 'content' && currentEditor) continue;
                 
-                const originalValue = currentlyEditingItem ? currentlyEditingItem[fieldName] : undefined;
                 const templateValue = templates[type][fieldName];
 
-                if (Array.isArray(originalValue) || Array.isArray(templateValue)) {
+                if (Array.isArray(templateValue)) {
                     data[fieldName] = value.split('\n').filter(line => line.trim() !== '');
-                } else if (typeof originalValue === 'number' || typeof templateValue === 'number') {
+                } else if (typeof templateValue === 'number') {
                     data[fieldName] = Number(value);
                 } else {
                     data[fieldName] = value;
                 }
             }
+
             if (type === 'announcements' && !key) data.timestamp = Date.now();
             const operation = key ? refs[type].child(key).update(data) : refs[type].push(data);
             operation.then(closeModal).catch(err => console.error(err));
