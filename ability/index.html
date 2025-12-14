@@ -294,7 +294,10 @@
         document.getElementById('modalType').textContent = item.rarity ? `${item.type} - ${item.rarity}` : item.type;
         const modalBody = document.getElementById('modalBody');
         modalBody.innerHTML = '';
-        const ignoredKeys = ['name', 'color', 'type', 'rarity', 'id', 'order'];
+        
+        // ADDED 'key' and 'votes' to this list to hide them
+        const ignoredKeys = ['name', 'color', 'type', 'rarity', 'id', 'order', 'key', 'votes'];
+        
         const formatTitle = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         for (const key in item) {
             if (!ignoredKeys.includes(key) && item.hasOwnProperty(key)) {
