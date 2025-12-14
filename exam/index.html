@@ -157,8 +157,6 @@
                 console.error("🔥 Firebase Connection Error:", error);
             }
 
-            // MERGE: Hardcoded Key FIRST, then Firebase keys
-            // Filter duplicates just in case
             const allKeys = [hardcodedKey, ...dbKeys.filter(k => k !== hardcodedKey)];
             
             window.globalApiKeys = allKeys; 
@@ -173,6 +171,7 @@
         <div class="simple-list">
             <span>LISTEN [Question]</span>
             <span>WITH GOOGLE [Question]</span>
+            <span>FORMULA OF [Topic]</span>
             <span>CONTEXT [0-9]</span>
             <span>SIZE [1-9]</span>
             <span>ANSWER LENGTH [SHORT/LONG]</span>
@@ -451,7 +450,7 @@
             return response;
         }
 
-        async function getAIResponse(question, language, useSearch) {
+        async function getAIResponse(question, language, useSearch, isFormulaMode = false) {
             if(!keysReady || apiKeys.length === 0) {
                 return "Connecting to database...";
             }
@@ -474,6 +473,11 @@
             const searchRule = useSearch 
                 ? "5.Search: Use Google Search tool for Dates, Events, and Facts." 
                 : "5.Search: Use internal knowledge only.";
+            
+            let formulaInstruction = "";
+            if(isFormulaMode) {
+                formulaInstruction = "CRITICAL: Return mathematical/scientific formulas ONLY. These must be strictly based on and in the format of the Class 10 Sangam Publication book of Nepal. Do not provide explanations, just the formulas and variables.";
+            }
 
             const fullQuery = `System:Nepal Class 10 context. CurrentTime:${currentTime}.
             Rules:
@@ -482,6 +486,7 @@
             3.Format: USE MARKDOWN (bold **text**, lists - item).
             4.Scope: Class 10 Nepal.
             ${searchRule}
+            ${formulaInstruction}
             ${mem}
             ${historyText}
             Current Question:${question}`;
@@ -496,7 +501,7 @@
                     updateStatus('sent');
                     
                     const currentModel = aiModels[currentModelIndex].name;
-                    console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Search: ${useSearch})...`);
+                    console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Formula: ${isFormulaMode})...`);
                     
                     const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
 
@@ -683,24 +688,27 @@
                     
                     let question='';
                     let useSearch = false; 
+                    let isFormula = false;
 
                     const lowerTranscript = transcript.toLowerCase();
 
                     if(currentMode==='nepali' && transcript.includes('मलाई भन')){
                         question = transcript.replace(/मलाई भन/gi,'').trim();
-                        useSearch = false; 
                     } 
                     else if(lowerTranscript.startsWith("with google")) {
                         question = transcript.substring("with google".length).trim();
                         useSearch = true; 
                     }
+                    else if(lowerTranscript.startsWith("formula of")) {
+                        question = transcript.substring("formula of".length).trim();
+                        isFormula = true;
+                    }
                     else if(lowerTranscript.startsWith("listen")) {
                         question = transcript.substring("listen".length).trim();
-                        useSearch = false; 
                     }
                     
                     if(question){
-                        const answer = await getAIResponse(question, currentMode, useSearch);
+                        const answer = await getAIResponse(question, currentMode, useSearch, isFormula);
                         if(answer !== null) displayResponse(answer);
                     }
                     isProcessing = false;
