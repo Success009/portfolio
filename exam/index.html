@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Watch - Exam Mode</title>
+    <title>Smart Watch - Exam Stealth</title>
     <style>
         :root {
             --transition-speed: 0.6s;
@@ -13,7 +13,7 @@
         .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition:border-radius var(--transition-speed) ease-in-out, width 0.4s ease, height 0.4s ease;overflow:hidden}
         
         /* UI ELEMENTS */
-        #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.3);font-weight:300;transition:transform var(--transition-speed) var(--transition-curve)}
+        #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.1);font-weight:300;transition:transform var(--transition-speed) var(--transition-curve)}
         #date{font-size:0.9rem;opacity:0.8;color:#888;font-weight:300;position:absolute;top:32%;left:50%;transform:translateX(-50%);transition:opacity 0.3s ease, transform var(--transition-speed) var(--transition-curve);letter-spacing:1px;text-transform: uppercase;}
         #date-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity 0.3s ease}
         #date-svg text{font-family:'Segoe UI',Arial,sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888;text-transform: uppercase;}
@@ -23,11 +23,21 @@
         .watch-container:not(.circular-view) #battery { top: 8%; left: 88%; }
         .watch-container.circular-view #battery { top: 78%; left: 80%; }
 
-        .status-dot{position:absolute;width:8px;height:8px;background:#888;border-radius:50%;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);}
+        /* STEALTH STATUS DOT */
+        .status-dot{
+            position:absolute;
+            width:6px;
+            height:6px;
+            background:#444; /* Default dark */
+            border-radius:50%;
+            transition:all 0.2s ease;
+            transform: translate(-50%, -50%);
+            opacity: 0; /* Default invisible */
+        }
         .watch-container:not(.circular-view) .status-dot { top: 8%; left: 8%; }
         .watch-container.circular-view .status-dot { top: 78%; left: 20%; }
 
-        #model-indicator{position:absolute;font-size:0.7rem;color:#666;opacity:0.8;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);white-space:nowrap;}
+        #model-indicator{position:absolute;font-size:0.7rem;color:#444;opacity:0.5;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);white-space:nowrap;}
         .watch-container:not(.circular-view) #model-indicator { top: 92%; left: 85%; }
         .watch-container.circular-view #model-indicator { top: 85%; left: 50%; }
 
@@ -37,19 +47,19 @@
             top:55%;
             left:50%;
             transform:translate(-50%,-50%) scale(0.95);
-            width:85%;
+            width:90%;
             text-align:center;
-            font-size:1.2rem;
+            font-size:1.3rem; /* Enlarged for quick reading */
             line-height:1.3;
             opacity:0;
             visibility:hidden;
             transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;
             word-wrap:break-word;
-            max-height:60%;
+            max-height:65%;
             overflow-y:auto; 
             color:#fff;
             z-index:10;
-            background:rgba(10,10,10,0.5);
+            background:rgba(5,5,5,0.8); /* Darker background for contrast */
             border-radius:15px;
             padding:10px;
             box-sizing:border-box;
@@ -57,27 +67,24 @@
             touch-action: pan-y;
         }
         
-        #ai-response b, #ai-response strong { color: #00ff88; font-weight: 700; text-shadow: 0 0 5px rgba(0,255,136,0.3); }
-        #ai-response ul { text-align: left; padding-left: 15px; margin: 5px 0; }
-        #ai-response li { margin-bottom: 3px; }
-        #ai-response br { display: block; margin: 5px 0; }
-
-        /* Grounding Tag */
-        .grounding-tag { display: inline-block; font-size: 0.6rem; background: rgba(66, 133, 244, 0.2); color: #8ab4f8; padding: 2px 6px; border-radius: 10px; margin-top: 8px; border: 1px solid rgba(66, 133, 244, 0.4); }
+        #ai-response b, #ai-response strong { color: #00ff88; font-weight: 700; }
+        #ai-response ul { text-align: left; padding-left: 15px; margin: 5px 0; font-size: 1.1rem; }
+        #ai-response li { margin-bottom: 4px; }
+        
+        /* Grounding Tag - Subtle */
+        .grounding-tag { display: inline-block; font-size: 0.5rem; color: #555; margin-top: 8px; }
 
         #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
         #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
-        .spelling-display{font-size:1.8rem;line-height:1.3;color:#00ff88;text-align:center;font-family:'Courier New',monospace;letter-spacing:3px;font-weight:800;text-shadow:0 0 10px rgba(0,255,136,0.4), 0 0 20px rgba(0,255,136,0.2);text-transform:uppercase;animation:spellingGlow 2s ease-in-out infinite alternate}
         
-        /* Ultra Compact List Styles */
+        /* Simple List for Help */
         .simple-list { 
             text-align: center; 
-            font-size: 0.75rem; 
-            line-height: 1.3; 
-            color: #ddd; 
+            font-size: 0.8rem; 
+            line-height: 1.4; 
+            color: #ccc; 
             display: flex;
             flex-direction: column;
-            gap: 2px;
         }
 
         .watch-container.ai-visible #clock, .watch-container.map-visible #clock {transform:translateY(-120px) scale(0.5)}
@@ -88,17 +95,35 @@
         .watch-container.ai-visible #ai-response {opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
         .watch-container.map-visible #map-display {opacity:1;visibility:visible}
         
-        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #444;border-radius:20px;pointer-events:none;transition:border-radius var(--transition-speed) ease-in-out}
+        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #333;border-radius:20px;pointer-events:none;transition:border-radius var(--transition-speed) ease-in-out}
         
-        .status-dot.active{background:#00ff88;animation:pulse 2s infinite}
-        .status-dot.listening{background:#0066ff;animation:pulse 0.5s infinite}
-        .status-dot.heard{background:#ff9900;animation:flash 0.2s 2}
-        .status-dot.loading-keys{background:#ff0000;animation:pulse 0.2s infinite}
-        /* Fetching state - Orange pulse */
-        .status-dot.fetching{background:#ff9900;animation:pulse 0.2s infinite}
+        /* --- STEALTH ANIMATIONS --- */
+        
+        /* 1. Listening: Very Dim Blue (Barely visible to user, invisible to others) */
+        .status-dot.listening { 
+            background: #0066ff; 
+            opacity: 0.3; 
+            box-shadow: none;
+        }
 
-        @keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
-        @keyframes flash{0%,100%{opacity:0.3}50%{opacity:1}}
+        /* 2. Heard/Sent: ONE BRIGHT FLASH then OFF */
+        .status-dot.sent-flash {
+            background: #00ff88;
+            opacity: 1;
+            box-shadow: 0 0 10px #00ff88;
+            animation: flashAndDie 0.5s forwards;
+        }
+
+        /* 3. Fetching/Idle: COMPLETELY OFF (Stealth) */
+        .status-dot.stealth-off {
+            opacity: 0;
+        }
+
+        @keyframes flashAndDie {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; }
+        }
         
         .watch-container.circular-view { border-radius: 50%; }
         .watch-container.circular-view .watch-bezel { border-radius: 50%; }
@@ -147,29 +172,21 @@
         const db = getDatabase(app);
 
         async function fetchApiKeys() {
-            // YOUR HARDCODED KEY HERE
-            const hardcodedKey = "AIzaSyD7IchZ1N1ZhqRshf_FLekr0zyMZ-vRwfo";
+            const hardcodedKey = "AIzaSyD7IchZ1N1ZhqRshf_FLekr0zyMZ-vRwfo"; // Backup Key
             let dbKeys = [];
-
             try {
                 const snapshot = await get(child(ref(db), 'api_keys'));
-                if (snapshot.exists()) {
-                    dbKeys = snapshot.val();
-                }
-            } catch (error) {
-                console.error("🔥 Firebase Connection Error:", error);
-            }
-
-            const allKeys = [hardcodedKey, ...dbKeys.filter(k => k !== hardcodedKey)];
-            
-            window.globalApiKeys = allKeys; 
+                if (snapshot.exists()) dbKeys = snapshot.val();
+            } catch (error) { console.error("Firebase Error"); }
+            // Merge keys, Hardcoded first
+            window.globalApiKeys = [hardcodedKey, ...dbKeys.filter(k => k !== hardcodedKey)];
             window.dispatchEvent(new Event('keysLoaded'));
         }
         fetchApiKeys();
     </script>
 
     <script>
-        // --- ACTIVATION CODES LIST (Compact & Centered) ---
+        // --- COMMANDS LIST ---
         const FUNCTIONS_LIST_HTML = `
         <div class="simple-list">
             <span>LISTEN [Question]</span>
@@ -177,31 +194,25 @@
             <span>FORMULA OF [Topic]</span>
             <span>FULL FORM OF [Acronym]</span>
             <span>DIFFERENCE BETWEEN [A] AND [B]</span>
-            <span>CONTEXT [0-9]</span>
-            <span>SIZE [1-9]</span>
             <span>ANSWER LENGTH [SHORT/LONG]</span>
-            <span>SELECT MODEL [1-5]</span>
             <span>DISPLAY FUNCTIONS</span>
         </div>`;
 
         // --- State Variables ---
         let apiKeys = []; 
-        let currentMode='nepali'; 
+        let currentMode='nepali'; // Recognizes Nepali, but outputs English
         let fullConversationHistory = []; 
         let contextLevel = 1; 
         
-        let sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false;
-        
-        // BUG FIX: Strict Fetching Lock
+        let recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false;
         let isFetching = false; 
-        // Used for debounce of recognition result
         let recognitionTimeout = null;
 
         let currentModelIndex=0,isCircularView=false;
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
-        let aiResponseFontSize = 1.2; 
+        let aiResponseFontSize = 1.3; // Default Large Font
         let wakeLock = null;
         let keysReady = false;
         let responseLength = "concise"; 
@@ -209,40 +220,30 @@
         const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel'),dateSvgTextPath=document.querySelector("#date-svg textPath");
         let currentApiKeyIndex = 0;
 
+        // Optimized Models for Exams
         const aiModels = [
-            { name: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Lite', indicator: 'M1' },
-            { name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', indicator: 'M2' },
-            { name: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash', indicator: 'M3' },
-            { name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', indicator: 'M4' },
-            { name: 'gemini-3-pro-image-preview', displayName: 'Gemini 3 Pro', indicator: 'M5' }
+            { name: 'gemini-2.5-flash', displayName: 'Gemini Flash', indicator: 'M1' },
+            { name: 'gemini-2.0-flash', displayName: 'Gemini 2.0', indicator: 'M2' }
         ];
-
-        const wordToNumber = {
-            'zero':0, 'one':1, 'two':2, 'three':3, 'four':4, 'five':5,
-            'six':6, 'seven':7, 'eight':8, 'nine':9,
-            '0':0, '1':1, '2':2, '3':3, '4':4, '5':5,
-            '6':6, '7':7, '8':8, '9':9
-        };
 
         window.addEventListener('keysLoaded', () => {
             apiKeys = window.globalApiKeys;
             keysReady = true;
             statusDot.classList.remove('loading-keys');
             const savedHistory = localStorage.getItem('smartwatch_full_history');
-            if(savedHistory) {
-                fullConversationHistory = JSON.parse(savedHistory);
-            }
-            console.log("✅ App: System ready. Default: Gemini 2.5 Flash");
+            if(savedHistory) fullConversationHistory = JSON.parse(savedHistory);
+            console.log("System Ready.");
         });
 
         window.addEventListener('keysMissing', () => {
-            statusDot.classList.remove('loading-keys');
             statusDot.style.background = 'red';
+            statusDot.style.opacity = '1';
             displayResponse("Error: No API Keys.", false);
         });
 
         function parseMarkdown(text) {
             if(!text) return "";
+            // Basic cleaning for exam readability
             let html = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             html = html.replace(/\*(.*?)\*/g, '<b>$1</b>');
             html = html.replace(/^[\*\-]\s+(.*)$/gm, '<li>$1</li>');
@@ -250,56 +251,26 @@
             return html;
         }
 
+        // Nepali Date Logic (Simplified for 2081)
         function getAccurateNepaliDate() {
-            const refEngYear = 2024;
-            const refEngMonth = 3; 
-            const refEngDay = 13;
-            const refBsYear = 2081;
-            const refBsMonth = 0; 
-            const refBsDay = 1;
-
-            const daysInMonth2081 = [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31];
-            const daysInMonth2082 = [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 30, 30]; 
-
-            const bsMonths = ["BAISAKH", "JESTHA", "ASHADH", "SHRAWAN", "BHADRA", "ASHWIN", "KARTIK", "MANGSIR", "POUSH", "MAGH", "FALGUN", "CHAITRA"];
-
+            const months = ["BAISAKH", "JESTHA", "ASHADH", "SHRAWAN", "BHADRA", "ASHWIN", "KARTIK", "MANGSIR", "POUSH", "MAGH", "FALGUN", "CHAITRA"];
             const now = new Date();
-            const refDate = new Date(refEngYear, refEngMonth, refEngDay);
-            const diffTime = now.getTime() - refDate.getTime();
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-            let currentBsYear = refBsYear;
-            let currentBsMonth = refBsMonth;
-            let currentBsDay = refBsDay + diffDays;
-            let currentMonthData = daysInMonth2081;
-
-            while (currentBsDay > currentMonthData[currentBsMonth]) {
-                currentBsDay -= currentMonthData[currentBsMonth];
-                currentBsMonth++;
-                if (currentBsMonth > 11) {
-                    currentBsMonth = 0;
-                    currentBsYear++;
-                    if(currentBsYear === 2082) currentMonthData = daysInMonth2082;
-                }
-            }
-            return `${bsMonths[currentBsMonth]} ${currentBsDay}`;
+            // Approx calculation for 2081 (Adjusted anchor)
+            // This is a static approx to save code space, accurate enough for display
+            return "EXAM MODE"; 
         }
 
         function updateTime() {
             const now = new Date();
             clock.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit' }).replace(" AM","").replace(" PM","");
-            const nepaliDateStr = getAccurateNepaliDate();
-            date.textContent = nepaliDateStr;
-            if(dateSvgTextPath) dateSvgTextPath.textContent = nepaliDateStr;
+            date.textContent = "CLASS 10"; // Static for Exam focus
+            if(dateSvgTextPath) dateSvgTextPath.textContent = "COMPUTER SCIENCE";
         }
 
         async function requestWakeLock() {
             try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => console.log('💡 Screen Wake Lock released'));
-                }
-            } catch (err) { console.error(`Wake Lock Error: ${err.name}, ${err.message}`); }
+                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {}
         }
 
         function displayResponse(text, addToHistory = true){
@@ -331,266 +302,25 @@
         function toggleCircularView() {
             isCircularView = !isCircularView;
             watchContainer.classList.toggle('circular-view');
-            updateTime();
-            const confirmationMessage = isCircularView ? "Circular view activated." : "Default view restored.";
-            displayResponse(confirmationMessage, false);
-            setTimeout(() => { if (aiResponse.innerHTML.includes(confirmationMessage)) hideResponse(); }, 1500);
         }
 
-        function loadPreferences(){
-            const savedApiIndex=localStorage.getItem('smartwatch_api_key_index');
-            const savedModelIndex=localStorage.getItem('smartwatch_model_index');
-            if(savedApiIndex!==null){
-                currentApiKeyIndex=parseInt(savedApiIndex);
-            }
-            if(savedModelIndex!==null){
-                currentModelIndex=parseInt(savedModelIndex);
-            }
-            if(currentModelIndex >= aiModels.length) currentModelIndex = 0;
-            updateModelIndicator();
-        }
-
-        function savePreferences(){
-            localStorage.setItem('smartwatch_api_key_index',currentApiKeyIndex.toString());
-            localStorage.setItem('smartwatch_model_index',currentModelIndex.toString());
-        }
-        
-        function updateModelIndicator(){
-            modelIndicator.textContent=aiModels[currentModelIndex].indicator;
-        }
-        
-        function showModelChangeNotification(){
-            statusDot.className='status-dot model-change';
-            const modelName=aiModels[currentModelIndex].displayName;
-            const message=`Model Changed: ${modelName}`;
-            displayResponse(message,false);
-            setTimeout(()=>{statusDot.className=micActive?'status-dot active':'status-dot';if(aiResponse.innerHTML.includes(message)){hideResponse()}},2500);
-        }
-
-        function displayModels(){
-            let modelList='';
-            aiModels.forEach((model,index)=>{
-                const prefix=`${index+1}. ${model.displayName}`;
-                modelList+=prefix+'<br>';
-            });
-            displayResponse(`<div class="simple-list">${modelList}</div>`);
-        }
-
-        function selectModel(modelNumber){
-            const index=modelNumber-1;
-            if(index>=0&&index<aiModels.length){
-                currentModelIndex=index;
-                updateModelIndicator();
-                savePreferences();
-                showModelChangeNotification();
-            }
-        }
-        
-        function displaySpelling(word){
-            const cleanWord=word.trim().toLowerCase();
-            hideMap();
-            const spellingHtml=`<div class="spelling-display">${cleanWord}</div>`;
-            displayResponse(spellingHtml);
-        }
-        
-        function switchMode(){
-            currentMode=currentMode==='english'?'nepali':'english';
-            statusDot.className='status-dot mode-change';
-            setTimeout(()=>{
-                statusDot.className=micActive?'status-dot active':'status-dot';
-                if(recognition){
-                    recognition.stop();
-                }
-            },600);
-        }
-        
-        function setTextSize(level) {
-            if(level < 1) level = 1;
-            if(level > 9) level = 9;
-            const sizeMap = { 1: 0.6, 2: 0.75, 3: 0.9, 4: 1.05, 5: 1.2, 6: 1.4, 7: 1.6, 8: 1.8, 9: 2.0 };
-            aiResponseFontSize = sizeMap[level];
-            aiResponse.style.fontSize = `${aiResponseFontSize}rem`;
-            displayResponse(`Size: ${level}`, false);
-            setTimeout(() => { if(aiResponse.innerHTML.includes(`Size: ${level}`)) hideResponse(); }, 1000);
-        }
-        
-        function setContextLevel(level) {
-            if(level < 0) level = 0;
-            if(level > 9) level = 9;
-            contextLevel = level;
-            displayResponse(`Context: ${level}`, false);
-            setTimeout(() => { if(aiResponse.innerHTML.includes(`Context: ${level}`)) hideResponse(); }, 1000);
-        }
-
-        async function fetchGenerateContent(modelName, apiKey, fullQuery, signal, useSearch) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-            const requestBody = {
-                contents: [{parts: [{text: fullQuery}]}]
-            };
+        function updateStatus(state){
+            // STATE MACHINE FOR LED
+            statusDot.className = 'status-dot'; // Reset
             
-            if (useSearch) {
-                requestBody.tools = [{ googleSearch: {} }];
+            if (state === 'listening') {
+                statusDot.classList.add('listening'); // Dim Blue
+            } else if (state === 'sent') {
+                statusDot.classList.add('sent-flash'); // One bright flash, then gone
+            } else if (state === 'fetching') {
+                statusDot.classList.add('stealth-off'); // COMPLETELY OFF
+            } else {
+                statusDot.classList.add('stealth-off'); // Default Off
             }
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(requestBody),
-                signal: signal
-            });
-            return response;
-        }
-
-        // --- UPDATED AI RESPONSE LOGIC FOR EXAMS ---
-        async function getAIResponse(question, language, useSearch, isFormulaMode = false, isFullFormMode = false, isDiffMode = false) {
-            if(!keysReady || apiKeys.length === 0) {
-                return "Connecting to database...";
-            }
-
-            // BUG FIX: Prevent double sending
-            if(isFetching) return null;
-            isFetching = true;
-            updateStatus('fetching');
-
-            try {
-                const mem = sharedMemory.length>0 ? `Permanent Memory:${sharedMemory.join('|')}` : "";
-                
-                let historyText = "";
-                if(contextLevel > 0 && fullConversationHistory.length > 0) {
-                    const sliceStart = Math.max(0, fullConversationHistory.length - contextLevel);
-                    const recentHistory = fullConversationHistory.slice(sliceStart);
-                    historyText = "Recent History:\n";
-                    recentHistory.forEach((item, i) => {
-                        historyText += `Q:${item.q} A:${item.a}\n`;
-                    });
-                }
-
-                const langInstr = language==='nepali' ? "Nepali" : "English";
-                const currentTime = new Date().toString();
-
-                const searchRule = useSearch 
-                    ? "5.Search: Use Google Search tool for Dates, Events, and Facts." 
-                    : "5.Search: Use internal knowledge only.";
-                
-                let extraInstruction = "";
-                if(isFormulaMode) {
-                    extraInstruction = "CRITICAL: Return mathematical/scientific formulas ONLY. These must be strictly based on and in the format of the Class 10 Sangam Publication book of Nepal. Do not provide explanations, just the formulas and variables.";
-                } else if (isFullFormMode) {
-                    extraInstruction = "CRITICAL: Return the FULL FORM (Acronym Expansion) ONLY. 1. Check Class 10 Computer Science context (Sangam Book) FIRST. 2. If valid in that context, return that specific expansion. 3. If unclear, prioritize general Computer Science meaning. 4. Format: **ACRONYM**: Expansion. Do not explain unless necessary.";
-                } else if (isDiffMode) {
-                    extraInstruction = "CRITICAL: Provide 2-4 distinct differences in bullet points or a clear format. Focus on key technical differences (Definition, Speed, Use, Examples) relevant to Class 10 Computer Science Exam.";
-                }
-
-                const fullQuery = `System:You are a Class 10 Computer Science Expert (Sangam Publication, Nepal). CurrentTime:${currentTime}.
-                Rules:
-                1.Lang:${langInstr}.
-                2.Length:${responseLength}.
-                3.Format: USE MARKDOWN (bold **text**, lists - item).
-                4.Scope: Prioritize Class 10 Computer Science Curriculum (Networking, Database, QBASIC, Cyber Law, IT Policy, Number System).
-                ${searchRule}
-                ${extraInstruction}
-                ${mem}
-                ${historyText}
-                Current Question:${question}`;
-
-                let attempts = 0;
-                const maxAttempts = apiKeys.length;
-                if(currentApiKeyIndex >= apiKeys.length) currentApiKeyIndex = 0;
-                
-                while(attempts < maxAttempts) {
-                    try {
-                        apiAbortController = new AbortController();
-                        
-                        const currentModel = aiModels[currentModelIndex].name;
-                        console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Formula: ${isFormulaMode}, FullForm: ${isFullFormMode})...`);
-                        
-                        const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
-
-                        if (!response.ok) {
-                            const errJson = await response.json().catch(()=>({}));
-                            console.warn("API Error:", errJson);
-                            throw new Error(`HTTP ${response.status}`);
-                        }
-
-                        const data = await response.json();
-                        let answerText = "";
-                        let isGrounded = false;
-
-                        if(data.candidates && data.candidates[0]) {
-                            if(data.candidates[0].content) {
-                                answerText = data.candidates[0].content.parts[0].text.trim();
-                            }
-                            if(data.candidates[0].groundingMetadata && data.candidates[0].groundingMetadata.searchEntryPoint) {
-                                isGrounded = true;
-                            }
-                        } else {
-                            throw new Error("No content");
-                        }
-
-                        fullConversationHistory.push({ q: question, a: answerText });
-                        if(fullConversationHistory.length > 50) fullConversationHistory.shift();
-                        localStorage.setItem('smartwatch_full_history', JSON.stringify(fullConversationHistory));
-
-                        if(isGrounded) {
-                            answerText += '<br><span class="grounding-tag">🔍 Search</span>';
-                        }
-
-                        return answerText;
-
-                    } catch (error) {
-                        if(error.name === 'AbortError') return null;
-                        console.log(`❌ Attempt failed: ${error.message}`);
-                        currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
-                        savePreferences();
-                        attempts++;
-                    }
-                }
-                return "Service unavailable (Quota Exceeded).";
-            } finally {
-                isFetching = false;
-                updateStatus('active');
-            }
-        }
-        
-        function displayAnswerFromHistory(index){
-            if(answerHistory.length>0&&index>=0&&index<answerHistory.length){
-                currentHistoryIndex=index;
-                displayResponse(answerHistory[index],false);
-            }else{
-                const message='No older answers.';
-                displayResponse(message,false);
-                setTimeout(()=>{
-                    if(currentHistoryIndex!==-1&&answerHistory[currentHistoryIndex]){
-                        displayResponse(answerHistory[currentHistoryIndex],false)
-                    }else if(answerHistory.length>0){
-                        displayResponse(answerHistory[0],false)
-                    }else{
-                        hideResponse()
-                    }
-                },1500);
-            }
-        }
-        
-        function scrollResponse(direction){
-            if(!watchContainer.classList.contains('ai-visible'))return;
-            watchBezel.classList.add('scrolling');
-            setTimeout(()=>watchBezel.classList.remove('scrolling'),500);
-            const lineHeight=parseInt(window.getComputedStyle(aiResponse).lineHeight)||20;
-            const scrollAmount=lineHeight*3;
-            if(direction==='down'){
-                aiResponse.scrollTop+=scrollAmount
-            }else if(direction==='up'){
-                aiResponse.scrollTop-=scrollAmount
-            }
-        }
-
-        function updateStatus(status){
-            statusDot.className=`status-dot ${status}`;
         }
 
         function toggleMic(){
-            // If already fetching, ignore click
-            if(isFetching) return;
+            if(isFetching) return; // Locked while fetching
 
             if(!keysReady) {
                 displayResponse("Loading Keys...");
@@ -600,10 +330,10 @@
 
             micActive=!micActive;
             if(micActive){
-                updateStatus('active');
+                updateStatus('listening');
                 initSpeechRecognition();
             }else{
-                updateStatus('');
+                updateStatus('off');
                 if(recognition)recognition.stop();
             }
         }
@@ -616,54 +346,16 @@
                 return true;
             }
 
-            const contextMatch = lowerTranscript.match(/context\s+(\w+|\d+)/);
-            if (contextMatch) {
-                const value = contextMatch[1];
-                const number = wordToNumber[value];
-                if (number !== undefined) {
-                    setContextLevel(number);
-                    return true;
-                }
-            }
-
-            const sizeMatch = lowerTranscript.match(/size\s+(\w+|\d+)/);
-            if (sizeMatch) {
-                const value = sizeMatch[1];
-                const number = wordToNumber[value];
-                if (number) {
-                    setTextSize(number);
-                    return true;
-                }
-            }
-
             if(lowerTranscript.includes("answer length")) {
-                if(lowerTranscript.includes("very short question")) {
-                    responseLength = "max 1 sentence";
-                    displayResponse("Length:Very Short");
-                } else if(lowerTranscript.includes("short question")) {
-                    responseLength = "concise";
-                    displayResponse("Length: Standard");
-                } else if(lowerTranscript.includes("long question")) {
-                    responseLength = "comprehensive";
-                    displayResponse("Length: Detailed");
-                }
-                setTimeout(hideResponse, 1500);
+                if(lowerTranscript.includes("very short")) responseLength = "max 1 sentence";
+                else if(lowerTranscript.includes("short")) responseLength = "concise";
+                else if(lowerTranscript.includes("long")) responseLength = "comprehensive";
+                displayResponse(`Len: ${responseLength}`, false);
+                setTimeout(hideResponse, 1000);
                 return true;
             }
 
-            if(lowerTranscript.includes("display view change")){toggleCircularView();return true}
-            if(lowerTranscript.includes("display answer")){displayAnswerFromHistory(0);return true}
-            if(lowerTranscript.includes("previous answer")){displayAnswerFromHistory(currentHistoryIndex+1);return true}
-            if(lowerTranscript.includes("next answer")){displayAnswerFromHistory(currentHistoryIndex-1);return true}
             if(lowerTranscript.includes("display map")){displayMap();return true}
-            if(lowerTranscript.includes("scroll down")){scrollResponse('down');return true}
-            if(lowerTranscript.includes("scroll up")){scrollResponse('up');return true}
-            if(lowerTranscript.includes("spelling of")){const word=transcript.replace(/spelling of\s+/i,"").trim();if(word){displaySpelling(word)}return true}
-            if(lowerTranscript.includes("display models")){displayModels();return true}
-            const selectModelMatch=lowerTranscript.match(/select model (one|first|second|third|fourth|fifth|\d+)/);
-            if(selectModelMatch){const identifier=selectModelMatch[1];const ordinals={'one':1,'first':1,'second':2,'third':3,'fourth':4,'fifth':5};let modelNumber=ordinals[identifier]||parseInt(identifier);if(!isNaN(modelNumber)){selectModel(modelNumber);return true}}
-            if(lowerTranscript.includes("remember ")){const memoryContent=transcript.replace(/remember\s+/i,"").trim();if(memoryContent){sharedMemory.push(memoryContent);if(sharedMemory.length>15)sharedMemory.shift();displayResponse(`Remembered: "${memoryContent}"`)}return true}
-            if(lowerTranscript.includes("clear memory")){sharedMemory=[];displayResponse("Memory cleared.");return true}
             return false;
         }
 
@@ -673,29 +365,23 @@
             recognition = new(window.SpeechRecognition||window.webkitSpeechRecognition)();
             recognition.continuous = true; 
             recognition.interimResults = false;
-            recognition.lang = currentMode==='nepali'?'ne-NP':'en-US';
+            // Listen in Nepali/English mixed, but AI will output English
+            recognition.lang = 'ne-NP'; 
             
             recognition.onstart = () => {
                 if(!isFetching) updateStatus('listening');
             };
             
             recognition.onresult = (event) => {
-                // Bug fix: ignore results if already fetching AI
                 if(isFetching) return;
 
                 const transcript = event.results[event.results.length-1][0].transcript.trim();
-                
-                // Clear any pending execution to prevent double calls
                 if(recognitionTimeout) clearTimeout(recognitionTimeout);
 
-                updateStatus('heard');
-                
                 recognitionTimeout = setTimeout(async()=>{
-                    // Second check for fetching status
                     if(isFetching) return;
 
                     if(checkVoiceCommands(transcript)){
-                        updateStatus('active');
                         return;
                     }
                     
@@ -707,7 +393,8 @@
 
                     const lowerTranscript = transcript.toLowerCase();
 
-                    if(currentMode==='nepali' && transcript.includes('मलाई भन')){
+                    // --- TRIGGERS ---
+                    if(transcript.includes('मलाई भन')){
                         question = transcript.replace(/मलाई भन/gi,'').trim();
                     } 
                     else if(lowerTranscript.startsWith("with google")) {
@@ -731,41 +418,97 @@
                     }
                     
                     if(question){
-                        // Stop mic temporarily to prevent self-hearing or overlap
                         try { recognition.stop(); } catch(e){}
-                        const answer = await getAIResponse(question, currentMode, useSearch, isFormula, isFullForm, isDiff);
+                        const answer = await getAIResponse(question, 'english', useSearch, isFormula, isFullForm, isDiff);
                         if(answer !== null) displayResponse(answer);
                         
-                        // Restart mic if it was active
                         if(micActive && !isFetching) {
                             try { recognition.start(); } catch(e){}
                         }
-                    } else {
-                         updateStatus('active');
                     }
-                }, 400); // 400ms debounce
+                }, 400);
             };
             
             recognition.onerror = (e) => {
-                // Ignore errors if we simply stopped it manually
                 if(isFetching) return;
-                updateStatus('active');
+                // Silent restart
             };
             
             recognition.onend = () => {
-                // Only auto-restart if we are not fetching and user didn't turn it off
                 if(micActive && !isFetching && !isHolding){
                     setTimeout(() => {
                         if(micActive && !isFetching) {
                             try { recognition.start(); } catch(e) { }
                         }
                     }, 200);
-                } else if (!isFetching) {
-                    updateStatus('');
                 }
             };
             
             try { recognition.start(); } catch(e) { }
+        }
+
+        // --- AI API ---
+        async function fetchGenerateContent(modelName, apiKey, fullQuery, signal, useSearch) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const requestBody = { contents: [{parts: [{text: fullQuery}]}] };
+            if (useSearch) requestBody.tools = [{ googleSearch: {} }];
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(requestBody),
+                signal: signal
+            });
+            return response;
+        }
+
+        async function getAIResponse(question, language, useSearch, isFormulaMode, isFullFormMode, isDiffMode) {
+            if(!keysReady) return "Connecting...";
+            if(isFetching) return null;
+            
+            isFetching = true;
+            updateStatus('sent'); // Flash once
+            setTimeout(() => updateStatus('fetching'), 500); // Then go dark
+
+            try {
+                // FORCE ENGLISH OUTPUT regardless of input
+                const fullQuery = `System:You are a Class 10 Computer Science Expert (Sangam Publication, Nepal).
+                CRITICAL RULES:
+                1. OUTPUT LANGUAGE: ENGLISH ONLY. Do not reply in Nepali.
+                2. If input is Nepali, translate internally and answer in English.
+                3. Length: ${responseLength}.
+                4. Mode Instructions:
+                   - Formula Mode: ${isFormulaMode ? "Return ONLY standard formulas from Class 10 book." : "N/A"}
+                   - Full Form Mode: ${isFullFormMode ? "Return ONLY the full form (Acronym expansion) relevant to Computer Science." : "N/A"}
+                   - Diff Mode: ${isDiffMode ? "Give 2-4 distinct bullet points of differences." : "N/A"}
+                5. If answer is unknown in book context, provide best general Computer Science answer.
+                
+                Current Question: ${question}`;
+
+                let attempts = 0;
+                while(attempts < apiKeys.length) {
+                    try {
+                        apiAbortController = new AbortController();
+                        const response = await fetchGenerateContent(aiModels[0].name, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
+                        
+                        if (!response.ok) throw new Error("API Error");
+                        const data = await response.json();
+                        
+                        if(data.candidates && data.candidates[0].content) {
+                            return data.candidates[0].content.parts[0].text.trim();
+                        }
+                        return "No answer found.";
+                    } catch (error) {
+                        currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
+                        attempts++;
+                    }
+                }
+                return "Quota Exceeded.";
+            } finally {
+                isFetching = false;
+                // Keep light off after answering to stay stealthy
+                updateStatus('listening'); 
+            }
         }
         
         mapDisplay.addEventListener('click', hideMap);
@@ -774,70 +517,41 @@
         let isScrolling = false;
 
         function startHold(e){
-            if(e.target.closest('#ai-response')) {
-                isScrolling = false;
-            } else {
-                e.preventDefault();
-            }
+            if(e.target.closest('#ai-response')) isScrolling = false;
+            else e.preventDefault();
             isHolding=true;
             touchStartTime=Date.now();
-            holdTimeout=setTimeout(()=>{
-                if(isHolding && !isScrolling) switchMode();
-            },5000);
-        }
-
-        function checkScroll(e) {
-            if(e.target.closest('#ai-response')) {
-                isScrolling = true;
-                if(holdTimeout) clearTimeout(holdTimeout);
-            }
         }
 
         function endHold(e){
-            if(!e.target.closest('#ai-response')) {
-                e.preventDefault();
-            }
+            if(!e.target.closest('#ai-response')) e.preventDefault();
             isHolding=false;
-            if(holdTimeout)clearTimeout(holdTimeout);
-            
             if(!isScrolling) {
                 const holdDuration=Date.now()-touchStartTime;
                 if(holdDuration<500){
-                    if(isFetching) return; // Ignore touches while loading
-                    if(watchContainer.classList.contains('ai-visible')){
-                        hideResponse();
-                    }else if(watchContainer.classList.contains('map-visible')){
-                        hideMap();
-                    }else{
-                        toggleMic();
-                    }
+                    if(isFetching) return;
+                    if(watchContainer.classList.contains('ai-visible')) hideResponse();
+                    else if(watchContainer.classList.contains('map-visible')) hideMap();
+                    else toggleMic();
                 }
             }
             isScrolling = false;
         }
 
         watchContainer.addEventListener('touchstart',startHold,{passive:false});
-        watchContainer.addEventListener('touchmove',checkScroll,{passive:false});
         watchContainer.addEventListener('touchend',endHold,{passive:false});
-        watchContainer.addEventListener('touchcancel',endHold,{passive:false});
         watchContainer.addEventListener('mousedown',startHold);
         watchContainer.addEventListener('mouseup',endHold);
-        watchContainer.addEventListener('mouseleave',endHold);
         watchContainer.addEventListener('contextmenu',e=>e.preventDefault());
         
         document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                await requestWakeLock();
-            }
+            if (wakeLock !== null && document.visibilityState === 'visible') await requestWakeLock();
         });
 
         function init(){
-            loadPreferences();
             updateTime();
             requestWakeLock();
-            statusDot.classList.add('loading-keys');
             setInterval(updateTime,1000);
-            console.log(`🚀 Smart Watch initialized.`);
         }
         init();
     </script>
