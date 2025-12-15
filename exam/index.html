@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Watch - Priority Key</title>
+    <title>Smart Watch - Exam Mode</title>
     <style>
         :root {
             --transition-speed: 0.6s;
@@ -94,6 +94,9 @@
         .status-dot.listening{background:#0066ff;animation:pulse 0.5s infinite}
         .status-dot.heard{background:#ff9900;animation:flash 0.2s 2}
         .status-dot.loading-keys{background:#ff0000;animation:pulse 0.2s infinite}
+        /* Fetching state - Orange pulse */
+        .status-dot.fetching{background:#ff9900;animation:pulse 0.2s infinite}
+
         @keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
         @keyframes flash{0%,100%{opacity:0.3}50%{opacity:1}}
         
@@ -172,29 +175,29 @@
             <span>LISTEN [Question]</span>
             <span>WITH GOOGLE [Question]</span>
             <span>FORMULA OF [Topic]</span>
+            <span>FULL FORM OF [Acronym]</span>
+            <span>DIFFERENCE BETWEEN [A] AND [B]</span>
             <span>CONTEXT [0-9]</span>
             <span>SIZE [1-9]</span>
             <span>ANSWER LENGTH [SHORT/LONG]</span>
             <span>SELECT MODEL [1-5]</span>
-            <span>DISPLAY MODELS</span>
-            <span>REMEMBER [Text]</span>
-            <span>CLEAR MEMORY</span>
             <span>DISPLAY FUNCTIONS</span>
-            <span>DISPLAY VIEW CHANGE</span>
-            <span>SCROLL [UP/DOWN]</span>
-            <span>DISPLAY MAP</span>
-            <span>SPELLING OF [Word]</span>
-            <span>DISPLAY ANSWER</span>
-            <span>PREV/NEXT ANSWER</span>
         </div>`;
 
         // --- State Variables ---
         let apiKeys = []; 
-        let currentMode='english'; 
+        let currentMode='nepali'; 
         let fullConversationHistory = []; 
         let contextLevel = 1; 
         
-        let sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false,isProcessing=false,currentModelIndex=0,isCircularView=false;
+        let sharedMemory=[],recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false;
+        
+        // BUG FIX: Strict Fetching Lock
+        let isFetching = false; 
+        // Used for debounce of recognition result
+        let recognitionTimeout = null;
+
+        let currentModelIndex=0,isCircularView=false;
         let answerHistory = [];
         let currentHistoryIndex = -1;
         let apiAbortController;
@@ -251,7 +254,6 @@
             const refEngYear = 2024;
             const refEngMonth = 3; 
             const refEngDay = 13;
-            
             const refBsYear = 2081;
             const refBsMonth = 0; 
             const refBsDay = 1;
@@ -263,14 +265,12 @@
 
             const now = new Date();
             const refDate = new Date(refEngYear, refEngMonth, refEngDay);
-            
             const diffTime = now.getTime() - refDate.getTime();
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
             let currentBsYear = refBsYear;
             let currentBsMonth = refBsMonth;
             let currentBsDay = refBsDay + diffDays;
-
             let currentMonthData = daysInMonth2081;
 
             while (currentBsDay > currentMonthData[currentBsMonth]) {
@@ -282,14 +282,12 @@
                     if(currentBsYear === 2082) currentMonthData = daysInMonth2082;
                 }
             }
-
             return `${bsMonths[currentBsMonth]} ${currentBsDay}`;
         }
 
         function updateTime() {
             const now = new Date();
             clock.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit' }).replace(" AM","").replace(" PM","");
-            
             const nepaliDateStr = getAccurateNepaliDate();
             date.textContent = nepaliDateStr;
             if(dateSvgTextPath) dateSvgTextPath.textContent = nepaliDateStr;
@@ -361,13 +359,6 @@
             modelIndicator.textContent=aiModels[currentModelIndex].indicator;
         }
         
-        function showApiChangeNotification(){
-            if(!apiKeys || apiKeys.length === 0) return;
-            const message=`API Changed (${currentApiKeyIndex+1}/${apiKeys.length})`;
-            displayResponse(message,false);
-            setTimeout(()=>{if(aiResponse.innerHTML.includes(message)){hideResponse()}},2000);
-        }
-
         function showModelChangeNotification(){
             statusDot.className='status-dot model-change';
             const modelName=aiModels[currentModelIndex].displayName;
@@ -450,102 +441,115 @@
             return response;
         }
 
-        async function getAIResponse(question, language, useSearch, isFormulaMode = false) {
+        // --- UPDATED AI RESPONSE LOGIC FOR EXAMS ---
+        async function getAIResponse(question, language, useSearch, isFormulaMode = false, isFullFormMode = false, isDiffMode = false) {
             if(!keysReady || apiKeys.length === 0) {
                 return "Connecting to database...";
             }
 
-            const mem = sharedMemory.length>0 ? `Permanent Memory:${sharedMemory.join('|')}` : "";
-            
-            let historyText = "";
-            if(contextLevel > 0 && fullConversationHistory.length > 0) {
-                const sliceStart = Math.max(0, fullConversationHistory.length - contextLevel);
-                const recentHistory = fullConversationHistory.slice(sliceStart);
-                historyText = "Recent History:\n";
-                recentHistory.forEach((item, i) => {
-                    historyText += `Q:${item.q} A:${item.a}\n`;
-                });
-            }
+            // BUG FIX: Prevent double sending
+            if(isFetching) return null;
+            isFetching = true;
+            updateStatus('fetching');
 
-            const langInstr = language==='nepali' ? "Nepali" : "English";
-            const currentTime = new Date().toString();
-
-            const searchRule = useSearch 
-                ? "5.Search: Use Google Search tool for Dates, Events, and Facts." 
-                : "5.Search: Use internal knowledge only.";
-            
-            let formulaInstruction = "";
-            if(isFormulaMode) {
-                formulaInstruction = "CRITICAL: Return mathematical/scientific formulas ONLY. These must be strictly based on and in the format of the Class 10 Sangam Publication book of Nepal. Do not provide explanations, just the formulas and variables.";
-            }
-
-            const fullQuery = `System:Nepal Class 10 context. CurrentTime:${currentTime}.
-            Rules:
-            1.Lang:${langInstr}.
-            2.Length:${responseLength}.
-            3.Format: USE MARKDOWN (bold **text**, lists - item).
-            4.Scope: Class 10 Nepal.
-            ${searchRule}
-            ${formulaInstruction}
-            ${mem}
-            ${historyText}
-            Current Question:${question}`;
-
-            let attempts = 0;
-            const maxAttempts = apiKeys.length;
-            if(currentApiKeyIndex >= apiKeys.length) currentApiKeyIndex = 0;
-            
-            while(attempts < maxAttempts) {
-                try {
-                    apiAbortController = new AbortController();
-                    updateStatus('sent');
-                    
-                    const currentModel = aiModels[currentModelIndex].name;
-                    console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Formula: ${isFormulaMode})...`);
-                    
-                    const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
-
-                    if (!response.ok) {
-                        const errJson = await response.json().catch(()=>({}));
-                        console.warn("API Error:", errJson);
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    let answerText = "";
-                    let isGrounded = false;
-
-                    if(data.candidates && data.candidates[0]) {
-                        if(data.candidates[0].content) {
-                            answerText = data.candidates[0].content.parts[0].text.trim();
-                        }
-                        if(data.candidates[0].groundingMetadata && data.candidates[0].groundingMetadata.searchEntryPoint) {
-                            isGrounded = true;
-                        }
-                    } else {
-                        return "No content returned.";
-                    }
-
-                    fullConversationHistory.push({ q: question, a: answerText });
-                    if(fullConversationHistory.length > 50) fullConversationHistory.shift();
-                    localStorage.setItem('smartwatch_full_history', JSON.stringify(fullConversationHistory));
-
-                    if(isGrounded) {
-                        answerText += '<br><span class="grounding-tag">🔍 Search</span>';
-                    }
-
-                    return answerText;
-
-                } catch (error) {
-                    if(error.name === 'AbortError') return null;
-                    console.log(`❌ Attempt failed: ${error.message}`);
-                    currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
-                    savePreferences();
-                    attempts++;
+            try {
+                const mem = sharedMemory.length>0 ? `Permanent Memory:${sharedMemory.join('|')}` : "";
+                
+                let historyText = "";
+                if(contextLevel > 0 && fullConversationHistory.length > 0) {
+                    const sliceStart = Math.max(0, fullConversationHistory.length - contextLevel);
+                    const recentHistory = fullConversationHistory.slice(sliceStart);
+                    historyText = "Recent History:\n";
+                    recentHistory.forEach((item, i) => {
+                        historyText += `Q:${item.q} A:${item.a}\n`;
+                    });
                 }
-            }
 
-            return "Service unavailable (Quota Exceeded).";
+                const langInstr = language==='nepali' ? "Nepali" : "English";
+                const currentTime = new Date().toString();
+
+                const searchRule = useSearch 
+                    ? "5.Search: Use Google Search tool for Dates, Events, and Facts." 
+                    : "5.Search: Use internal knowledge only.";
+                
+                let extraInstruction = "";
+                if(isFormulaMode) {
+                    extraInstruction = "CRITICAL: Return mathematical/scientific formulas ONLY. These must be strictly based on and in the format of the Class 10 Sangam Publication book of Nepal. Do not provide explanations, just the formulas and variables.";
+                } else if (isFullFormMode) {
+                    extraInstruction = "CRITICAL: Return the FULL FORM (Acronym Expansion) ONLY. 1. Check Class 10 Computer Science context (Sangam Book) FIRST. 2. If valid in that context, return that specific expansion. 3. If unclear, prioritize general Computer Science meaning. 4. Format: **ACRONYM**: Expansion. Do not explain unless necessary.";
+                } else if (isDiffMode) {
+                    extraInstruction = "CRITICAL: Provide 2-4 distinct differences in bullet points or a clear format. Focus on key technical differences (Definition, Speed, Use, Examples) relevant to Class 10 Computer Science Exam.";
+                }
+
+                const fullQuery = `System:You are a Class 10 Computer Science Expert (Sangam Publication, Nepal). CurrentTime:${currentTime}.
+                Rules:
+                1.Lang:${langInstr}.
+                2.Length:${responseLength}.
+                3.Format: USE MARKDOWN (bold **text**, lists - item).
+                4.Scope: Prioritize Class 10 Computer Science Curriculum (Networking, Database, QBASIC, Cyber Law, IT Policy, Number System).
+                ${searchRule}
+                ${extraInstruction}
+                ${mem}
+                ${historyText}
+                Current Question:${question}`;
+
+                let attempts = 0;
+                const maxAttempts = apiKeys.length;
+                if(currentApiKeyIndex >= apiKeys.length) currentApiKeyIndex = 0;
+                
+                while(attempts < maxAttempts) {
+                    try {
+                        apiAbortController = new AbortController();
+                        
+                        const currentModel = aiModels[currentModelIndex].name;
+                        console.log(`🤖 Requesting ${aiModels[currentModelIndex].displayName} (Formula: ${isFormulaMode}, FullForm: ${isFullFormMode})...`);
+                        
+                        const response = await fetchGenerateContent(currentModel, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
+
+                        if (!response.ok) {
+                            const errJson = await response.json().catch(()=>({}));
+                            console.warn("API Error:", errJson);
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        let answerText = "";
+                        let isGrounded = false;
+
+                        if(data.candidates && data.candidates[0]) {
+                            if(data.candidates[0].content) {
+                                answerText = data.candidates[0].content.parts[0].text.trim();
+                            }
+                            if(data.candidates[0].groundingMetadata && data.candidates[0].groundingMetadata.searchEntryPoint) {
+                                isGrounded = true;
+                            }
+                        } else {
+                            throw new Error("No content");
+                        }
+
+                        fullConversationHistory.push({ q: question, a: answerText });
+                        if(fullConversationHistory.length > 50) fullConversationHistory.shift();
+                        localStorage.setItem('smartwatch_full_history', JSON.stringify(fullConversationHistory));
+
+                        if(isGrounded) {
+                            answerText += '<br><span class="grounding-tag">🔍 Search</span>';
+                        }
+
+                        return answerText;
+
+                    } catch (error) {
+                        if(error.name === 'AbortError') return null;
+                        console.log(`❌ Attempt failed: ${error.message}`);
+                        currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
+                        savePreferences();
+                        attempts++;
+                    }
+                }
+                return "Service unavailable (Quota Exceeded).";
+            } finally {
+                isFetching = false;
+                updateStatus('active');
+            }
         }
         
         function displayAnswerFromHistory(index){
@@ -585,7 +589,9 @@
         }
 
         function toggleMic(){
-            if(isProcessing)return;
+            // If already fetching, ignore click
+            if(isFetching) return;
+
             if(!keysReady) {
                 displayResponse("Loading Keys...");
                 setTimeout(hideResponse, 1500);
@@ -670,18 +676,25 @@
             recognition.lang = currentMode==='nepali'?'ne-NP':'en-US';
             
             recognition.onstart = () => {
-                updateStatus('listening');
+                if(!isFetching) updateStatus('listening');
             };
             
             recognition.onresult = (event) => {
+                // Bug fix: ignore results if already fetching AI
+                if(isFetching) return;
+
                 const transcript = event.results[event.results.length-1][0].transcript.trim();
-                isProcessing = true;
+                
+                // Clear any pending execution to prevent double calls
+                if(recognitionTimeout) clearTimeout(recognitionTimeout);
+
                 updateStatus('heard');
                 
-                setTimeout(async()=>{
-                    if(!isProcessing) return;
+                recognitionTimeout = setTimeout(async()=>{
+                    // Second check for fetching status
+                    if(isFetching) return;
+
                     if(checkVoiceCommands(transcript)){
-                        isProcessing = false;
                         updateStatus('active');
                         return;
                     }
@@ -689,6 +702,8 @@
                     let question='';
                     let useSearch = false; 
                     let isFormula = false;
+                    let isFullForm = false;
+                    let isDiff = false;
 
                     const lowerTranscript = transcript.toLowerCase();
 
@@ -703,31 +718,49 @@
                         question = transcript.substring("formula of".length).trim();
                         isFormula = true;
                     }
+                    else if(lowerTranscript.startsWith("full form of")) {
+                        question = transcript.substring("full form of".length).trim();
+                        isFullForm = true;
+                    }
+                    else if(lowerTranscript.startsWith("difference between") || lowerTranscript.startsWith("distinguish between")) {
+                        question = transcript;
+                        isDiff = true;
+                    }
                     else if(lowerTranscript.startsWith("listen")) {
                         question = transcript.substring("listen".length).trim();
                     }
                     
                     if(question){
-                        const answer = await getAIResponse(question, currentMode, useSearch, isFormula);
+                        // Stop mic temporarily to prevent self-hearing or overlap
+                        try { recognition.stop(); } catch(e){}
+                        const answer = await getAIResponse(question, currentMode, useSearch, isFormula, isFullForm, isDiff);
                         if(answer !== null) displayResponse(answer);
+                        
+                        // Restart mic if it was active
+                        if(micActive && !isFetching) {
+                            try { recognition.start(); } catch(e){}
+                        }
+                    } else {
+                         updateStatus('active');
                     }
-                    isProcessing = false;
-                    updateStatus('active');
-                }, 400);
+                }, 400); // 400ms debounce
             };
             
             recognition.onerror = (e) => {
-                isProcessing = false;
+                // Ignore errors if we simply stopped it manually
+                if(isFetching) return;
+                updateStatus('active');
             };
             
             recognition.onend = () => {
-                if(micActive && !isHolding){
+                // Only auto-restart if we are not fetching and user didn't turn it off
+                if(micActive && !isFetching && !isHolding){
                     setTimeout(() => {
-                        if(micActive && !isProcessing) {
+                        if(micActive && !isFetching) {
                             try { recognition.start(); } catch(e) { }
                         }
                     }, 200);
-                } else {
+                } else if (!isFetching) {
                     updateStatus('');
                 }
             };
@@ -770,12 +803,7 @@
             if(!isScrolling) {
                 const holdDuration=Date.now()-touchStartTime;
                 if(holdDuration<500){
-                    if(isProcessing){
-                        if(apiAbortController)apiAbortController.abort();
-                        isProcessing=false;
-                        updateStatus(micActive?'active':'');
-                        return;
-                    }
+                    if(isFetching) return; // Ignore touches while loading
                     if(watchContainer.classList.contains('ai-visible')){
                         hideResponse();
                     }else if(watchContainer.classList.contains('map-visible')){
