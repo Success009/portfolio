@@ -1,547 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Watch - Exam Mode</title>
-    <style>
-        :root {
-            --transition-speed: 0.6s;
-            --transition-curve: cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        body{background:#000;color:white;font-family:'Segoe UI',Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:auto;user-select:none}
-        .watch-container{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px rgba(0,0,0,0.8),inset 0 1px 2px rgba(255,255,255,0.1);transition:border-radius var(--transition-speed) ease-in-out, width 0.4s ease, height 0.4s ease;overflow:hidden}
-        
-        /* UI ELEMENTS */
-        #clock{font-size:2.8rem;font-family:'Courier New',monospace;text-align:center;letter-spacing:2px;color:#00ff88;text-shadow:0 0 10px rgba(0,255,136,0.1);font-weight:300;transition:transform var(--transition-speed) var(--transition-curve)}
-        #date{font-size:0.9rem;opacity:0.8;color:#888;font-weight:300;position:absolute;top:32%;left:50%;transform:translateX(-50%);transition:opacity 0.3s ease, transform var(--transition-speed) var(--transition-curve);letter-spacing:1px;text-transform: uppercase;}
-        #date-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity 0.3s ease}
-        #date-svg text{font-family:'Segoe UI',Arial,sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888;text-transform: uppercase;}
-        
-        /* INDICATORS */
-        #battery{position:absolute;font-size:0.8rem;color:#00ff88;opacity:0.7;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);}
-        .watch-container:not(.circular-view) #battery { top: 8%; left: 88%; }
-        .watch-container.circular-view #battery { top: 78%; left: 80%; }
-
-        /* STATUS DOT */
-        .status-dot{
-            position:absolute;
-            width:8px;
-            height:8px;
-            background:#444;
-            border-radius:50%;
-            transition:all 0.2s ease;
-            transform: translate(-50%, -50%);
-            opacity: 0.6; /* Default visible but dim */
-        }
-        .watch-container:not(.circular-view) .status-dot { top: 8%; left: 8%; }
-        .watch-container.circular-view .status-dot { top: 78%; left: 20%; }
-
-        #model-indicator{position:absolute;font-size:0.7rem;color:#666;opacity:0.8;transition:all var(--transition-speed) var(--transition-curve);transform: translate(-50%, -50%);white-space:nowrap;}
-        .watch-container:not(.circular-view) #model-indicator { top: 92%; left: 85%; }
-        .watch-container.circular-view #model-indicator { top: 85%; left: 50%; }
-
-        /* DISPLAYS */
-        #ai-response{
-            position:absolute;
-            top:55%;
-            left:50%;
-            transform:translate(-50%,-50%) scale(0.95);
-            width:90%;
-            text-align:center;
-            font-size:1.3rem; 
-            line-height:1.3;
-            opacity:0;
-            visibility:hidden;
-            transition:all var(--transition-speed) var(--transition-curve), font-size 0.2s ease;
-            word-wrap:break-word;
-            max-height:65%;
-            overflow-y:auto; 
-            color:#fff;
-            z-index:10;
-            background:rgba(5,5,5,0.85); 
-            border-radius:15px;
-            padding:10px;
-            box-sizing:border-box;
-            pointer-events: auto; 
-            touch-action: pan-y;
-        }
-        
-        #ai-response b, #ai-response strong { color: #00ff88; font-weight: 700; }
-        #ai-response ul { text-align: left; padding-left: 15px; margin: 5px 0; font-size: 1.1rem; }
-        #ai-response li { margin-bottom: 4px; }
-        
-        .grounding-tag { display: inline-block; font-size: 0.5rem; color: #555; margin-top: 8px; }
-
-        #map-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--transition-speed) var(--transition-curve);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
-        #map-display img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--transition-speed) var(--transition-curve)}
-        
-        /* Simple List for Help */
-        .simple-list { 
-            text-align: center; 
-            font-size: 0.8rem; 
-            line-height: 1.4; 
-            color: #ccc; 
-            display: flex;
-            flex-direction: column;
-        }
-
-        .watch-container.ai-visible #clock, .watch-container.map-visible #clock {transform:translateY(-120px) scale(0.5)}
-        .watch-container.ai-visible #date, .watch-container.map-visible #date, .watch-container.ai-visible #date-svg, .watch-container.map-visible #date-svg {opacity:0;transform:translateY(-120px)}
-        .watch-container.ai-visible #battery, .watch-container.map-visible #battery,
-        .watch-container.ai-visible #model-indicator, .watch-container.map-visible #model-indicator,
-        .watch-container.ai-visible .status-dot, .watch-container.map-visible .status-dot {opacity:0;transform:translate(-50%, 60px)}
-        .watch-container.ai-visible #ai-response {opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
-        .watch-container.map-visible #map-display {opacity:1;visibility:visible}
-        
-        .watch-bezel{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #333;border-radius:20px;pointer-events:none;transition:border-radius var(--transition-speed) ease-in-out}
-        
-        /* --- STATUS LIGHT LOGIC --- */
-        
-        /* 1. LISTENING: Blue, slow pulse */
-        .status-dot.listening { 
-            background: #0066ff; 
-            opacity: 0.8; 
-            box-shadow: 0 0 5px #0066ff;
-            animation: pulse 1.5s infinite;
-        }
-
-        /* 2. FETCHING/THINKING: Orange, fast pulse (So you know it's working) */
-        .status-dot.fetching {
-            background: #ff9900;
-            opacity: 0.8;
-            box-shadow: 0 0 5px #ff9900;
-            animation: pulse 0.3s infinite;
-        }
-
-        /* 3. SENT/HEARD: Green, bright flash */
-        .status-dot.sent-flash {
-            background: #00ff88;
-            opacity: 1;
-            box-shadow: 0 0 15px #00ff88;
-            animation: flash 0.5s forwards;
-        }
-
-        /* 4. ACTIVE/IDLE: Green, steady */
-        .status-dot.active {
-            background: #00ff88;
-            opacity: 0.6;
-            animation: pulse 3s infinite;
-        }
-
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        @keyframes flash { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); } }
-        
-        .watch-container.circular-view { border-radius: 50%; }
-        .watch-container.circular-view .watch-bezel { border-radius: 50%; }
-        .watch-container.circular-view #date { opacity: 0 !important; visibility: hidden !important; }
-        .watch-container.circular-view #date-svg { opacity: 0.8; visibility: visible; }
-        .watch-container.circular-view.ai-visible #clock, .watch-container.circular-view.map-visible #clock { transform: translateY(-115px) scale(0.6); }
-        .watch-container.circular-view #ai-response { width: 80%; height: 65%; top: 52%; }
-        .watch-container.circular-view #map-display { width: 100%; height: 100%; border-radius: 50%; }
-        .watch-container.circular-view #map-display img { border-radius: 50%; }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Watch - English Exam</title>
+<style>
+:root{--t:0.6s;--c:cubic-bezier(0.34,1.56,0.64,1)}
+body{background:#000;color:#fff;font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;overflow:hidden;user-select:none}
+.wc{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px #000c,inset 0 1px 2px #ffffff1a;transition:border-radius var(--t) ease-in-out,width .4s ease,height .4s ease;overflow:hidden}
+#clk{font-size:2.8rem;font-family:'Courier New',monospace;letter-spacing:2px;color:#0f8;text-shadow:0 0 10px #00ff881a;font-weight:300;transition:transform var(--t) var(--c);z-index:2}
+#dt{font-size:.9rem;opacity:.8;color:#888;font-weight:300;position:absolute;top:20%;left:50%;transform:translateX(-50%);transition:opacity .3s,transform var(--t) var(--c);letter-spacing:1px;text-transform:uppercase}
+#d-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .3s}
+#d-svg text{font-family:'Segoe UI',sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888;text-transform:uppercase}
+#bat{position:absolute;font-size:.8rem;color:#0f8;opacity:.7;transition:all var(--t) var(--c);transform:translate(-50%,-50%)}
+.wc:not(.cv) #bat{top:8%;left:88%}.wc.cv #bat{top:78%;left:80%}
+.sd{position:absolute;width:8px;height:8px;background:#444;border-radius:50%;transition:all .2s;transform:translate(-50%,-50%);opacity:.6}
+.wc:not(.cv) .sd{top:8%;left:8%}.wc.cv .sd{top:78%;left:20%}
+#mi{position:absolute;font-size:.7rem;color:#666;opacity:.8;transition:all var(--t) var(--c);transform:translate(-50%,-50%);white-space:nowrap}
+.wc:not(.cv) #mi{top:92%;left:85%}.wc.cv #mi{top:85%;left:50%}
+#ai{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%) scale(.95);width:90%;text-align:center;font-size:1.3rem;line-height:1.3;opacity:0;visibility:hidden;transition:all var(--t) var(--c),font-size .2s;word-wrap:break-word;max-height:65%;overflow-y:auto;color:#fff;z-index:10;background:#050505d9;border-radius:15px;padding:10px;box-sizing:border-box;pointer-events:auto}
+#ai b,#ai strong{color:#0f8;font-weight:700}#ai ul{text-align:left;padding-left:15px;margin:5px 0}#ai li{margin-bottom:4px}
+#map{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--t) var(--c);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
+#map img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--t) var(--c)}
+.sl{text-align:center;font-size:.8rem;line-height:1.4;color:#ccc;display:flex;flex-direction:column}
+.wc.av #clk,.wc.mv #clk{transform:translateY(-120px) scale(.5)}
+.wc.av #dt,.wc.mv #dt,.wc.av #d-svg,.wc.mv #d-svg{opacity:0;transform:translateY(-120px)}
+.wc.av #bat,.wc.mv #bat,.wc.av #mi,.wc.mv #mi,.wc.av .sd,.wc.mv .sd{opacity:0;transform:translate(-50%,60px)}
+.wc.av #ai{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+.wc.mv #map{opacity:1;visibility:visible}
+.wb{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #333;border-radius:20px;pointer-events:none;transition:border-radius var(--t) ease-in-out}
+.sd.l{background:#06f;opacity:.8;box-shadow:0 0 5px #06f;animation:p 1.5s infinite}
+.sd.f{background:#f90;opacity:.8;box-shadow:0 0 5px #f90;animation:p .3s infinite}
+.sd.s{background:#0f8;opacity:1;box-shadow:0 0 15px #0f8;animation:fl .5s forwards}
+.sd.a{background:#0f8;opacity:.6;animation:p 3s infinite}
+@keyframes p{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes fl{0%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}100%{opacity:.8;transform:translate(-50%,-50%) scale(1)}}
+.wc.cv{border-radius:50%}.wc.cv .wb{border-radius:50%}
+.wc.cv #dt{opacity:0!important;visibility:hidden!important}
+.wc.cv #d-svg{opacity:.8;visibility:visible}
+.wc.cv.av #clk,.wc.cv.mv #clk{transform:translateY(-115px) scale(.6)}
+.wc.cv #ai{width:80%;height:65%;top:52%}.wc.cv #map{width:100%;height:100%;border-radius:50%}
+.wc.cv #map img{border-radius:50%}
+</style>
 </head>
 <body>
-    <div class="watch-container" id="watchContainer">
-        <div class="watch-bezel" id="watchBezel"></div>
-        <div id="clock"></div>
-        <div id="date"></div>
-        <svg id="date-svg" viewBox="0 0 300 300">
-            <defs><path id="datePath" d="M 60 150 a 90 90 0 1 1 180 0" fill="none" /></defs>
-            <text><textPath xlink:href="#datePath" startOffset="50%" text-anchor="middle">LOADING...</textPath></text>
-        </svg>
-        <div id="ai-response"></div>
-        <div id="map-display">
-            <img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Nepal Political Map">
-        </div>
-        <div id="battery">85%</div>
-        <div class="status-dot" id="statusDot"></div>
-        <div id="model-indicator">M1</div>
-    </div>
+<div class="wc" id="wc">
+<div class="wb"></div><div id="clk"></div><div id="dt"></div>
+<svg id="d-svg" viewBox="0 0 300 300"><defs><path id="dp" d="M 60 150 a 90 90 0 1 1 180 0" fill="none"/></defs><text><textPath xlink:href="#dp" startOffset="50%" text-anchor="middle">LOADING...</textPath></text></svg>
+<div id="ai"></div>
+<div id="map"><img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Map"></div>
+<div id="bat">85%</div><div class="sd" id="sd"></div><div id="mi">M1</div>
+</div>
+<script>
+const HELP=`<div class="sl"><span>LISTEN [Q]</span><span>WITH GOOGLE [Q]</span><span>SPELLING OF [Word]</span><span>DISPLAY ANSWER</span><span>LEN [SHORT/LONG]</span><span>FUNCTIONS</span></div>`;
+const K="AIzaSyBLstnm6K8jyDy29ModBoBoe7Uq7SRKeZE";
+let rec,hT,mic=0,fet=0,rTo,mod=0,cv=0,hist=[],hI=-1,abc,fs=1.3,wl,len="concise";
+const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath");
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+function upd(){
+    const d=new Date();
+    clk.textContent=d.toLocaleTimeString('en-US',{hour12:true,hour:'numeric',minute:'2-digit'}).replace(/ AM| PM/g,"");
+    dt.textContent=d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}).toUpperCase();
+    if(dsp)dsp.textContent="ENGLISH EXAM";
+}
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
-            authDomain: "community-canvas-255fa.firebaseapp.com",
-            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
-            projectId: "community-canvas-255fa",
-            storageBucket: "community-canvas-255fa.appspot.com",
-            messagingSenderId: "729445267995",
-            appId: "1:729445267995:web:05da6756d66c58b9ccd6be",
-            measurementId: "G-FW93CB5QL7"
-        };
+async function wlReq(){
+try{if('wakeLock'in navigator)wl=await navigator.wakeLock.request('screen')}catch(e){}}
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+function disp(t,h=1){
+    wc.classList.remove('mv');
+    if(h&&t){hist.unshift(t);if(hist.length>20)hist.pop();hI=0}
+    ai.innerHTML=(t||"").replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/^[\*\-]\s+(.*)$/gm,'<li>$1</li>').replace(/\n/g,'<br>');
+    ai.style.fontSize=fs+'rem';
+    wc.classList.add('av');
+    ai.scrollTop=0;
+}
+function hide(){wc.classList.remove('av')}
 
-        async function fetchApiKeys() {
-            const hardcodedKey = "AIzaSyC31KFOMKYf0dfbyAXHXqVzKoP1QZGhfPQ"; // Backup Key
-            let dbKeys = [];
-            try {
-                const snapshot = await get(child(ref(db), 'api_keys'));
-                if (snapshot.exists()) dbKeys = snapshot.val();
-            } catch (error) { console.error("Firebase Error"); }
-            window.globalApiKeys = [hardcodedKey, ...dbKeys.filter(k => k !== hardcodedKey)];
-            window.dispatchEvent(new Event('keysLoaded'));
-        }
-        fetchApiKeys();
-    </script>
+function stat(s){
+    sd.className='sd';
+    if(s=='l')sd.classList.add('l');
+    else if(s=='s')sd.classList.add('s');
+    else if(s=='f')sd.classList.add('f');
+    else sd.classList.add('a');
+}
 
-    <script>
-        const FUNCTIONS_LIST_HTML = `
-        <div class="simple-list">
-            <span>LISTEN [Question]</span>
-            <span>WITH GOOGLE [Question]</span>
-            <span>FORMULA OF [Topic]</span>
-            <span>FULL FORM OF [Acronym]</span>
-            <span>DIFFERENCE BETWEEN [A] AND [B]</span>
-            <span>ANSWER LENGTH [SHORT/LONG]</span>
-            <span>DISPLAY FUNCTIONS</span>
-        </div>`;
+function togMic(){
+    if(fet)return;
+    mic=!mic;
+    if(mic){stat('l');initRec()}else{stat('a');if(rec)rec.stop()}
+}
 
-        let apiKeys = []; 
-        let currentMode='nepali'; 
-        let fullConversationHistory = []; 
-        let contextLevel = 1; 
-        
-        let recognition,isHolding=false,holdTimeout,batteryLevel=85,micActive=false;
-        let isFetching = false; 
-        let recognitionTimeout = null;
-
-        let currentModelIndex=0,isCircularView=false;
-        let answerHistory = [];
-        let currentHistoryIndex = -1;
-        let apiAbortController;
-        let aiResponseFontSize = 1.3; 
-        let wakeLock = null;
-        let keysReady = false;
-        let responseLength = "concise"; 
-        
-        const clock=document.getElementById('clock'),date=document.getElementById('date'),aiResponse=document.getElementById('ai-response'),mapDisplay=document.getElementById('map-display'),battery=document.getElementById('battery'),watchContainer=document.getElementById('watchContainer'),statusDot=document.getElementById('statusDot'),modelIndicator=document.getElementById('model-indicator'),watchBezel=document.getElementById('watchBezel'),dateSvgTextPath=document.querySelector("#date-svg textPath");
-        let currentApiKeyIndex = 0;
-
-        const aiModels = [
-            { name: 'gemini-2.5-flash', displayName: 'Gemini Flash', indicator: 'M1' },
-            { name: 'gemini-2.0-flash', displayName: 'Gemini 2.0', indicator: 'M2' }
-        ];
-
-        window.addEventListener('keysLoaded', () => {
-            apiKeys = window.globalApiKeys;
-            keysReady = true;
-            statusDot.classList.remove('loading-keys');
-            const savedHistory = localStorage.getItem('smartwatch_full_history');
-            if(savedHistory) fullConversationHistory = JSON.parse(savedHistory);
-            console.log("System Ready.");
-        });
-
-        window.addEventListener('keysMissing', () => {
-            statusDot.style.background = 'red';
-            displayResponse("Error: No API Keys.", false);
-        });
-
-        function parseMarkdown(text) {
-            if(!text) return "";
-            let html = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-            html = html.replace(/\*(.*?)\*/g, '<b>$1</b>');
-            html = html.replace(/^[\*\-]\s+(.*)$/gm, '<li>$1</li>');
-            html = html.replace(/\n/g, '<br>');
-            return html;
-        }
-
-        function updateTime() {
-            const now = new Date();
-            clock.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit' }).replace(" AM","").replace(" PM","");
-            date.textContent = "CLASS 10"; 
-            if(dateSvgTextPath) dateSvgTextPath.textContent = "COMPUTER SCIENCE";
-        }
-
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
-            } catch (err) {}
-        }
-
-        function displayResponse(text, addToHistory = true){
-            watchContainer.classList.remove('map-visible');
-            if (addToHistory && text) {
-                answerHistory.unshift(text);
-                if (answerHistory.length > 20) answerHistory.pop();
-                currentHistoryIndex = 0;
+function initRec(){
+    if(!mic||!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
+    rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+    rec.continuous=1;rec.interimResults=0;rec.lang='ne-NP';
+    rec.onstart=()=>!fet&&stat('l');
+    rec.onresult=e=>{
+        if(fet)return;
+        const t=e.results[e.results.length-1][0].transcript.trim(), lt=t.toLowerCase();
+        if(rTo)clearTimeout(rTo);
+        rTo=setTimeout(async()=>{
+            if(fet)return;
+            if(lt.includes("functions")){disp(HELP,0);return}
+            if(lt.includes("answer length")){
+                len=lt.includes("very short")?"max 1 sentence":lt.includes("long")?"comprehensive":"concise";
+                disp(`Len: ${len}`,0);setTimeout(hide,1000);return;
             }
-            aiResponse.innerHTML = parseMarkdown(text);
-            aiResponse.style.fontSize = `${aiResponseFontSize}rem`;
-            watchContainer.classList.add('ai-visible');
-            aiResponse.scrollTop = 0;
-        }
-
-        function hideResponse(){
-            watchContainer.classList.remove('ai-visible');
-        }
-
-        function displayMap(){
-            watchContainer.classList.remove('ai-visible');
-            watchContainer.classList.add('map-visible');
-        }
-
-        function hideMap(){
-            watchContainer.classList.remove('map-visible');
-        }
-
-        function toggleCircularView() {
-            isCircularView = !isCircularView;
-            watchContainer.classList.toggle('circular-view');
-        }
-
-        function updateStatus(state){
-            statusDot.className = 'status-dot'; // Reset
+            if(lt.includes("display map")){wc.classList.remove('av');wc.classList.add('mv');return}
             
-            if (state === 'listening') {
-                statusDot.classList.add('listening'); // Blue Pulse
-            } else if (state === 'sent') {
-                statusDot.classList.add('sent-flash'); // Bright Green Flash
-            } else if (state === 'fetching') {
-                statusDot.classList.add('fetching'); // Orange Fast Pulse (Thinking)
-            } else {
-                statusDot.classList.add('active'); // Steady Green
-            }
-        }
-
-        function toggleMic(){
-            if(isFetching) return; 
-
-            if(!keysReady) {
-                displayResponse("Loading Keys...");
-                setTimeout(hideResponse, 1500);
+            // New: Display Answer
+            if(lt.includes("display answer") || lt.includes("show answer")){
+                if(hist.length>0) disp(hist[0], 0);
                 return;
             }
 
-            micActive=!micActive;
-            if(micActive){
-                updateStatus('listening');
-                initSpeechRecognition();
-            }else{
-                updateStatus('active'); // Set to active/idle instead of off
-                if(recognition)recognition.stop();
+            let q='',s=0;
+            if(t.includes('मलाई भन')) q=t.replace(/मलाई भन/gi,'').trim();
+            else if(lt.startsWith("with google")){q=t.substring(11).trim();s=1}
+            else if(lt.startsWith("spelling of")){
+                const w=t.replace(/^spelling of/i,'').trim();
+                if(!w)return;
+                const sz=Math.min(3.5, 25/w.length);
+                // Removed setTimeout, using default h=1 to save to history
+                disp(`<div style="font-size:${sz}rem;line-height:1.1;color:#0f8;text-shadow:0 0 20px #0f8,0 0 10px #0f8;font-weight:700;margin-top:5%;word-break:break-word">${w}</div>`);
+                return;
             }
-        }
-        
-        function checkVoiceCommands(transcript){
-            const lowerTranscript=transcript.toLowerCase();
+            else if(lt.startsWith("listen")) q=t.substring(6).trim();
             
-            if(lowerTranscript.includes("display functions")) {
-                displayResponse(FUNCTIONS_LIST_HTML, false);
-                return true;
+            if(q){
+                try{rec.stop()}catch(e){}
+                const ans=await getAI(q,s);
+                if(ans)disp(ans);
+                if(mic&&!fet)try{rec.start()}catch(e){}
             }
+        },400);
+    };
+    rec.onend=()=>{if(mic&&!fet&&!hld)setTimeout(()=>mic&&!fet&&rec.start(),200)};
+    try{rec.start()}catch(e){}
+}
 
-            if(lowerTranscript.includes("answer length")) {
-                if(lowerTranscript.includes("very short")) responseLength = "max 1 sentence";
-                else if(lowerTranscript.includes("short")) responseLength = "concise";
-                else if(lowerTranscript.includes("long")) responseLength = "comprehensive";
-                displayResponse(`Len: ${responseLength}`, false);
-                setTimeout(hideResponse, 1000);
-                return true;
-            }
-
-            if(lowerTranscript.includes("display map")){displayMap();return true}
-            return false;
-        }
-
-        function initSpeechRecognition(){
-            if(!micActive||!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
-            
-            recognition = new(window.SpeechRecognition||window.webkitSpeechRecognition)();
-            recognition.continuous = true; 
-            recognition.interimResults = false;
-            recognition.lang = 'ne-NP'; 
-            
-            recognition.onstart = () => {
-                if(!isFetching) updateStatus('listening');
-            };
-            
-            recognition.onresult = (event) => {
-                if(isFetching) return;
-
-                const transcript = event.results[event.results.length-1][0].transcript.trim();
-                if(recognitionTimeout) clearTimeout(recognitionTimeout);
-
-                recognitionTimeout = setTimeout(async()=>{
-                    if(isFetching) return;
-
-                    if(checkVoiceCommands(transcript)){
-                        return;
-                    }
-                    
-                    let question='';
-                    let useSearch = false; 
-                    let isFormula = false;
-                    let isFullForm = false;
-                    let isDiff = false;
-
-                    const lowerTranscript = transcript.toLowerCase();
-
-                    // --- TRIGGERS ---
-                    if(transcript.includes('मलाई भन')){
-                        question = transcript.replace(/मलाई भन/gi,'').trim();
-                    } 
-                    else if(lowerTranscript.startsWith("with google")) {
-                        question = transcript.substring("with google".length).trim();
-                        useSearch = true; 
-                    }
-                    else if(lowerTranscript.startsWith("formula of")) {
-                        question = transcript.substring("formula of".length).trim();
-                        isFormula = true;
-                    }
-                    else if(lowerTranscript.startsWith("full form of")) {
-                        question = transcript.substring("full form of".length).trim();
-                        isFullForm = true;
-                    }
-                    else if(lowerTranscript.startsWith("difference between") || lowerTranscript.startsWith("distinguish between")) {
-                        question = transcript;
-                        isDiff = true;
-                    }
-                    else if(lowerTranscript.startsWith("listen")) {
-                        question = transcript.substring("listen".length).trim();
-                    }
-                    
-                    if(question){
-                        try { recognition.stop(); } catch(e){}
-                        const answer = await getAIResponse(question, 'english', useSearch, isFormula, isFullForm, isDiff);
-                        if(answer !== null) displayResponse(answer);
-                        
-                        if(micActive && !isFetching) {
-                            try { recognition.start(); } catch(e){}
-                        }
-                    }
-                }, 400);
-            };
-            
-            recognition.onerror = (e) => {
-                if(isFetching) return;
-            };
-            
-            recognition.onend = () => {
-                if(micActive && !isFetching && !isHolding){
-                    setTimeout(() => {
-                        if(micActive && !isFetching) {
-                            try { recognition.start(); } catch(e) { }
-                        }
-                    }, 200);
-                }
-            };
-            
-            try { recognition.start(); } catch(e) { }
-        }
-
-        // --- AI API ---
-        async function fetchGenerateContent(modelName, apiKey, fullQuery, signal, useSearch) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-            const requestBody = { contents: [{parts: [{text: fullQuery}]}] };
-            if (useSearch) requestBody.tools = [{ googleSearch: {} }];
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(requestBody),
-                signal: signal
-            });
-            return response;
-        }
-
-        async function getAIResponse(question, language, useSearch, isFormulaMode, isFullFormMode, isDiffMode) {
-            if(!keysReady) return "Connecting...";
-            if(isFetching) return null;
-            
-            isFetching = true;
-            updateStatus('sent'); // Green Flash
-            setTimeout(() => updateStatus('fetching'), 500); // Orange Pulse
-
-            try {
-                // FORCE ENGLISH OUTPUT regardless of input
-                const fullQuery = `System:You are a Class 10 Computer Science Expert (Sangam Publication, Nepal).
-                CRITICAL RULES:
-                1. OUTPUT LANGUAGE: ENGLISH ONLY. Do not reply in Nepali.
-                2. If input is Nepali, translate internally and answer in English.
-                3. Length: ${responseLength}.
-                4. Mode Instructions:
-                   - Formula Mode: ${isFormulaMode ? "Return ONLY standard formulas from Class 10 book." : "N/A"}
-                   - Full Form Mode: ${isFullFormMode ? "Return ONLY the full form (Acronym expansion) relevant to Computer Science." : "N/A"}
-                   - Diff Mode: ${isDiffMode ? "Give 2-4 distinct bullet points of differences." : "N/A"}
-                5. If answer is unknown in book context, provide best general Computer Science answer.
-                
-                Current Question: ${question}`;
-
-                let attempts = 0;
-                while(attempts < apiKeys.length) {
-                    try {
-                        apiAbortController = new AbortController();
-                        const response = await fetchGenerateContent(aiModels[0].name, apiKeys[currentApiKeyIndex], fullQuery, apiAbortController.signal, useSearch);
-                        
-                        if (!response.ok) throw new Error("API Error");
-                        const data = await response.json();
-                        
-                        if(data.candidates && data.candidates[0].content) {
-                            return data.candidates[0].content.parts[0].text.trim();
-                        }
-                        return "No answer found.";
-                    } catch (error) {
-                        currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
-                        attempts++;
-                    }
-                }
-                return "Quota Exceeded.";
-            } finally {
-                isFetching = false;
-                updateStatus('listening'); 
-            }
-        }
-        
-        mapDisplay.addEventListener('click', hideMap);
-        
-        let touchStartTime = 0;
-        let isScrolling = false;
-
-        function startHold(e){
-            if(e.target.closest('#ai-response')) isScrolling = false;
-            else e.preventDefault();
-            isHolding=true;
-            touchStartTime=Date.now();
-        }
-
-        function endHold(e){
-            if(!e.target.closest('#ai-response')) e.preventDefault();
-            isHolding=false;
-            if(!isScrolling) {
-                const holdDuration=Date.now()-touchStartTime;
-                if(holdDuration<500){
-                    if(isFetching) return;
-                    if(watchContainer.classList.contains('ai-visible')) hideResponse();
-                    else if(watchContainer.classList.contains('map-visible')) hideMap();
-                    else toggleMic();
-                }
-            }
-            isScrolling = false;
-        }
-
-        watchContainer.addEventListener('touchstart',startHold,{passive:false});
-        watchContainer.addEventListener('touchend',endHold,{passive:false});
-        watchContainer.addEventListener('mousedown',startHold);
-        watchContainer.addEventListener('mouseup',endHold);
-        watchContainer.addEventListener('contextmenu',e=>e.preventDefault());
-        
-        document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') await requestWakeLock();
+async function getAI(q,s){
+    if(fet)return null;
+    fet=1;stat('s');setTimeout(()=>stat('f'),500);
+    try{
+        const pmpt=`System:You are a Class 10 English Expert (Nepal Curriculum).
+RULES: ENGLISH OUTPUT ONLY. No Nepali. Length: ${len}.
+If unknown, provide best general English answer.
+Q: ${q}`;
+        abc=new AbortController();
+        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${K}`,{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({contents:[{parts:[{text:pmpt}]}],tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
         });
+        const d=await res.json();
+        return d.candidates?.[0]?.content?.parts?.[0]?.text.trim()||"No answer.";
+    }catch(e){return "Error."}finally{fet=0;stat('l')}
+}
 
-        function init(){
-            updateTime();
-            requestWakeLock();
-            setInterval(updateTime,1000);
-        }
-        init();
-    </script>
+let hld=0,ts=0,isc=0;
+function sH(e){if(e.target.closest('#ai'))isc=0;else e.preventDefault();hld=1;ts=Date.now()}
+function eH(e){
+    if(!e.target.closest('#ai'))e.preventDefault();
+    hld=0;
+    if(!isc&&(Date.now()-ts<500)){
+        if(fet)return;
+        if(wc.classList.contains('av'))hide();
+        else if(wc.classList.contains('mv'))wc.classList.remove('mv');
+        else togMic();
+    }
+    isc=0;
+}
+
+wc.addEventListener('touchstart',sH,{passive:0});wc.addEventListener('touchend',eH,{passive:0});
+wc.addEventListener('mousedown',sH);wc.addEventListener('mouseup',eH);
+wc.addEventListener('contextmenu',e=>e.preventDefault());
+map.addEventListener('click',()=>wc.classList.remove('mv'));
+document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
+
+upd();wlReq();setInterval(upd,1000);
+console.log("English Exam Mode Ready");
+</script>
 </body>
 </html>
