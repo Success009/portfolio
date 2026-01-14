@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Watch - Exam Master</title>
+<title>Exam Master - Pro</title>
 <style>
-:root{--t:0.6s;--c:cubic-bezier(0.34,1.56,0.64,1)}
+:root{--t:0.4s;--c:cubic-bezier(0.34,1.56,0.64,1)}
 body{
     background:#000;
     color:#fff;
@@ -43,11 +43,12 @@ body{
 .wc.mv #map{opacity:1;visibility:visible}
 .wb{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #333;border-radius:20px;pointer-events:none;transition:border-radius var(--t) ease-in-out}
 /* MENU */
-#mm{position:absolute;top:0;left:0;width:100%;height:100%;background:#000000f2;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s;overflow-y:auto}
+#mm{position:absolute;top:0;left:0;width:100%;height:100%;background:#000000f2;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .2s;overflow-y:auto}
 #mm.v{opacity:1;visibility:visible}
-.mb{width:80%;padding:12px;margin:5px 0;background:#222;border:1px solid #444;border-radius:10px;color:#ccc;font-size:1rem;text-align:center}
-.mb.act{border-color:#0f8;color:#0f8;background:#002211}
-/* LIGHTS */
+.mb{width:80%;padding:15px;margin:8px 0;background:#222;border:1px solid #444;border-radius:10px;color:#ccc;font-size:1.1rem;text-align:center;transition:background .2s}
+.mb.act{border-color:#0f8;color:#0f8;background:#003311}
+.mb:active{background:#444}
+/* STATES */
 .sd.l{background:#06f;opacity:1;box-shadow:0 0 5px #06f}
 .sd.f{background:#f90;opacity:1;box-shadow:0 0 10px #f90;animation:p .5s infinite}
 .sd.s{background:#0f8;opacity:1;box-shadow:0 0 15px #0f8;animation:fl .5s forwards}
@@ -67,7 +68,7 @@ body{
 <svg id="d-svg" viewBox="0 0 300 300"><defs><path id="dp" d="M 60 150 a 90 90 0 1 1 180 0" fill="none"/></defs><text><textPath xlink:href="#dp" startOffset="50%" text-anchor="middle">LOADING...</textPath></text></svg>
 <div id="ai"></div>
 <div id="map"><img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Map"></div>
-<div id="bat">85%</div><div class="sd" id="sd"></div><div id="mi">M3</div>
+<div id="bat">85%</div><div class="sd" id="sd"></div><div id="mi">M1</div>
 <div id="mm"></div>
 </div>
 <script>
@@ -75,19 +76,19 @@ body{
 const K1 = "AIzaSyDYneePNgz2";
 const K2 = "AfGih4yIM1ag1OFykbyPTHc";
 const K = K1 + K2;
-const HELP=`<div class="sl"><span>SUBJECT [Name]</span><span>LISTEN [Q]</span><span>DISPLAY ANSWER</span><span>HOLD 5s (Menu)</span></div>`;
+const HELP=`<div class="sl"><span>SUBJECT [Name]</span><span>LISTEN [Q]</span><span>DISPLAY ANSWER</span><span>DISPLAY MODELS</span></div>`;
 
-// MODELS
+// UPGRADED MODELS LIST
 const MDLS = [
-    {n: "Gemini 1.5 Flash", id: "gemini-1.5-flash", c:"M1"},
-    {n: "Gemini 2.0 Flash", id: "gemini-2.0-flash", c:"M2"},
-    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M3"},
-    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M4"}
+    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},  // Default, Balanced
+    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},    // Smartest
+    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"}, // Newest Fast
+    {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"} // Fastest
 ];
-let mIdx = 2; // Default M3
+let mIdx = 0; // Default M1 (2.5 Flash)
 
-let rec,hT,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General Knowledge";
-let holdT, isHold=0, lastReq=0;
+let rec,hT,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General";
+let lastReq=0;
 
 const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath"),mi=document.getElementById('mi'),mm=document.getElementById('mm');
 
@@ -95,7 +96,7 @@ function upd(){
     const d=new Date();
     clk.textContent=d.toLocaleTimeString('en-US',{hour12:true,hour:'numeric',minute:'2-digit'}).replace(/ AM| PM/g,"");
     dt.textContent=d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}).toUpperCase();
-    if(dsp)dsp.textContent="ENGLISH EXAM";
+    if(dsp)dsp.textContent="EXAM MODE";
     mi.textContent = MDLS[mIdx].c;
 }
 
@@ -103,19 +104,23 @@ async function wlReq(){try{if('wakeLock'in navigator)wl=await navigator.wakeLock
 
 function disp(t,h=1){
     wc.classList.remove('mv');
-    // Save to history unless h=0 (e.g., help menu)
     if(h&&t){hist.unshift(t);if(hist.length>20)hist.pop();hI=0}
     
     ai.innerHTML=(t||"").replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/^[\*\-]\s+(.*)$/gm,'<li>$1</li>').replace(/\n/g,'<br>');
     ai.style.fontSize=fs+'rem';
     wc.classList.add('av');
     ai.scrollTop=0;
+    
+    // Auto-stop mic when answer shown (privacy/safety)
+    if(mic) togMic(false);
 }
+
 function hide(){
     wc.classList.remove('av'); 
     mm.classList.remove('v');
-    // Ensure mic is off when hiding answering (as requested)
-    if(mic) togMic(); 
+    wc.classList.remove('mv');
+    // Ensure mic is OFF
+    if(mic) togMic(false);
 }
 
 function stat(s){
@@ -126,17 +131,23 @@ function stat(s){
 }
 
 // --- MIC LOGIC ---
-function togMic(){
-    if(fet)return;
-    mic = !mic;
+function togMic(forceState){
+    if(fet) return;
+    
+    // If forceState is provided (true/false), use it. Else toggle.
+    const nextState = (typeof forceState !== 'undefined') ? forceState : !mic;
+    
+    if(mic === nextState) return; // No change needed
+    
+    mic = nextState;
     
     if(mic){
         stat('l');
         initRec();
     } else {
-        stat('');
+        stat(''); // LED Off
         if(rec){
-            try{ rec.abort(); }catch(e){} // Abort = Hard stop (immediate)
+            try{ rec.abort(); }catch(e){} // Immediate kill
         }
     }
 }
@@ -164,52 +175,57 @@ function initRec(){
 
             // --- COMMANDS ---
 
-            // SUBJECT SWITCHING
+            // 1. MENU
+            if(lt.includes("display model") || lt.includes("show model") || lt.includes("change model")){
+                stat('s');
+                rendMenu();
+                mm.classList.add('v');
+                togMic(false); // Stop mic while in menu
+                return;
+            }
+
+            // 2. SUBJECT
             if(lt.startsWith("subject")){
-                const s = t.substring(7).trim(); // Get word after "subject"
+                const s = t.substring(7).trim();
                 if(s){
                     subj = s;
                     stat('s');
-                    disp(`Subject set to:<br><b style="color:#0f8">${subj.toUpperCase()}</b>`, 0);
+                    // We display this as a temporary notification, not answer
+                    disp(`<div style="margin-top:20%;color:#0f8">SUBJECT SET:<br><b style="font-size:1.5rem">${subj.toUpperCase()}</b></div>`, 0);
                     setTimeout(hide, 1500);
                     return;
                 }
             }
 
-            // DISPLAY ANSWER (HISTORY)
+            // 3. HISTORY
             if(lt.includes("display answer") || lt.includes("show answer") || lt.includes("previous answer")){
                 stat('s');
-                if(hist.length>0) disp(hist[0], 0); // Show last from history
+                if(hist.length>0) disp(hist[0], 0);
                 else disp("No history.", 0);
                 return;
             }
 
-            // LENGTH
+            // 4. SETTINGS
             if(lt.includes("very short")){stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("short answer")){stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("long answer")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
+            if(lt.includes("map") || lt.includes("display map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); togMic(false); return;}
 
-            // MAP
-            if(lt.includes("map") || lt.includes("display map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); return;}
-
-            // QUERY
+            // 5. QUERY
             let q='',s=0;
-            // Keywords to trigger AI
+            // Triggers
             if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me") || lt.includes("what is") || lt.includes("define") || lt.includes("explain")){
-                q = t; // Send whole text usually works best for English
+                q = t; 
                 trigger=true;
             }
-            // Google
             else if(lt.includes("google") || lt.includes("search")){
                 q=t.replace(/google|search|with google/gi,'').trim(); s=1; trigger=true;
             }
-            // Spelling
             else if(lt.startsWith("spelling of")){
                 const w=t.replace(/^spelling of/i,'').trim();
                 if(w){
                     stat('s');
                     const sz=Math.min(3.5, 25/w.length);
-                    // SAVED TO HISTORY via disp() default h=1
                     disp(`<div style="font-size:${sz}rem;line-height:1.1;color:#0f8;text-shadow:0 0 20px #0f8;font-weight:700;margin-top:5%;word-break:break-word">${w}</div>`);
                     return;
                 }
@@ -223,8 +239,8 @@ function initRec(){
     };
 
     rec.onend=()=>{
-        // RESTART ONLY IF MIC IS INTENDED TO BE ON
-        if(mic && !fet && !isHold){
+        // Restart if mic flag is ON, otherwise visual OFF
+        if(mic && !fet){
             setTimeout(()=>{ if(mic) try{rec.start();}catch(e){} },200);
         } else {
             if(!fet) stat('');
@@ -238,19 +254,18 @@ async function getAI(q,s){
     fet=1; lastReq=Date.now();
     setTimeout(()=>stat('f'),200);
     
-    // Stop mic while fetching to prevent interference
     if(rec) try{rec.abort();}catch(e){}
 
     try{
         const M_ID = MDLS[mIdx].id;
         const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${K}`;
         
-        const pmpt=`System: You are a Class 10 Exam Expert.
+        const pmpt=`System: Class 10 Exam Expert (Nepal).
 SUBJECT: ${subj}.
 RULES:
-1. Output in English.
+1. Response: ENGLISH ONLY.
 2. Mode: ${len}.
-3. Be direct and accurate for Class 10 Nepal.
+3. Be direct. No filler.
 Q: ${q}`;
         
         abc=new AbortController();
@@ -269,20 +284,17 @@ Q: ${q}`;
         disp(`Error: ${e.message}`, 0);
     }finally{
         fet=0;
-        // Resume mic if it was ON
-        if(mic) {
-            stat('l');
-            setTimeout(()=>{ try{rec.start();}catch(e){} }, 200);
-        }
+        // Mic stays OFF after answer (user must tap to ask next q)
+        if(mic) togMic(false); 
     }
 }
 
 function rendMenu(){
-    mm.innerHTML = `<div style="font-size:0.8rem;color:#666;margin-bottom:10px;text-transform:uppercase">Select Model</div>`;
+    mm.innerHTML = `<div style="font-size:0.8rem;color:#888;margin-bottom:10px;text-transform:uppercase">SELECT MODEL</div>`;
     MDLS.forEach((m,i)=>{
         const b = document.createElement('div');
         b.className = `mb ${i===mIdx?'act':''}`;
-        b.innerHTML = `<b>${m.c}</b> - ${m.n.replace('Gemini ','')}`;
+        b.innerHTML = `<b>${m.c}</b> <span style="font-size:0.9em;opacity:0.8">${m.n.replace('Gemini ','')}</span>`;
         b.onclick = (e) => {
             e.stopPropagation();
             mIdx = i;
@@ -294,47 +306,54 @@ function rendMenu(){
     });
 }
 
-function sH(e){
-    if(e.target.closest('#ai') || e.target.closest('#mm')) return;
-    isHold = 0;
-    holdT = setTimeout(()=>{
-        isHold = 1;
-        rendMenu();
-        mm.classList.add('v');
-        stat('s');
-    }, 5000);
-}
-
-function eH(e){
-    if(e.target.closest('#ai') || e.target.closest('#mm')) return;
-    clearTimeout(holdT);
+// --- SINGLE TAP LOGIC ---
+function tapH(e){
+    // Don't trigger if tapping menu or links
+    if(e.target.closest('.mb') || e.target.closest('a')) return;
     
-    if(!isHold){
-        // TAP LOGIC
-        if(fet) return;
-
-        // 1. If Answer/Map Visible -> Hide It (Immediate)
-        if(wc.classList.contains('av') || wc.classList.contains('mv')){
-            hide();
-            // Also ensure mic is off for safety/privacy after reading answer
-            if(mic) togMic(); 
-        }
-        // 2. If Nothing Visible -> Toggle Mic
-        else {
-            togMic();
-        }
+    // 1. If Menu Open -> Close it
+    if(mm.classList.contains('v')){
+        mm.classList.remove('v');
+        return;
     }
-    isHold = 0;
+
+    // 2. If Answer/Map Open -> Hide it
+    if(wc.classList.contains('av') || wc.classList.contains('mv')){
+        hide(); // Hides visual AND stops mic
+        return;
+    }
+
+    // 3. If Mic ON -> Turn OFF
+    if(mic){
+        togMic(false);
+        return;
+    }
+
+    // 4. Default -> Turn Mic ON
+    togMic(true);
 }
 
-wc.addEventListener('touchstart',sH,{passive:true});wc.addEventListener('touchend',eH,{passive:true});
-wc.addEventListener('mousedown',sH);wc.addEventListener('mouseup',eH);
+// Bind to Touchend for fast reaction (watch compatible)
+// Use PreventDefault to stop ghost clicks
+wc.addEventListener('touchend', (e)=>{
+    // Allow scrolling in answer box
+    if(e.target.closest('#ai') && wc.classList.contains('av')) return;
+    
+    tapH(e);
+    // e.preventDefault(); // Optional: uncomment if double-firing occurs
+});
+// Mouse fallback for testing
+wc.addEventListener('click', (e)=>{
+    if(e.target.closest('#ai') && wc.classList.contains('av')) return;
+    tapH(e);
+});
+
 wc.addEventListener('contextmenu',e=>e.preventDefault());
 map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("Exam Master Ready");
+console.log("Exam Master Pro Ready");
 </script>
 </body>
 </html>
