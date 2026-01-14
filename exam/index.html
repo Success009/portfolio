@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exam Master - Final</title>
+<title>Exam Master - Instant</title>
 <style>
 :root{--t:0.4s;--c:cubic-bezier(0.34,1.56,0.64,1)}
 body{
@@ -12,14 +12,15 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    /* SCROLL FIX: Just 2% extra height to trigger address bar hiding */
+    /* 2% extra height to allow scrolling up to hide address bar */
     min-height: 102vh; 
     height: auto;
     margin:0;
-    overflow-y:auto; /* Allows the tiny scroll */
+    overflow-y:auto;
     padding:0;
     user-select:none;
     -webkit-tap-highlight-color:transparent;
+    touch-action: manipulation; /* Improves tap response */
 }
 .wc{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px #000c,inset 0 1px 2px #ffffff1a;transition:border-radius var(--t) ease-in-out,width .4s ease,height .4s ease;overflow:hidden}
 #clk{font-size:2.8rem;font-family:'Courier New',monospace;letter-spacing:2px;color:#0f8;text-shadow:0 0 10px #00ff881a;font-weight:300;transition:transform var(--t) var(--c);z-index:2}
@@ -73,23 +74,23 @@ body{
 <div id="mm"></div>
 </div>
 <script>
-// KEYS
 const K1 = "AIzaSyDYneePNgz2";
 const K2 = "AfGih4yIM1ag1OFykbyPTHc";
 const K = K1 + K2;
 const HELP=`<div class="sl"><span>SUBJECT [Name]</span><span>LISTEN [Q]</span><span>DISPLAY ANSWER</span><span>DISPLAY MODELS</span></div>`;
 
-// PRO MODELS LIST
+// MODELS
 const MDLS = [
-    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},   // Default
-    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},     // Smartest
-    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"}, // Newest
-    {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"} // Fastest
+    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},
+    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},
+    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"},
+    {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"}
 ];
-let mIdx = 0; // Default M1
+let mIdx = 0;
 
-let rec,hT,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General";
+let rec,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General";
 let lastReq=0;
+let tSX=0, tSY=0; // Touch start coordinates
 
 const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath"),mi=document.getElementById('mi'),mm=document.getElementById('mm');
 
@@ -106,11 +107,12 @@ async function wlReq(){try{if('wakeLock'in navigator)wl=await navigator.wakeLock
 function disp(t,h=1){
     wc.classList.remove('mv');
     if(h&&t){hist.unshift(t);if(hist.length>20)hist.pop();hI=0}
+    
     ai.innerHTML=(t||"").replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/^[\*\-]\s+(.*)$/gm,'<li>$1</li>').replace(/\n/g,'<br>');
     ai.style.fontSize=fs+'rem';
     wc.classList.add('av');
     ai.scrollTop=0;
-    // Auto-stop mic when answer shown
+    
     if(mic) togMic(false);
 }
 
@@ -118,7 +120,6 @@ function hide(){
     wc.classList.remove('av'); 
     mm.classList.remove('v');
     wc.classList.remove('mv');
-    // Ensure mic is OFF
     if(mic) togMic(false);
 }
 
@@ -167,74 +168,43 @@ function initRec(){
             if(fet || !mic) return;
             let trigger=false;
 
-            // 1. MENU
             if(lt.includes("display model") || lt.includes("show model") || lt.includes("change model")){
-                stat('s');
-                rendMenu();
-                mm.classList.add('v');
-                togMic(false); // Stop mic while in menu
-                return;
+                stat('s'); rendMenu(); mm.classList.add('v'); togMic(false); return;
             }
-
-            // 2. SUBJECT
             if(lt.startsWith("subject")){
                 const s = t.substring(7).trim();
                 if(s){
-                    subj = s;
-                    stat('s');
+                    subj = s; stat('s');
                     disp(`<div style="margin-top:20%;color:#0f8">SUBJECT SET:<br><b style="font-size:1.5rem">${subj.toUpperCase()}</b></div>`, 0);
-                    setTimeout(hide, 1500);
-                    return;
+                    setTimeout(hide, 1500); return;
                 }
             }
-
-            // 3. HISTORY
             if(lt.includes("display answer") || lt.includes("show answer") || lt.includes("previous answer")){
                 stat('s');
-                if(hist.length>0) disp(hist[0], 0);
-                else disp("No history.", 0);
-                return;
+                if(hist.length>0) disp(hist[0], 0); else disp("No history.", 0); return;
             }
-
-            // 4. SETTINGS
             if(lt.includes("very short")){stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("short answer")){stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("long answer")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
             if(lt.includes("map") || lt.includes("display map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); togMic(false); return;}
 
-            // 5. QUERY
             let q='',s=0;
             if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me") || lt.includes("what is") || lt.includes("define") || lt.includes("explain")){
-                q = t; 
-                trigger=true;
-            }
-            else if(lt.includes("google") || lt.includes("search")){
+                q = t; trigger=true;
+            } else if(lt.includes("google") || lt.includes("search")){
                 q=t.replace(/google|search|with google/gi,'').trim(); s=1; trigger=true;
-            }
-            else if(lt.startsWith("spelling of")){
+            } else if(lt.startsWith("spelling of")){
                 const w=t.replace(/^spelling of/i,'').trim();
                 if(w){
-                    stat('s');
-                    const sz=Math.min(3.5, 25/w.length);
+                    stat('s'); const sz=Math.min(3.5, 25/w.length);
                     disp(`<div style="font-size:${sz}rem;line-height:1.1;color:#0f8;text-shadow:0 0 20px #0f8;font-weight:700;margin-top:5%;word-break:break-word">${w}</div>`);
                     return;
                 }
             }
-            
-            if(trigger && q){
-                stat('s');
-                await getAI(q,s);
-            }
+            if(trigger && q){ stat('s'); await getAI(q,s); }
         },400);
     };
-
-    rec.onend=()=>{
-        if(mic && !fet){
-            setTimeout(()=>{ if(mic) try{rec.start();}catch(e){} },200);
-        } else {
-            if(!fet) stat('');
-        }
-    };
+    rec.onend=()=>{ if(mic && !fet){ setTimeout(()=>{ if(mic) try{rec.start();}catch(e){} },200); } else { if(!fet) stat(''); } };
     try{rec.start();}catch(e){}
 }
 
@@ -242,39 +212,29 @@ async function getAI(q,s){
     if(fet || (Date.now()-lastReq<2000)) return;
     fet=1; lastReq=Date.now();
     setTimeout(()=>stat('f'),200);
-    
     if(rec) try{rec.abort();}catch(e){}
 
     try{
         const M_ID = MDLS[mIdx].id;
         const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${K}`;
-        
         const pmpt=`System: Class 10 Exam Expert (Nepal).
 SUBJECT: ${subj}.
 RULES:
 1. Response: ENGLISH ONLY.
 2. Mode: ${len}.
-3. Be direct. No filler.
+3. Be direct.
 Q: ${q}`;
-        
         abc=new AbortController();
         const res=await fetch(URL,{
             method:'POST',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({contents:[{parts:[{text:pmpt}]}],tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
         });
-        
         if(res.status===429) throw new Error("Limit Reached. Switch Model.");
         if(!res.ok) throw new Error("API Error");
-        
         const d=await res.json();
         const ans = d.candidates?.[0]?.content?.parts?.[0]?.text.trim();
         disp(ans || "No answer.");
-    }catch(e){
-        disp(`Error: ${e.message}`, 0);
-    }finally{
-        fet=0;
-        if(mic) togMic(false); 
-    }
+    }catch(e){ disp(`Error: ${e.message}`, 0); }finally{ fet=0; if(mic) togMic(false); }
 }
 
 function rendMenu(){
@@ -284,51 +244,60 @@ function rendMenu(){
         b.className = `mb ${i===mIdx?'act':''}`;
         b.innerHTML = `<b>${m.c}</b> <span style="font-size:0.9em;opacity:0.8">${m.n.replace('Gemini ','')}</span>`;
         b.onclick = (e) => {
-            e.stopPropagation();
-            mIdx = i;
-            upd();
-            mm.classList.remove('v');
-            stat('s');
+            e.stopPropagation(); mIdx = i; upd(); mm.classList.remove('v'); stat('s');
         };
         mm.appendChild(b);
     });
 }
 
-// --- SINGLE TAP LOGIC ---
-function tapH(e){
+// --- NEW TAP LOGIC (Whole Screen) ---
+// 1. Capture start coords
+document.body.addEventListener('touchstart', (e)=>{
+    tSX = e.changedTouches[0].screenX;
+    tSY = e.changedTouches[0].screenY;
+}, {passive:true});
+
+// 2. Analyze end coords
+document.body.addEventListener('touchend', (e)=>{
+    // Ignore clicks on links or specific interactive elements inside menu
     if(e.target.closest('.mb') || e.target.closest('a')) return;
+
+    // Calculate distance moved
+    let tEX = e.changedTouches[0].screenX;
+    let tEY = e.changedTouches[0].screenY;
+    let dist = Math.sqrt(Math.pow(tEX - tSX, 2) + Math.pow(tEY - tSY, 2));
+
+    // If moved > 10px, it is a scroll, NOT a tap. Ignore.
+    if(dist > 10) return;
+
+    // --- IT IS A TAP ---
     
-    // 1. Menu Open -> Close
+    // Exception: If tapping inside scrolling answer text, do nothing (let them read)
+    if(e.target.closest('#ai') && wc.classList.contains('av')) return;
+    
+    // ACTION LOGIC
     if(mm.classList.contains('v')){
         mm.classList.remove('v');
         return;
     }
-
-    // 2. Answer/Map Open -> Hide (Immediate)
     if(wc.classList.contains('av') || wc.classList.contains('mv')){
         hide();
         return;
     }
-
-    // 3. Mic ON -> Turn OFF
     if(mic){
         togMic(false);
-        return;
+    } else {
+        togMic(true);
     }
+}, {passive:false});
 
-    // 4. Default -> Turn Mic ON
-    togMic(true);
-}
-
-// Touchend for fast reaction
-wc.addEventListener('touchend', (e)=>{
+// Mouse fallback for PC testing
+document.body.addEventListener('click', (e)=>{
     if(e.target.closest('#ai') && wc.classList.contains('av')) return;
-    tapH(e);
-});
-// Mouse fallback
-wc.addEventListener('click', (e)=>{
-    if(e.target.closest('#ai') && wc.classList.contains('av')) return;
-    tapH(e);
+    if(e.target.closest('.mb')) return;
+    if(mm.classList.contains('v')){ mm.classList.remove('v'); return; }
+    if(wc.classList.contains('av') || wc.classList.contains('mv')){ hide(); return; }
+    togMic();
 });
 
 wc.addEventListener('contextmenu',e=>e.preventDefault());
@@ -336,7 +305,7 @@ map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("Exam Master Final Ready");
+console.log("Exam Master Instant Ready");
 </script>
 </body>
 </html>
