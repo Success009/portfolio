@@ -342,3 +342,234 @@ console.log("English Exam Mode Ready");
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Watch - Nepali Core</title>
+<style>
+:root{--t:0.6s;--c:cubic-bezier(0.34,1.56,0.64,1)}
+/* SCROLL FIX: Allows hiding address bar by swiping up on bezels */
+body{
+    background:#000;
+    color:#fff;
+    font-family:'Segoe UI',sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:115vh; /* Taller than viewport to allow scroll */
+    height: auto;
+    margin:0;
+    overflow-y:auto; /* Enable vertical scroll */
+    padding-bottom: 50px;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+}
+.wc{width:300px;height:300px;background:linear-gradient(145deg,#1a1a1a,#0a0a0a);border-radius:25px;border:3px solid #333;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;box-shadow:0 0 20px #000c,inset 0 1px 2px #ffffff1a;transition:border-radius var(--t) ease-in-out,width .4s ease,height .4s ease;overflow:hidden}
+#clk{font-size:2.8rem;font-family:'Courier New',monospace;letter-spacing:2px;color:#0f8;text-shadow:0 0 10px #00ff881a;font-weight:300;transition:transform var(--t) var(--c);z-index:2}
+#dt{font-size:.9rem;opacity:.8;color:#888;font-weight:300;position:absolute;top:20%;left:50%;transform:translateX(-50%);transition:opacity .3s,transform var(--t) var(--c);letter-spacing:1px;text-transform:uppercase}
+#d-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .3s}
+#d-svg text{font-family:'Segoe UI',sans-serif;font-weight:300;font-size:14px;letter-spacing:2.5px;fill:#888;text-transform:uppercase}
+#bat{position:absolute;font-size:.8rem;color:#0f8;opacity:.7;transition:all var(--t) var(--c);transform:translate(-50%,-50%)}
+.wc:not(.cv) #bat{top:8%;left:88%}.wc.cv #bat{top:78%;left:80%}
+.sd{position:absolute;width:8px;height:8px;background:#444;border-radius:50%;transition:all .2s;transform:translate(-50%,-50%);opacity:.6}
+.wc:not(.cv) .sd{top:8%;left:8%}.wc.cv .sd{top:78%;left:20%}
+#mi{position:absolute;font-size:.7rem;color:#666;opacity:.8;transition:all var(--t) var(--c);transform:translate(-50%,-50%);white-space:nowrap}
+.wc:not(.cv) #mi{top:92%;left:85%}.wc.cv #mi{top:85%;left:50%}
+#ai{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%) scale(.95);width:90%;text-align:center;font-size:1.3rem;line-height:1.3;opacity:0;visibility:hidden;transition:all var(--t) var(--c),font-size .2s;word-wrap:break-word;max-height:65%;overflow-y:auto;color:#fff;z-index:10;background:#050505d9;border-radius:15px;padding:10px;box-sizing:border-box;pointer-events:auto}
+#ai b,#ai strong{color:#0f8;font-weight:700}#ai ul{text-align:left;padding-left:15px;margin:5px 0}#ai li{margin-bottom:4px}
+#map{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;height:90%;opacity:0;visibility:hidden;transition:all var(--t) var(--c);z-index:10;border-radius:15px;overflow:hidden;cursor:pointer}
+#map img{width:100%;height:100%;object-fit:cover;border-radius:15px;transition:border-radius var(--t) var(--c)}
+.sl{text-align:center;font-size:.8rem;line-height:1.4;color:#ccc;display:flex;flex-direction:column}
+.wc.av #clk,.wc.mv #clk{transform:translateY(-120px) scale(.5)}
+.wc.av #dt,.wc.mv #dt,.wc.av #d-svg,.wc.mv #d-svg{opacity:0;transform:translateY(-120px)}
+.wc.av #bat,.wc.mv #bat,.wc.av #mi,.wc.mv #mi,.wc.av .sd,.wc.mv .sd{opacity:0;transform:translate(-50%,60px)}
+.wc.av #ai{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+.wc.mv #map{opacity:1;visibility:visible}
+.wb{position:absolute;top:5px;left:5px;right:5px;bottom:5px;border:1px solid #333;border-radius:20px;pointer-events:none;transition:border-radius var(--t) ease-in-out}
+.sd.l{background:#06f;opacity:.8;box-shadow:0 0 5px #06f;animation:p 1.5s infinite}
+.sd.f{background:#f90;opacity:.8;box-shadow:0 0 5px #f90;animation:p .3s infinite}
+.sd.s{background:#0f8;opacity:1;box-shadow:0 0 15px #0f8;animation:fl .5s forwards}
+.sd.a{background:#0f8;opacity:.6;animation:p 3s infinite}
+@keyframes p{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes fl{0%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}100%{opacity:.8;transform:translate(-50%,-50%) scale(1)}}
+.wc.cv{border-radius:50%}.wc.cv .wb{border-radius:50%}
+.wc.cv #dt{opacity:0!important;visibility:hidden!important}
+.wc.cv #d-svg{opacity:.8;visibility:visible}
+.wc.cv.av #clk,.wc.cv.mv #clk{transform:translateY(-115px) scale(.6)}
+.wc.cv #ai{width:80%;height:65%;top:52%}.wc.cv #map{width:100%;height:100%;border-radius:50%}
+.wc.cv #map img{border-radius:50%}
+</style>
+</head>
+<body>
+<div class="wc" id="wc">
+<div class="wb"></div><div id="clk"></div><div id="dt"></div>
+<svg id="d-svg" viewBox="0 0 300 300"><defs><path id="dp" d="M 60 150 a 90 90 0 1 1 180 0" fill="none"/></defs><text><textPath xlink:href="#dp" startOffset="50%" text-anchor="middle">LOADING...</textPath></text></svg>
+<div id="ai"></div>
+<div id="map"><img src="https://raw.githubusercontent.com/Success009/portfolio/refs/heads/main/exam/new-political-map-of-Nepal-1024x678.jpg" alt="Map"></div>
+<div id="bat">85%</div><div class="sd" id="sd"></div><div id="mi">M1</div>
+</div>
+<script>
+// NEPALI HELP MENU
+const HELP=`<div class="sl"><span>मलाई भन [Question]</span><span>गुगल गर [Question]</span><span>Very Short / Short / Long</span><span>Spelling of [Word]</span><span>नक्सा देखाउ (Map)</span><span>उत्तर देखाउ (Answer)</span></div>`;
+const K="AIzaSyBLstnm6K8jyDy29ModBoBoe7Uq7SRKeZE";
+let rec,hT,mic=0,fet=0,rTo,mod=0,cv=0,hist=[],hI=-1,abc,fs=1.3,wl,len="concise";
+const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath");
+
+function upd(){
+    const d=new Date();
+    clk.textContent=d.toLocaleTimeString('en-US',{hour12:true,hour:'numeric',minute:'2-digit'}).replace(/ AM| PM/g,"");
+    dt.textContent=d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}).toUpperCase();
+    if(dsp)dsp.textContent="ENGLISH EXAM";
+}
+
+async function wlReq(){
+try{if('wakeLock'in navigator)wl=await navigator.wakeLock.request('screen')}catch(e){}}
+
+function disp(t,h=1){
+    wc.classList.remove('mv');
+    if(h&&t){hist.unshift(t);if(hist.length>20)hist.pop();hI=0}
+    ai.innerHTML=(t||"").replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/^[\*\-]\s+(.*)$/gm,'<li>$1</li>').replace(/\n/g,'<br>');
+    ai.style.fontSize=fs+'rem';
+    wc.classList.add('av');
+    ai.scrollTop=0;
+}
+function hide(){wc.classList.remove('av')}
+
+function stat(s){
+    sd.className='sd';
+    if(s=='l')sd.classList.add('l');
+    else if(s=='s')sd.classList.add('s');
+    else if(s=='f')sd.classList.add('f');
+    else sd.classList.add('a');
+}
+
+function togMic(){
+    if(fet)return;
+    mic=!mic;
+    if(mic){stat('l');initRec()}else{stat('a');if(rec)rec.stop()}
+}
+
+function initRec(){
+    if(!mic||!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
+    rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+    rec.continuous=1;rec.interimResults=0;
+    // SET TO NEPALI
+    rec.lang='ne-NP';
+    rec.onstart=()=>!fet&&stat('l');
+    rec.onresult=e=>{
+        if(fet)return;
+        const t=e.results[e.results.length-1][0].transcript.trim();
+        const lt=t.toLowerCase();
+        
+        if(rTo)clearTimeout(rTo);
+        rTo=setTimeout(async()=>{
+            if(fet)return;
+            
+            // --- COMMANDS HANDLING ---
+            
+            // 1. HELP / FUNCTIONS
+            if(t.includes("फङ्सन") || t.includes("function") || t.includes("हेल्प")){disp(HELP,0);return}
+
+            // 2. LENGTH SETTINGS (Handles English words spoken in Nepali mode)
+            // Very Short
+            if(t.includes("very short") || t.includes("धेरै छोटो") || t.includes("भेरी सर्ट")){
+                len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;
+            }
+            // Short
+            if(t.includes("short answer") || t.includes("छोटो उत्तर") || t.includes("short")){
+                len="concise"; disp("Mode: Short",0); setTimeout(hide,1000); return;
+            }
+            // Long
+            if(t.includes("long answer") || t.includes("लामो उत्तर") || t.includes("long")){
+                len="comprehensive"; disp("Mode: Long",0); setTimeout(hide,1000); return;
+            }
+
+            // 3. MAP
+            if(t.includes("नक्सा") || t.includes("map")){wc.classList.remove('av');wc.classList.add('mv');return}
+            
+            // 4. DISPLAY ANSWER (History)
+            if(t.includes("उत्तर देखाउ") || t.includes("answer") || t.includes("show")){
+                if(hist.length>0) disp(hist[0], 0);
+                return;
+            }
+
+            // 5. QUERY PROCESSING
+            let q='',s=0;
+
+            // Trigger: "Malai Bhana" (मलाई भन)
+            if(t.includes('मलाई भन') || t.includes('मलाई भन्नुहोस्')){
+                // Remove the trigger phrase to get the question
+                q = t.replace(/मलाई भन|मलाई भन्नुहोस्/gi,'').trim();
+            }
+            else if(t.includes("गुगल") || lt.startsWith("with google")){
+                q=t.replace(/गुगल गर|गुगल|with google/gi,'').trim(); s=1;
+            }
+            else if(t.includes("spelling") || t.includes("स्पेलिङ")){
+                const w=t.replace(/spelling of|स्पेलिङ/gi,'').trim();
+                if(!w)return;
+                const sz=Math.min(3.5, 25/w.length);
+                disp(`<div style="font-size:${sz}rem;line-height:1.1;color:#0f8;text-shadow:0 0 20px #0f8,0 0 10px #0f8;font-weight:700;margin-top:5%;word-break:break-word">${w}</div>`);
+                return;
+            }
+            
+            if(q){
+                try{rec.stop()}catch(e){}
+                const ans=await getAI(q,s);
+                if(ans)disp(ans);
+                if(mic&&!fet)try{rec.start()}catch(e){}
+            }
+        },400);
+    };
+    rec.onend=()=>{if(mic&&!fet&&!hld)setTimeout(()=>mic&&!fet&&rec.start(),200)};
+    try{rec.start()}catch(e){}
+}
+
+async function getAI(q,s){
+    if(fet)return null;
+    fet=1;stat('s');setTimeout(()=>stat('f'),500);
+    try{
+        // AI PROMPT: Understands Nepali input, Output strictly English (unless asked otherwise)
+        const pmpt=`System: You are a Class 10 English Exam Expert for a Nepali student.
+RULES: 
+1. The user will ask in Nepali or English.
+2. YOU MUST REPLY IN ENGLISH ONLY (because it is an English exam).
+3. Exception: If the user specifically asks "Meaning in Nepali", then use Nepali.
+4. Current Length Mode: ${len}.
+5. If the question is just a word, give definition/synonyms.
+Q: ${q}`;
+        abc=new AbortController();
+        const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${K}`,{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({contents:[{parts:[{text:pmpt}]}],tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
+        });
+        const d=await res.json();
+        return d.candidates?.[0]?.content?.parts?.[0]?.text.trim()||"No answer.";
+    }catch(e){return "Error."}finally{fet=0;stat('l')}
+}
+
+let hld=0,ts=0,isc=0;
+function sH(e){if(e.target.closest('#ai'))isc=0;else e.preventDefault();hld=1;ts=Date.now()}
+function eH(e){
+    if(!e.target.closest('#ai'))e.preventDefault();
+    hld=0;
+    if(!isc&&(Date.now()-ts<500)){
+        if(fet)return;
+        if(wc.classList.contains('av'))hide();
+        else if(wc.classList.contains('mv'))wc.classList.remove('mv');
+        else togMic();
+    }
+    isc=0;
+}
+
+wc.addEventListener('touchstart',sH,{passive:0});wc.addEventListener('touchend',eH,{passive:0});
+wc.addEventListener('mousedown',sH);wc.addEventListener('mouseup',eH);
+wc.addEventListener('contextmenu',e=>e.preventDefault());
+map.addEventListener('click',()=>wc.classList.remove('mv'));
+document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
+
+upd();wlReq();setInterval(upd,1000);
+console.log("Nepali Exam Mode Ready");
+</script>
+</body>
+</html>
