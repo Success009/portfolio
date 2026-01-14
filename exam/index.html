@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exam Master - Stealth</title>
+<title>Exam Master - Zone</title>
 <style>
-:root{--t:0.3s;--c:cubic-bezier(0.34,1.56,0.64,1)} /* Faster transition */
+:root{--t:0.2s;--c:cubic-bezier(0.34,1.56,0.64,1)}
 body{
     background:#000;
     color:#fff;
@@ -12,8 +12,7 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    /* 102vh allows just enough scroll to hide address bar */
-    min-height: 102vh; 
+    min-height: 102vh; /* Scrollable to hide bar */
     height: auto;
     margin:0;
     overflow-y:auto;
@@ -74,7 +73,6 @@ body{
 <div id="mm"></div>
 </div>
 <script>
-// KEYS
 const K1 = "AIzaSyDYneePNgz2";
 const K2 = "AfGih4yIM1ag1OFykbyPTHc";
 const K = K1 + K2;
@@ -82,16 +80,16 @@ const HELP=`<div class="sl"><span>SUBJECT [Name]</span><span>LISTEN [Q]</span><s
 
 // MODELS
 const MDLS = [
-    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},   // Default
-    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},     // Smart
-    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"}, // Newest
-    {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"} // Fastest
+    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},
+    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},
+    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"},
+    {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"}
 ];
 let mIdx = 0;
 
 let rec,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General";
 let lastReq=0;
-let tSX=0, tSY=0; // Touch Start Coords
+let ignoreEnd = false; // Flag to prevent restart loops
 
 const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath"),mi=document.getElementById('mi'),mm=document.getElementById('mm');
 
@@ -112,8 +110,7 @@ function disp(t,h=1){
     ai.style.fontSize=fs+'rem';
     wc.classList.add('av');
     ai.scrollTop=0;
-    
-    // Safety: If showing answer, ensure mic is marked OFF and stopped
+    // Safety: Auto-stop mic if answer shown
     if(mic) togMic(false);
 }
 
@@ -121,7 +118,6 @@ function hide(){
     wc.classList.remove('av'); 
     mm.classList.remove('v');
     wc.classList.remove('mv');
-    // Safety
     if(mic) togMic(false);
 }
 
@@ -132,21 +128,19 @@ function stat(s){
     else if(s=='s')sd.classList.add('s');
 }
 
-// --- FIXED MIC LOGIC ---
+// --- MIC LOGIC ---
 function togMic(forceState){
     if(fet) return;
-    
     const nextState = (typeof forceState !== 'undefined') ? forceState : !mic;
     
     if(mic === nextState) return;
     
     mic = nextState;
-    
     if(mic){
         stat('l');
         initRec();
     } else {
-        stat(''); // Kill lights
+        stat('');
         if(rec){
             try{ rec.abort(); }catch(e){} // Hard Stop
         }
@@ -195,7 +189,6 @@ function initRec(){
             if(lt.includes("long answer")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
             if(lt.includes("map") || lt.includes("display map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); togMic(false); return;}
 
-            // QUERY
             let q='',s=0;
             if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me") || lt.includes("what is") || lt.includes("define") || lt.includes("explain")){
                 q = t; trigger=true;
@@ -214,11 +207,11 @@ function initRec(){
     };
 
     rec.onend=()=>{
-        // CRITICAL FIX: Only restart if user actually wants it ON
+        // Restart only if mic var is true AND we aren't fetching
         if(mic && !fet){
             setTimeout(()=>{ if(mic) try{rec.start();}catch(e){} },200);
         } else {
-            if(!fet) stat(''); // Ensure lights off
+            if(!fet) stat('');
         }
     };
     try{rec.start();}catch(e){}
@@ -266,66 +259,62 @@ function rendMenu(){
     });
 }
 
-// --- AGGRESSIVE TAP LOGIC ---
+// --- ZONE TOUCH SYSTEM (Fixes Lag & Scroll Conflicts) ---
+
 document.body.addEventListener('touchstart', (e)=>{
-    tSX = e.changedTouches[0].screenX;
-    tSY = e.changedTouches[0].screenY;
-}, {passive:true});
+    // Get Touch X Coord
+    const x = e.changedTouches[0].clientX;
+    const w = window.innerWidth;
+    
+    // Check if Menu button interaction (allow)
+    if(e.target.closest('.mb')) return;
+
+    // ZONE DEFINITION
+    // Bezel = Outer 40px on Left and Right
+    const isBezel = (x < 40) || (x > w - 40);
+
+    // --- BEZEL LOGIC (SCROLL) ---
+    if(isBezel){
+        // Do nothing. Allow default scroll.
+        return;
+    }
+
+    // --- CENTER LOGIC (BUTTON) ---
+    // Prevent default scroll behavior in the center to make it a pure button
+    if(!e.target.closest('#ai')) e.preventDefault(); 
+    
+    // PANIC MODE (Touch Start = IMMEDIATE OFF)
+    // If Mic is ON, or Answer is Visible -> KILL IT NOW.
+    if(mic || wc.classList.contains('av') || wc.classList.contains('mv') || mm.classList.contains('v')){
+        hide();      // Hides visuals
+        togMic(false); // Kills mic
+        ignoreEnd = true; // Tell touchend NOT to turn it back on
+    } else {
+        ignoreEnd = false; // We are Idle, so allow touchend to start mic
+    }
+}, {passive:false}); // Passive false allows preventDefault
 
 document.body.addEventListener('touchend', (e)=>{
-    // 1. Allow interacting with Menu buttons
-    if(e.target.closest('.mb')) return;
+    // If bezel or menu, ignore
+    const x = e.changedTouches[0].clientX;
+    const w = window.innerWidth;
+    if((x < 40) || (x > w - 40) || e.target.closest('.mb')) return;
 
-    // 2. Calc Dist
-    let tEX = e.changedTouches[0].screenX;
-    let tEY = e.changedTouches[0].screenY;
-    let dist = Math.sqrt(Math.pow(tEX - tSX, 2) + Math.pow(tEY - tSY, 2));
-
-    // 3. If Moved > 10px -> IT IS A SCROLL. Ignore.
-    if(dist > 10) return;
-
-    // --- IT IS A TAP ---
-
-    // Special Case: Allow scrolling text inside answer box without closing it
-    // Only close if tapping OUTSIDE the text content area (or if you just tap without dragging inside it)
-    // But user requested "Single tap hides answer".
-    // So: If I tap (dist < 10) inside answer, I probably want to hide it too, or stop mic.
-    
-    // ACTION PRIORITY
-    if(mm.classList.contains('v')){
-        mm.classList.remove('v');
-        return;
-    }
-    
-    // If Answer/Map Visible -> HIDE
-    if(wc.classList.contains('av') || wc.classList.contains('mv')){
-        hide();
-        return;
-    }
-
-    // If Mic ON -> STOP
-    if(mic){
-        togMic(false);
-    } else {
-        // If Nothing -> START MIC
+    // CENTER LOGIC (START)
+    // If we just killed the mic (ignoreEnd), do nothing.
+    // If we are Idle -> Start Mic
+    if(!ignoreEnd && !mic && !fet){
         togMic(true);
     }
+    ignoreEnd = false; // Reset
 }, {passive:true});
-
-// PC Mouse Support
-document.body.addEventListener('click', (e)=>{
-    if(e.target.closest('.mb')) return;
-    if(mm.classList.contains('v')){ mm.classList.remove('v'); return; }
-    if(wc.classList.contains('av') || wc.classList.contains('mv')){ hide(); return; }
-    togMic();
-});
 
 wc.addEventListener('contextmenu',e=>e.preventDefault());
 map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("Exam Master Stealth Ready");
+console.log("Exam Master Zone Ready");
 </script>
 </body>
 </html>
