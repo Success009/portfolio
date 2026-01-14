@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Watch - Samajik Final</title>
+<title>Smart Watch - Samajik Robust</title>
 <style>
 :root{--t:0.6s;--c:cubic-bezier(0.34,1.56,0.64,1)}
 body{
@@ -70,24 +70,22 @@ body{
 <div id="mm"></div>
 </div>
 <script>
-// --- KEY OBFUSCATION (To bypass Google Scanners) ---
 const K1 = "AIzaSyDYneePNgz2";
 const K2 = "AfGih4yIM1ag1OFykbyPTHc";
 const K = K1 + K2;
-
 const HELP=`<div class="sl"><span>मलाई भन [प्रश्न]</span><span>Hold 5s (Menu)</span><span>Short / Long</span><span>Map / Answer</span></div>`;
 
-// ORDERED LOGICALLY: M1=Oldest, M4=Newest
+// MODELS
 const MDLS = [
     {n: "Gemini 1.5 Flash", id: "gemini-1.5-flash", c:"M1"},
     {n: "Gemini 2.0 Flash", id: "gemini-2.0-flash", c:"M2"},
     {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M3"},
     {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M4"}
 ];
-let mIdx = 2; // Default to M3 (Gemini 2.5)
+let mIdx = 2; // Default M3
 
 let rec,hT,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise";
-let holdT, isHold=0, lastReq=0; // lastReq prevents spam
+let holdT, isHold=0, lastReq=0;
 
 const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath"),mi=document.getElementById('mi'),mm=document.getElementById('mm');
 
@@ -96,7 +94,7 @@ function upd(){
     clk.textContent=d.toLocaleTimeString('en-US',{hour12:true,hour:'numeric',minute:'2-digit'}).replace(/ AM| PM/g,"");
     dt.textContent=d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}).toUpperCase();
     if(dsp)dsp.textContent="SAMAJIK EXAM";
-    mi.textContent = MDLS[mIdx].c; // Display M1, M2, etc.
+    mi.textContent = MDLS[mIdx].c;
 }
 
 async function wlReq(){try{if('wakeLock'in navigator)wl=await navigator.wakeLock.request('screen')}catch(e){}}
@@ -118,10 +116,136 @@ function stat(s){
     else if(s=='s')sd.classList.add('s');
 }
 
+// --- ROBUST MIC LOGIC ---
 function togMic(){
-    if(fet)return;
-    mic=!mic;
-    if(mic){stat('l');initRec()}else{sd.className='sd';if(rec)rec.stop()}
+    if(fet)return; // Do nothing if currently fetching answer
+    
+    // Toggle State
+    mic = !mic;
+
+    if(mic){
+        // TURN ON
+        stat('l');
+        initRec();
+    } else {
+        // TURN OFF
+        stat(''); // Remove all lights immediately
+        if(rec){
+            try{ rec.stop(); }catch(e){}
+            try{ rec.abort(); }catch(e){} // Force stop
+        }
+    }
+}
+
+function initRec(){
+    // Prevent multiple instances
+    if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
+    if(rec){ try{rec.stop();}catch(e){} } // Clean up old ref
+
+    rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+    rec.continuous=true; 
+    rec.interimResults=false;
+    rec.lang='ne-NP';
+    
+    rec.onstart=()=>{
+        if(!fet && mic) stat('l'); // Confirm listening
+    };
+    
+    rec.onresult=e=>{
+        if(fet || !mic) return; // Ignore if off or fetching
+        const t=e.results[e.results.length-1][0].transcript.trim();
+        const lt=t.toLowerCase();
+        
+        if(rTo)clearTimeout(rTo);
+        rTo=setTimeout(async()=>{
+            if(fet || !mic) return;
+            let trigger=false;
+
+            // COMMANDS
+            if(t.includes("फङ्सन") || t.includes("function") || t.includes("हेल्प")){stat('s'); disp(HELP,0); return;}
+            
+            // LENGTH
+            if(t.includes("very short") || t.includes("धेरै छोटो")){stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;}
+            if(t.includes("short answer") || t.includes("छोटो उत्तर")){stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;}
+            if(t.includes("long answer") || t.includes("लामो उत्तर")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
+
+            // UTILS
+            if(t.includes("नक्सा") || t.includes("map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); return;}
+            if(t.includes("उत्तर देखाउ") || t.includes("answer") || t.includes("show")){stat('s'); if(hist.length>0) disp(hist[0], 0); return;}
+
+            // QUERY
+            let q='',s=0;
+            if(t.includes('मलाई भन') || t.includes('मलाई भन्नुहोस्')){q = t.replace(/मलाई भन|मलाई भन्नुहोस्/gi,'').trim(); trigger=true;}
+            else if(t.includes("गुगल") || lt.startsWith("with google")){q=t.replace(/गुगल गर|गुगल|with google/gi,'').trim(); s=1; trigger=true;}
+            
+            if(trigger && q){
+                stat('s');
+                // Don't stop mic here, just fetch.
+                // Stopping mic causes restarting loop issues in some browsers.
+                await getAI(q,s);
+            }
+        },400);
+    };
+
+    // CRITICAL FIX: RESTART LOOP LOGIC
+    rec.onend=()=>{
+        if(mic && !fet && !isHold){
+            // User wants mic ON, and we aren't busy. Restart.
+            setTimeout(()=>{
+                if(mic) try{rec.start();}catch(e){}
+            },200);
+        } else {
+            // User turned mic OFF, or we are busy. Ensure visual is OFF.
+            if(!fet && !mic) stat('');
+        }
+    };
+    
+    // Start
+    try{rec.start();}catch(e){}
+}
+
+async function getAI(q,s){
+    if(fet || (Date.now()-lastReq<2000)) return;
+    fet=1; lastReq=Date.now();
+    setTimeout(()=>stat('f'),200);
+    
+    // Pause Rec temporarily to avoid self-listening
+    if(rec) try{rec.stop();}catch(e){}
+
+    try{
+        const M_ID = MDLS[mIdx].id;
+        const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${K}`;
+        const pmpt=`System: You are a Class 10 Samajik (Social Studies) Expert Nepal.
+RULES: 
+1. OUTPUT: NEPALI ONLY (Devanagari).
+2. Mode: ${len}.
+FORMAT: 
+- Very Short: One sentence only.
+- Short/Long: Bullet points.
+Q: ${q}`;
+        
+        abc=new AbortController();
+        const res=await fetch(URL,{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({contents:[{parts:[{text:pmpt}]}],tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
+        });
+        
+        if(res.status===429) throw new Error("API Limit. Switch M.");
+        if(!res.ok) throw new Error("API Error");
+        
+        const d=await res.json();
+        const ans = d.candidates?.[0]?.content?.parts?.[0]?.text.trim();
+        disp(ans || "No answer.");
+    }catch(e){
+        disp(`Error: ${e.message}`, 0);
+    }finally{
+        fet=0;
+        // Resume Listening if mic was ON
+        if(mic) {
+            stat('l');
+            setTimeout(()=>{ try{rec.start();}catch(e){} }, 200);
+        }
+    }
 }
 
 function rendMenu(){
@@ -141,102 +265,11 @@ function rendMenu(){
     });
 }
 
-function initRec(){
-    if(!mic||!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
-    rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
-    rec.continuous=1;rec.interimResults=0;
-    rec.lang='ne-NP';
-    rec.onstart=()=>!fet&&stat('l');
-    rec.onresult=e=>{
-        if(fet)return;
-        const t=e.results[e.results.length-1][0].transcript.trim();
-        const lt=t.toLowerCase();
-        
-        if(rTo)clearTimeout(rTo);
-        rTo=setTimeout(async()=>{
-            if(fet)return;
-            let trigger=false;
-
-            // COMMANDS
-            if(t.includes("फङ्सन") || t.includes("function") || t.includes("हेल्प")){stat('s'); disp(HELP,0); return;}
-
-            // MODES
-            if(t.includes("very short") || t.includes("धेरै छोटो")){
-                stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;
-            }
-            if(t.includes("short answer") || t.includes("छोटो उत्तर")){
-                stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;
-            }
-            if(t.includes("long answer") || t.includes("लामो उत्तर")){
-                stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;
-            }
-
-            // UTILS
-            if(t.includes("नक्सा") || t.includes("map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); return;}
-            if(t.includes("उत्तर देखाउ") || t.includes("answer") || t.includes("show")){stat('s'); if(hist.length>0) disp(hist[0], 0); return;}
-
-            // QUERY
-            let q='',s=0;
-            if(t.includes('मलाई भन') || t.includes('मलाई भन्नुहोस्')){q = t.replace(/मलाई भन|मलाई भन्नुहोस्/gi,'').trim(); trigger=true;}
-            else if(t.includes("गुगल") || lt.startsWith("with google")){q=t.replace(/गुगल गर|गुगल|with google/gi,'').trim(); s=1; trigger=true;}
-            
-            if(trigger && q){
-                try{rec.stop()}catch(e){}
-                stat('s');
-                await getAI(q,s); // Await handles logic
-                if(mic&&!fet)try{rec.start()}catch(e){}
-            }
-        },400);
-    };
-    rec.onend=()=>{if(mic&&!fet&&!isHold)setTimeout(()=>mic&&!fet&&rec.start(),200)};
-    try{rec.start()}catch(e){}
-}
-
-async function getAI(q,s){
-    // SPAM PROTECTION: Block if request was made < 2 seconds ago
-    if(fet || (Date.now() - lastReq < 2000)) return;
-    
-    fet=1;
-    lastReq = Date.now();
-    setTimeout(()=>stat('f'),200);
-    
-    try{
-        const M_ID = MDLS[mIdx].id;
-        const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${K}`;
-        const pmpt=`System: You are a Class 10 Samajik (Social Studies) Expert Nepal.
-RULES: 
-1. OUTPUT: NEPALI ONLY (Devanagari).
-2. Mode: ${len}.
-FORMAT: 
-- Very Short: One sentence only.
-- Short/Long: Bullet points (बुँदागत).
-Q: ${q}`;
-        
-        abc=new AbortController();
-        const res=await fetch(URL,{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({contents:[{parts:[{text:pmpt}]}],tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
-        });
-        
-        if(res.status === 429) throw new Error("API Limit Reached. Switch Model.");
-        if(!res.ok) throw new Error("API Error");
-        
-        const d=await res.json();
-        const ans = d.candidates?.[0]?.content?.parts?.[0]?.text.trim();
-        if(ans) disp(ans);
-        else disp("No answer generated.");
-        
-    }catch(e){
-        disp(`Error: ${e.message}`, 0);
-    }finally{
-        fet=0; stat('l');
-    }
-}
-
-// TOUCH
+// TOUCH HANDLERS
 function sH(e){
     if(e.target.closest('#ai') || e.target.closest('#mm')) return;
     isHold = 0;
+    // 5 Second Hold for Menu
     holdT = setTimeout(()=>{
         isHold = 1;
         rendMenu();
@@ -247,12 +280,16 @@ function sH(e){
 
 function eH(e){
     if(e.target.closest('#ai') || e.target.closest('#mm')) return;
+    
+    // Clear the hold timer immediately on lift
     clearTimeout(holdT);
+    
     if(!isHold){
+        // TAP Detected
         if(fet)return;
         if(wc.classList.contains('av')) hide();
         else if(wc.classList.contains('mv')) wc.classList.remove('mv');
-        else togMic();
+        else togMic(); // TOGGLE MIC
     }
     isHold = 0;
 }
@@ -264,7 +301,7 @@ map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("Samajik Final Ready");
+console.log("Samajik Robust Ready");
 </script>
 </body>
 </html>
