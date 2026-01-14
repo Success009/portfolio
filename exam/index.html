@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Watch - Samajik Robust</title>
+<title>Smart Watch - Exam Mode (ENG)</title>
 <style>
 :root{--t:0.6s;--c:cubic-bezier(0.34,1.56,0.64,1)}
 body{
@@ -73,7 +73,7 @@ body{
 const K1 = "AIzaSyDYneePNgz2";
 const K2 = "AfGih4yIM1ag1OFykbyPTHc";
 const K = K1 + K2;
-const HELP=`<div class="sl"><span>मलाई भन [प्रश्न]</span><span>Hold 5s (Menu)</span><span>Short / Long</span><span>Map / Answer</span></div>`;
+const HELP=`<div class="sl"><span>LISTEN [Question]</span><span>SEARCH [Topic]</span><span>Short / Long Answer</span><span>Display Map / Answer</span><span>Hold 5s (Menu)</span></div>`;
 
 // MODELS
 const MDLS = [
@@ -93,7 +93,7 @@ function upd(){
     const d=new Date();
     clk.textContent=d.toLocaleTimeString('en-US',{hour12:true,hour:'numeric',minute:'2-digit'}).replace(/ AM| PM/g,"");
     dt.textContent=d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}).toUpperCase();
-    if(dsp)dsp.textContent="SAMAJIK EXAM";
+    if(dsp)dsp.textContent="ENGLISH EXAM";
     mi.textContent = MDLS[mIdx].c;
 }
 
@@ -118,41 +118,33 @@ function stat(s){
 
 // --- ROBUST MIC LOGIC ---
 function togMic(){
-    if(fet)return; // Do nothing if currently fetching answer
-    
-    // Toggle State
+    if(fet)return;
     mic = !mic;
-
     if(mic){
-        // TURN ON
         stat('l');
         initRec();
     } else {
-        // TURN OFF
-        stat(''); // Remove all lights immediately
+        stat('');
         if(rec){
             try{ rec.stop(); }catch(e){}
-            try{ rec.abort(); }catch(e){} // Force stop
+            try{ rec.abort(); }catch(e){}
         }
     }
 }
 
 function initRec(){
-    // Prevent multiple instances
     if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
-    if(rec){ try{rec.stop();}catch(e){} } // Clean up old ref
+    if(rec){ try{rec.stop();}catch(e){} }
 
     rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
     rec.continuous=true; 
     rec.interimResults=false;
-    rec.lang='ne-NP';
+    rec.lang='en-US'; // ENGLISH MODE
     
-    rec.onstart=()=>{
-        if(!fet && mic) stat('l'); // Confirm listening
-    };
+    rec.onstart=()=>{ if(!fet && mic) stat('l'); };
     
     rec.onresult=e=>{
-        if(fet || !mic) return; // Ignore if off or fetching
+        if(fet || !mic) return;
         const t=e.results[e.results.length-1][0].transcript.trim();
         const lt=t.toLowerCase();
         
@@ -162,45 +154,40 @@ function initRec(){
             let trigger=false;
 
             // COMMANDS
-            if(t.includes("फङ्सन") || t.includes("function") || t.includes("हेल्प")){stat('s'); disp(HELP,0); return;}
+            if(lt.includes("help") || lt.includes("function")){stat('s'); disp(HELP,0); return;}
             
             // LENGTH
-            if(t.includes("very short") || t.includes("धेरै छोटो")){stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;}
-            if(t.includes("short answer") || t.includes("छोटो उत्तर")){stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;}
-            if(t.includes("long answer") || t.includes("लामो उत्तर")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
+            if(lt.includes("very short")){stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;}
+            if(lt.includes("short answer")){stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;}
+            if(lt.includes("long answer")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
 
             // UTILS
-            if(t.includes("नक्सा") || t.includes("map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); return;}
-            if(t.includes("उत्तर देखाउ") || t.includes("answer") || t.includes("show")){stat('s'); if(hist.length>0) disp(hist[0], 0); return;}
+            if(lt.includes("map") || lt.includes("display map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); return;}
+            if(lt.includes("show answer") || lt.includes("display answer")){stat('s'); if(hist.length>0) disp(hist[0], 0); return;}
 
-            // QUERY
+            // QUERY TRIGGERS (English)
             let q='',s=0;
-            if(t.includes('मलाई भन') || t.includes('मलाई भन्नुहोस्')){q = t.replace(/मलाई भन|मलाई भन्नुहोस्/gi,'').trim(); trigger=true;}
-            else if(t.includes("गुगल") || lt.startsWith("with google")){q=t.replace(/गुगल गर|गुगल|with google/gi,'').trim(); s=1; trigger=true;}
+            if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me")){
+                q = t.replace(/listen|question|tell me/gi,'').trim(); trigger=true;
+            }
+            else if(lt.includes("google") || lt.includes("search")){
+                q=t.replace(/google|search|with google/gi,'').trim(); s=1; trigger=true;
+            }
             
             if(trigger && q){
                 stat('s');
-                // Don't stop mic here, just fetch.
-                // Stopping mic causes restarting loop issues in some browsers.
                 await getAI(q,s);
             }
         },400);
     };
 
-    // CRITICAL FIX: RESTART LOOP LOGIC
     rec.onend=()=>{
         if(mic && !fet && !isHold){
-            // User wants mic ON, and we aren't busy. Restart.
-            setTimeout(()=>{
-                if(mic) try{rec.start();}catch(e){}
-            },200);
+            setTimeout(()=>{ if(mic) try{rec.start();}catch(e){} },200);
         } else {
-            // User turned mic OFF, or we are busy. Ensure visual is OFF.
             if(!fet && !mic) stat('');
         }
     };
-    
-    // Start
     try{rec.start();}catch(e){}
 }
 
@@ -208,19 +195,20 @@ async function getAI(q,s){
     if(fet || (Date.now()-lastReq<2000)) return;
     fet=1; lastReq=Date.now();
     setTimeout(()=>stat('f'),200);
-    
-    // Pause Rec temporarily to avoid self-listening
     if(rec) try{rec.stop();}catch(e){}
 
     try{
         const M_ID = MDLS[mIdx].id;
         const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${K}`;
-        const pmpt=`System: You are a Class 10 Samajik (Social Studies) Expert Nepal.
+        
+        // PROMPT FOR ENG/POP/COMP
+        const pmpt=`System: You are an Exam Expert for Class 10 Nepal (Science, Population, Computer).
 RULES: 
-1. OUTPUT: NEPALI ONLY (Devanagari).
+1. OUTPUT: ENGLISH ONLY.
 2. Mode: ${len}.
+3. Subjects: Science, Population (Pop), Computer Science.
 FORMAT: 
-- Very Short: One sentence only.
+- Very Short: One direct sentence.
 - Short/Long: Bullet points.
 Q: ${q}`;
         
@@ -230,7 +218,7 @@ Q: ${q}`;
             body:JSON.stringify({contents:[{parts:[{text:pmpt}]}],tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
         });
         
-        if(res.status===429) throw new Error("API Limit. Switch M.");
+        if(res.status===429) throw new Error("Limit Reached. Switch Model.");
         if(!res.ok) throw new Error("API Error");
         
         const d=await res.json();
@@ -240,7 +228,6 @@ Q: ${q}`;
         disp(`Error: ${e.message}`, 0);
     }finally{
         fet=0;
-        // Resume Listening if mic was ON
         if(mic) {
             stat('l');
             setTimeout(()=>{ try{rec.start();}catch(e){} }, 200);
@@ -265,11 +252,9 @@ function rendMenu(){
     });
 }
 
-// TOUCH HANDLERS
 function sH(e){
     if(e.target.closest('#ai') || e.target.closest('#mm')) return;
     isHold = 0;
-    // 5 Second Hold for Menu
     holdT = setTimeout(()=>{
         isHold = 1;
         rendMenu();
@@ -280,16 +265,12 @@ function sH(e){
 
 function eH(e){
     if(e.target.closest('#ai') || e.target.closest('#mm')) return;
-    
-    // Clear the hold timer immediately on lift
     clearTimeout(holdT);
-    
     if(!isHold){
-        // TAP Detected
         if(fet)return;
         if(wc.classList.contains('av')) hide();
         else if(wc.classList.contains('mv')) wc.classList.remove('mv');
-        else togMic(); // TOGGLE MIC
+        else togMic();
     }
     isHold = 0;
 }
@@ -301,7 +282,7 @@ map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("Samajik Robust Ready");
+console.log("English Exam Mode Ready");
 </script>
 </body>
 </html>
