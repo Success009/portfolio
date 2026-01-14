@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exam Master - Pro</title>
+<title>Exam Master - Final</title>
 <style>
 :root{--t:0.4s;--c:cubic-bezier(0.34,1.56,0.64,1)}
 body{
@@ -12,11 +12,12 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    min-height:115vh;
-    height:auto;
+    /* SCROLL FIX: Just 2% extra height to trigger address bar hiding */
+    min-height: 102vh; 
+    height: auto;
     margin:0;
-    overflow-y:auto;
-    padding-bottom:50px;
+    overflow-y:auto; /* Allows the tiny scroll */
+    padding:0;
     user-select:none;
     -webkit-tap-highlight-color:transparent;
 }
@@ -78,14 +79,14 @@ const K2 = "AfGih4yIM1ag1OFykbyPTHc";
 const K = K1 + K2;
 const HELP=`<div class="sl"><span>SUBJECT [Name]</span><span>LISTEN [Q]</span><span>DISPLAY ANSWER</span><span>DISPLAY MODELS</span></div>`;
 
-// UPGRADED MODELS LIST
+// PRO MODELS LIST
 const MDLS = [
-    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},  // Default, Balanced
-    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},    // Smartest
-    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"}, // Newest Fast
+    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},   // Default
+    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},     // Smartest
+    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"}, // Newest
     {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"} // Fastest
 ];
-let mIdx = 0; // Default M1 (2.5 Flash)
+let mIdx = 0; // Default M1
 
 let rec,hT,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General";
 let lastReq=0;
@@ -96,7 +97,7 @@ function upd(){
     const d=new Date();
     clk.textContent=d.toLocaleTimeString('en-US',{hour12:true,hour:'numeric',minute:'2-digit'}).replace(/ AM| PM/g,"");
     dt.textContent=d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}).toUpperCase();
-    if(dsp)dsp.textContent="EXAM MODE";
+    if(dsp)dsp.textContent="ENGLISH EXAM";
     mi.textContent = MDLS[mIdx].c;
 }
 
@@ -105,13 +106,11 @@ async function wlReq(){try{if('wakeLock'in navigator)wl=await navigator.wakeLock
 function disp(t,h=1){
     wc.classList.remove('mv');
     if(h&&t){hist.unshift(t);if(hist.length>20)hist.pop();hI=0}
-    
     ai.innerHTML=(t||"").replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/^[\*\-]\s+(.*)$/gm,'<li>$1</li>').replace(/\n/g,'<br>');
     ai.style.fontSize=fs+'rem';
     wc.classList.add('av');
     ai.scrollTop=0;
-    
-    // Auto-stop mic when answer shown (privacy/safety)
+    // Auto-stop mic when answer shown
     if(mic) togMic(false);
 }
 
@@ -133,22 +132,17 @@ function stat(s){
 // --- MIC LOGIC ---
 function togMic(forceState){
     if(fet) return;
-    
-    // If forceState is provided (true/false), use it. Else toggle.
     const nextState = (typeof forceState !== 'undefined') ? forceState : !mic;
     
-    if(mic === nextState) return; // No change needed
+    if(mic === nextState) return;
     
     mic = nextState;
-    
     if(mic){
         stat('l');
         initRec();
     } else {
-        stat(''); // LED Off
-        if(rec){
-            try{ rec.abort(); }catch(e){} // Immediate kill
-        }
+        stat('');
+        if(rec){ try{ rec.abort(); }catch(e){} }
     }
 }
 
@@ -173,8 +167,6 @@ function initRec(){
             if(fet || !mic) return;
             let trigger=false;
 
-            // --- COMMANDS ---
-
             // 1. MENU
             if(lt.includes("display model") || lt.includes("show model") || lt.includes("change model")){
                 stat('s');
@@ -190,7 +182,6 @@ function initRec(){
                 if(s){
                     subj = s;
                     stat('s');
-                    // We display this as a temporary notification, not answer
                     disp(`<div style="margin-top:20%;color:#0f8">SUBJECT SET:<br><b style="font-size:1.5rem">${subj.toUpperCase()}</b></div>`, 0);
                     setTimeout(hide, 1500);
                     return;
@@ -213,7 +204,6 @@ function initRec(){
 
             // 5. QUERY
             let q='',s=0;
-            // Triggers
             if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me") || lt.includes("what is") || lt.includes("define") || lt.includes("explain")){
                 q = t; 
                 trigger=true;
@@ -239,7 +229,6 @@ function initRec(){
     };
 
     rec.onend=()=>{
-        // Restart if mic flag is ON, otherwise visual OFF
         if(mic && !fet){
             setTimeout(()=>{ if(mic) try{rec.start();}catch(e){} },200);
         } else {
@@ -284,7 +273,6 @@ Q: ${q}`;
         disp(`Error: ${e.message}`, 0);
     }finally{
         fet=0;
-        // Mic stays OFF after answer (user must tap to ask next q)
         if(mic) togMic(false); 
     }
 }
@@ -308,22 +296,21 @@ function rendMenu(){
 
 // --- SINGLE TAP LOGIC ---
 function tapH(e){
-    // Don't trigger if tapping menu or links
     if(e.target.closest('.mb') || e.target.closest('a')) return;
     
-    // 1. If Menu Open -> Close it
+    // 1. Menu Open -> Close
     if(mm.classList.contains('v')){
         mm.classList.remove('v');
         return;
     }
 
-    // 2. If Answer/Map Open -> Hide it
+    // 2. Answer/Map Open -> Hide (Immediate)
     if(wc.classList.contains('av') || wc.classList.contains('mv')){
-        hide(); // Hides visual AND stops mic
+        hide();
         return;
     }
 
-    // 3. If Mic ON -> Turn OFF
+    // 3. Mic ON -> Turn OFF
     if(mic){
         togMic(false);
         return;
@@ -333,16 +320,12 @@ function tapH(e){
     togMic(true);
 }
 
-// Bind to Touchend for fast reaction (watch compatible)
-// Use PreventDefault to stop ghost clicks
+// Touchend for fast reaction
 wc.addEventListener('touchend', (e)=>{
-    // Allow scrolling in answer box
     if(e.target.closest('#ai') && wc.classList.contains('av')) return;
-    
     tapH(e);
-    // e.preventDefault(); // Optional: uncomment if double-firing occurs
 });
-// Mouse fallback for testing
+// Mouse fallback
 wc.addEventListener('click', (e)=>{
     if(e.target.closest('#ai') && wc.classList.contains('av')) return;
     tapH(e);
@@ -353,7 +336,7 @@ map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("Exam Master Pro Ready");
+console.log("Exam Master Final Ready");
 </script>
 </body>
 </html>
