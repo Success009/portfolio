@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Watch - Exam Mode (ENG)</title>
+<title>Smart Watch - Exam Master</title>
 <style>
 :root{--t:0.6s;--c:cubic-bezier(0.34,1.56,0.64,1)}
 body{
@@ -47,6 +47,7 @@ body{
 #mm.v{opacity:1;visibility:visible}
 .mb{width:80%;padding:12px;margin:5px 0;background:#222;border:1px solid #444;border-radius:10px;color:#ccc;font-size:1rem;text-align:center}
 .mb.act{border-color:#0f8;color:#0f8;background:#002211}
+/* LIGHTS */
 .sd.l{background:#06f;opacity:1;box-shadow:0 0 5px #06f}
 .sd.f{background:#f90;opacity:1;box-shadow:0 0 10px #f90;animation:p .5s infinite}
 .sd.s{background:#0f8;opacity:1;box-shadow:0 0 15px #0f8;animation:fl .5s forwards}
@@ -70,10 +71,11 @@ body{
 <div id="mm"></div>
 </div>
 <script>
+// KEYS
 const K1 = "AIzaSyDYneePNgz2";
 const K2 = "AfGih4yIM1ag1OFykbyPTHc";
 const K = K1 + K2;
-const HELP=`<div class="sl"><span>LISTEN [Question]</span><span>SEARCH [Topic]</span><span>Short / Long Answer</span><span>Display Map / Answer</span><span>Hold 5s (Menu)</span></div>`;
+const HELP=`<div class="sl"><span>SUBJECT [Name]</span><span>LISTEN [Q]</span><span>DISPLAY ANSWER</span><span>HOLD 5s (Menu)</span></div>`;
 
 // MODELS
 const MDLS = [
@@ -84,7 +86,7 @@ const MDLS = [
 ];
 let mIdx = 2; // Default M3
 
-let rec,hT,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise";
+let rec,hT,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General Knowledge";
 let holdT, isHold=0, lastReq=0;
 
 const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath"),mi=document.getElementById('mi'),mm=document.getElementById('mm');
@@ -101,13 +103,20 @@ async function wlReq(){try{if('wakeLock'in navigator)wl=await navigator.wakeLock
 
 function disp(t,h=1){
     wc.classList.remove('mv');
+    // Save to history unless h=0 (e.g., help menu)
     if(h&&t){hist.unshift(t);if(hist.length>20)hist.pop();hI=0}
+    
     ai.innerHTML=(t||"").replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/^[\*\-]\s+(.*)$/gm,'<li>$1</li>').replace(/\n/g,'<br>');
     ai.style.fontSize=fs+'rem';
     wc.classList.add('av');
     ai.scrollTop=0;
 }
-function hide(){wc.classList.remove('av'); mm.classList.remove('v');}
+function hide(){
+    wc.classList.remove('av'); 
+    mm.classList.remove('v');
+    // Ensure mic is off when hiding answering (as requested)
+    if(mic) togMic(); 
+}
 
 function stat(s){
     sd.className='sd';
@@ -116,30 +125,30 @@ function stat(s){
     else if(s=='s')sd.classList.add('s');
 }
 
-// --- ROBUST MIC LOGIC ---
+// --- MIC LOGIC ---
 function togMic(){
     if(fet)return;
     mic = !mic;
+    
     if(mic){
         stat('l');
         initRec();
     } else {
         stat('');
         if(rec){
-            try{ rec.stop(); }catch(e){}
-            try{ rec.abort(); }catch(e){}
+            try{ rec.abort(); }catch(e){} // Abort = Hard stop (immediate)
         }
     }
 }
 
 function initRec(){
     if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window))return;
-    if(rec){ try{rec.stop();}catch(e){} }
+    if(rec){ try{rec.abort();}catch(e){} }
 
     rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
     rec.continuous=true; 
     rec.interimResults=false;
-    rec.lang='en-US'; // ENGLISH MODE
+    rec.lang='en-US';
     
     rec.onstart=()=>{ if(!fet && mic) stat('l'); };
     
@@ -153,25 +162,57 @@ function initRec(){
             if(fet || !mic) return;
             let trigger=false;
 
-            // COMMANDS
-            if(lt.includes("help") || lt.includes("function")){stat('s'); disp(HELP,0); return;}
-            
+            // --- COMMANDS ---
+
+            // SUBJECT SWITCHING
+            if(lt.startsWith("subject")){
+                const s = t.substring(7).trim(); // Get word after "subject"
+                if(s){
+                    subj = s;
+                    stat('s');
+                    disp(`Subject set to:<br><b style="color:#0f8">${subj.toUpperCase()}</b>`, 0);
+                    setTimeout(hide, 1500);
+                    return;
+                }
+            }
+
+            // DISPLAY ANSWER (HISTORY)
+            if(lt.includes("display answer") || lt.includes("show answer") || lt.includes("previous answer")){
+                stat('s');
+                if(hist.length>0) disp(hist[0], 0); // Show last from history
+                else disp("No history.", 0);
+                return;
+            }
+
             // LENGTH
             if(lt.includes("very short")){stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("short answer")){stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("long answer")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
 
-            // UTILS
+            // MAP
             if(lt.includes("map") || lt.includes("display map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); return;}
-            if(lt.includes("show answer") || lt.includes("display answer")){stat('s'); if(hist.length>0) disp(hist[0], 0); return;}
 
-            // QUERY TRIGGERS (English)
+            // QUERY
             let q='',s=0;
-            if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me")){
-                q = t.replace(/listen|question|tell me/gi,'').trim(); trigger=true;
+            // Keywords to trigger AI
+            if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me") || lt.includes("what is") || lt.includes("define") || lt.includes("explain")){
+                q = t; // Send whole text usually works best for English
+                trigger=true;
             }
+            // Google
             else if(lt.includes("google") || lt.includes("search")){
                 q=t.replace(/google|search|with google/gi,'').trim(); s=1; trigger=true;
+            }
+            // Spelling
+            else if(lt.startsWith("spelling of")){
+                const w=t.replace(/^spelling of/i,'').trim();
+                if(w){
+                    stat('s');
+                    const sz=Math.min(3.5, 25/w.length);
+                    // SAVED TO HISTORY via disp() default h=1
+                    disp(`<div style="font-size:${sz}rem;line-height:1.1;color:#0f8;text-shadow:0 0 20px #0f8;font-weight:700;margin-top:5%;word-break:break-word">${w}</div>`);
+                    return;
+                }
             }
             
             if(trigger && q){
@@ -182,10 +223,11 @@ function initRec(){
     };
 
     rec.onend=()=>{
+        // RESTART ONLY IF MIC IS INTENDED TO BE ON
         if(mic && !fet && !isHold){
             setTimeout(()=>{ if(mic) try{rec.start();}catch(e){} },200);
         } else {
-            if(!fet && !mic) stat('');
+            if(!fet) stat('');
         }
     };
     try{rec.start();}catch(e){}
@@ -195,21 +237,20 @@ async function getAI(q,s){
     if(fet || (Date.now()-lastReq<2000)) return;
     fet=1; lastReq=Date.now();
     setTimeout(()=>stat('f'),200);
-    if(rec) try{rec.stop();}catch(e){}
+    
+    // Stop mic while fetching to prevent interference
+    if(rec) try{rec.abort();}catch(e){}
 
     try{
         const M_ID = MDLS[mIdx].id;
         const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${K}`;
         
-        // PROMPT FOR ENG/POP/COMP
-        const pmpt=`System: You are an Exam Expert for Class 10 Nepal (Science, Population, Computer).
-RULES: 
-1. OUTPUT: ENGLISH ONLY.
+        const pmpt=`System: You are a Class 10 Exam Expert.
+SUBJECT: ${subj}.
+RULES:
+1. Output in English.
 2. Mode: ${len}.
-3. Subjects: Science, Population (Pop), Computer Science.
-FORMAT: 
-- Very Short: One direct sentence.
-- Short/Long: Bullet points.
+3. Be direct and accurate for Class 10 Nepal.
 Q: ${q}`;
         
         abc=new AbortController();
@@ -228,6 +269,7 @@ Q: ${q}`;
         disp(`Error: ${e.message}`, 0);
     }finally{
         fet=0;
+        // Resume mic if it was ON
         if(mic) {
             stat('l');
             setTimeout(()=>{ try{rec.start();}catch(e){} }, 200);
@@ -266,11 +308,21 @@ function sH(e){
 function eH(e){
     if(e.target.closest('#ai') || e.target.closest('#mm')) return;
     clearTimeout(holdT);
+    
     if(!isHold){
-        if(fet)return;
-        if(wc.classList.contains('av')) hide();
-        else if(wc.classList.contains('mv')) wc.classList.remove('mv');
-        else togMic();
+        // TAP LOGIC
+        if(fet) return;
+
+        // 1. If Answer/Map Visible -> Hide It (Immediate)
+        if(wc.classList.contains('av') || wc.classList.contains('mv')){
+            hide();
+            // Also ensure mic is off for safety/privacy after reading answer
+            if(mic) togMic(); 
+        }
+        // 2. If Nothing Visible -> Toggle Mic
+        else {
+            togMic();
+        }
     }
     isHold = 0;
 }
@@ -282,7 +334,7 @@ map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("English Exam Mode Ready");
+console.log("Exam Master Ready");
 </script>
 </body>
 </html>
