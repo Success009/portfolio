@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exam Master - Final</title>
+<title>Exam Master - Context</title>
 <style>
 /* SMOOTH TRANSITIONS */
 :root{--t:0.6s;--c:cubic-bezier(0.34,1.56,0.64,1)}
@@ -18,7 +18,7 @@ body{
     margin:0;
     overflow-y:auto;
     padding:0;
-    user-select:none; /* Prevents text highlighting */
+    user-select:none;
     -webkit-tap-highlight-color:transparent;
     touch-action: manipulation;
 }
@@ -74,23 +74,30 @@ body{
 <div id="mm"></div>
 </div>
 <script>
-const K1 = "AIzaSyDYneePNgz2";
-const K2 = "AfGih4yIM1ag1OFykbyPTHc";
-const K = K1 + K2;
-const HELP=`<div class="sl"><span>SUBJECT [Name]</span><span>LISTEN [Q]</span><span>DISPLAY ANSWER</span><span>DISPLAY MODELS</span></div>`;
+// --- KEY MANAGEMENT ---
+const API_KEYS = [
+    { n: "API Key 1", k: "AIzaSyDYneePNgz2" + "AfGih4yIM1ag1OFykbyPTHc" },
+    { n: "API Key 2", k: "AIzaSyC0zxC4_c-n1VXl8ca" + "PypOB5atduxwOHrc" }
+];
+let kIdx = parseInt(localStorage.getItem('kIdx') || 0);
+if(kIdx >= API_KEYS.length) kIdx = 0;
+
+const HELP=`<div class="sl"><span>LISTEN [Q]</span><span>GOOGLE [Q]</span><span>CHANGE API</span><span>DISPLAY ANSWER</span><span>SUBJECT [Name]</span></div>`;
 
 // MODELS
 const MDLS = [
-    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},   // Balanced
-    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},     // Smartest
-    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"}, // Newest
-    {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"} // Fastest
+    {n: "Gemini 2.5 Flash", id: "gemini-2.5-flash", c:"M1"},   
+    {n: "Gemini 2.5 Pro",   id: "gemini-2.5-pro", c:"M2"},     
+    {n: "Gemini 3 Flash",   id: "gemini-3-flash-preview", c:"M3"},
+    {n: "Gemini Flash Lite",id: "gemini-flash-lite-latest", c:"M4"}
 ];
 let mIdx = 0;
 
 let rec,mic=0,fet=0,rTo,hist=[],hI=-1,abc,fs=1.3,wl,len="concise",subj="General";
 let lastReq=0;
-let tSX=0, tSY=0; // Touch Start Coords
+let tSX=0, tSY=0;
+// CONTEXT MEMORY
+let chatContext = []; 
 
 const clk=document.getElementById('clk'),dt=document.getElementById('dt'),ai=document.getElementById('ai'),map=document.getElementById('map'),wc=document.getElementById('wc'),sd=document.getElementById('sd'),dsp=document.querySelector("#d-svg textPath"),mi=document.getElementById('mi'),mm=document.getElementById('mm');
 
@@ -111,8 +118,6 @@ function disp(t,h=1){
     ai.style.fontSize=fs+'rem';
     wc.classList.add('av');
     ai.scrollTop=0;
-    
-    // Auto-Stop Mic on Display (Safety)
     if(mic) togMic(false);
 }
 
@@ -120,7 +125,6 @@ function hide(){
     wc.classList.remove('av'); 
     mm.classList.remove('v');
     wc.classList.remove('mv');
-    // Ensure Mic is OFF
     if(mic) togMic(false);
 }
 
@@ -169,32 +173,38 @@ function initRec(){
             if(fet || !mic) return;
             let trigger=false;
 
-            // COMMANDS
-            if(lt.includes("display model") || lt.includes("show model") || lt.includes("change model")){
-                stat('s'); rendMenu(); mm.classList.add('v'); togMic(false); return;
-            }
+            // --- STRICT COMMAND LIST ---
+            if(lt.includes("change api")){ stat('s'); rendMenu('key'); mm.classList.add('v'); togMic(false); return; }
+            if(lt.includes("display model")){ stat('s'); rendMenu('model'); mm.classList.add('v'); togMic(false); return; }
+            if(lt.includes("display answer")){ stat('s'); if(hist.length>0) disp(hist[0], 0); else disp("No history.", 0); return; }
+            if(lt.includes("display map")){ stat('s'); wc.classList.remove('av');wc.classList.add('mv'); togMic(false); return; }
+            
+            // SETTINGS
             if(lt.startsWith("subject")){
                 const s = t.substring(7).trim();
                 if(s){ subj = s; stat('s'); disp(`<div style="margin-top:20%;color:#0f8">SUBJECT SET:<br><b style="font-size:1.5rem">${subj.toUpperCase()}</b></div>`, 0); setTimeout(hide, 1500); return; }
             }
-            if(lt.includes("display answer") || lt.includes("show answer") || lt.includes("previous answer")){
-                stat('s'); if(hist.length>0) disp(hist[0], 0); else disp("No history.", 0); return;
-            }
             if(lt.includes("very short")){stat('s'); len="max 1 sentence"; disp("Mode: Very Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("short answer")){stat('s'); len="concise points"; disp("Mode: Short",0); setTimeout(hide,1000); return;}
             if(lt.includes("long answer")){stat('s'); len="detailed points"; disp("Mode: Long",0); setTimeout(hide,1000); return;}
-            if(lt.includes("map") || lt.includes("display map")){stat('s'); wc.classList.remove('av');wc.classList.add('mv'); togMic(false); return;}
 
-            // QUERY
-            let q='',s=0;
-            if(lt.startsWith("listen") || lt.startsWith("question") || lt.startsWith("tell me") || lt.includes("what is") || lt.includes("define") || lt.includes("explain")){
-                q = t; trigger=true;
-            } else if(lt.includes("google") || lt.includes("search")){
-                q=t.replace(/google|search|with google/gi,'').trim(); s=1; trigger=true;
-            } else if(lt.startsWith("spelling of")){
+            // SPELLING
+            if(lt.startsWith("spelling of")){
                 const w=t.replace(/^spelling of/i,'').trim();
                 if(w){ stat('s'); const sz=Math.min(3.5, 25/w.length); disp(`<div style="font-size:${sz}rem;line-height:1.1;color:#0f8;text-shadow:0 0 20px #0f8;font-weight:700;margin-top:5%;word-break:break-word">${w}</div>`); return; }
             }
+
+            // QUERIES
+            let q='',s=0;
+            if(lt.startsWith("listen")){
+                q = t.substring(6).trim(); 
+                trigger=true;
+            } 
+            else if(lt.startsWith("google")){
+                q = t.substring(6).trim(); 
+                s=1; trigger=true;
+            }
+            
             if(trigger && q){ stat('s'); await getAI(q,s); }
         },400);
     };
@@ -217,80 +227,95 @@ async function getAI(q,s){
 
     try{
         const M_ID = MDLS[mIdx].id;
-        const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${K}`;
-        const pmpt=`System: Class 10 Exam Expert (Nepal).
+        const CUR_KEY = API_KEYS[kIdx].k;
+        const URL = `https://generativelanguage.googleapis.com/v1beta/models/${M_ID}:generateContent?key=${CUR_KEY}`;
+        
+        // SYSTEM PROMPT FOR CURRENT Q
+        const sysPrompt = `System: Class 10 Exam Expert (Nepal).
 SUBJECT: ${subj}.
 RULES:
 1. Response: ENGLISH ONLY.
 2. Mode: ${len}.
-3. Be direct.
-Q: ${q}`;
+3. Be direct.`;
+
+        // CONSTRUCT PAYLOAD WITH CONTEXT
+        // We include previous history + Current Q with strict system rules attached
+        let payload = [...chatContext];
+        payload.push({ role: "user", parts: [{ text: `${sysPrompt}\nQ: ${q}` }] });
+
         abc=new AbortController();
         const res=await fetch(URL,{
             method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({contents:[{parts:[{text:pmpt}]}],tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
+            body:JSON.stringify({contents:payload, tools:s?[{googleSearch:{}}]:[]}),signal:abc.signal
         });
-        if(res.status===429) throw new Error("Limit Reached. Switch Model.");
+        
+        if(res.status===429) throw new Error("Limit Reached. Switch Model/Key.");
         if(!res.ok) throw new Error("API Error");
+        
         const d=await res.json();
         const ans = d.candidates?.[0]?.content?.parts?.[0]?.text.trim();
-        disp(ans || "No answer.");
+        
+        if(ans){
+            disp(ans);
+            // UPDATE CONTEXT
+            // Add raw Q and A to history
+            chatContext.push({ role: "user", parts: [{ text: q }] });
+            chatContext.push({ role: "model", parts: [{ text: ans }] });
+            // Keep only last 4 items (2 Qs, 2 As) to stay light
+            if(chatContext.length > 4) chatContext = chatContext.slice(-4);
+        } else {
+            disp("No answer.");
+        }
     }catch(e){ disp(`Error: ${e.message}`, 0); }finally{ fet=0; if(mic) togMic(false); }
 }
 
-function rendMenu(){
-    mm.innerHTML = `<div style="font-size:0.8rem;color:#888;margin-bottom:10px;text-transform:uppercase">SELECT MODEL</div>`;
-    MDLS.forEach((m,i)=>{
-        const b = document.createElement('div');
-        b.className = `mb ${i===mIdx?'act':''}`;
-        b.innerHTML = `<b>${m.c}</b> <span style="font-size:0.9em;opacity:0.8">${m.n.replace('Gemini ','')}</span>`;
-        b.onclick = (e) => { e.stopPropagation(); mIdx = i; upd(); mm.classList.remove('v'); stat('s'); };
-        mm.appendChild(b);
-    });
+// Menu Renderer
+function rendMenu(type){
+    mm.innerHTML = `<div style="font-size:0.8rem;color:#888;margin-bottom:10px;text-transform:uppercase">SELECT ${type.toUpperCase()}</div>`;
+    
+    if(type === 'model'){
+        MDLS.forEach((m,i)=>{
+            const b = document.createElement('div');
+            b.className = `mb ${i===mIdx?'act':''}`;
+            b.innerHTML = `<b>${m.c}</b> <span style="font-size:0.9em;opacity:0.8">${m.n.replace('Gemini ','')}</span>`;
+            b.onclick = (e) => { e.stopPropagation(); mIdx = i; upd(); mm.classList.remove('v'); stat('s'); };
+            mm.appendChild(b);
+        });
+    } else if(type === 'key'){
+        API_KEYS.forEach((k,i)=>{
+            const b = document.createElement('div');
+            b.className = `mb ${i===kIdx?'act':''}`;
+            b.textContent = k.n;
+            b.onclick = (e) => { 
+                e.stopPropagation(); 
+                kIdx = i; 
+                localStorage.setItem('kIdx', kIdx); 
+                mm.classList.remove('v'); 
+                stat('s'); 
+            };
+            mm.appendChild(b);
+        });
+    }
 }
 
-// --- UNIVERSAL TOUCH LOGIC ---
-
+// --- AGGRESSIVE TAP LOGIC ---
 document.body.addEventListener('touchstart', (e)=>{
     tSX = e.changedTouches[0].screenX;
     tSY = e.changedTouches[0].screenY;
 }, {passive:true});
 
 document.body.addEventListener('touchend', (e)=>{
-    // 1. Menu Interactions (don't override)
     if(e.target.closest('.mb')) return;
-
-    // 2. Calc Movement
     let tEX = e.changedTouches[0].screenX;
     let tEY = e.changedTouches[0].screenY;
     let dist = Math.sqrt(Math.pow(tEX - tSX, 2) + Math.pow(tEY - tSY, 2));
 
-    // 3. THRESHOLD CHECK
-    // > 8px = SCROLL/DRAG. Do nothing (let browser/css handle it)
-    if(dist > 8) return;
+    if(dist > 8) return; // SCROLL
 
-    // < 8px = TAP. EXECUTE ACTION.
-    
-    // ACTION:
-    
-    // A. Close Menu
-    if(mm.classList.contains('v')){
-        mm.classList.remove('v');
-        return;
-    }
-    
-    // B. Hide Answer/Map (PANIC KILL)
-    if(wc.classList.contains('av') || wc.classList.contains('mv')){
-        hide();
-        return;
-    }
-
-    // C. Toggle Mic
-    if(mic){
-        togMic(false);
-    } else {
-        togMic(true);
-    }
+    // TAP
+    if(mm.classList.contains('v')){ mm.classList.remove('v'); return; }
+    if(wc.classList.contains('av') || wc.classList.contains('mv')){ hide(); return; }
+    if(mic){ togMic(false); } else { togMic(true); }
 }, {passive:true});
 
 wc.addEventListener('contextmenu',e=>e.preventDefault());
@@ -298,7 +323,7 @@ map.addEventListener('click',()=>wc.classList.remove('mv'));
 document.addEventListener('visibilitychange',async()=>{if(wl&&document.visibilityState==='visible')await wlReq()});
 
 upd();wlReq();setInterval(upd,1000);
-console.log("Exam Master Robust Ready");
+console.log("Exam Master Context Ready");
 </script>
 </body>
 </html>
