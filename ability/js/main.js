@@ -270,12 +270,30 @@
 
     function createMinecraftBlocks() {
       const container = document.getElementById('minecraft-blocks');
-      const types = ['https://minecraft.wiki/images/Grass_Block_JE6.png', 'https://minecraft.wiki/images/Diamond_Ore_JE6_BE6.png', 'https://minecraft.wiki/images/Stone_JE4_BE2.png'];
       if (!container) return;
-      for (let i = 0; i < 15; i++) {
-        const block = document.createElement('div'); block.className = 'block';
-        block.style.cssText = `background-image: url(${types[Math.floor(Math.random()*types.length)]}); left: ${Math.random()*100}%; animation-duration: ${20+Math.random()*20}s; animation-delay: ${Math.random()*15}s;`;
-        container.appendChild(block);
+      container.innerHTML = '';
+      
+      for (let i = 0; i < 40; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'block';
+        const size = Math.random() * 4 + 2;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.opacity = Math.random() * 0.5 + 0.2;
+        
+        const duration = 15 + Math.random() * 20;
+        const delay = Math.random() * -30;
+        particle.style.animation = `ambient-float ${duration}s linear infinite`;
+        particle.style.animationDelay = delay + 's';
+        
+        // Randomize color slightly between white and light green
+        if (Math.random() > 0.5) {
+          particle.style.background = '#2ecc71';
+          particle.style.boxShadow = '0 0 10px #2ecc71';
+        }
+        
+        container.appendChild(particle);
       }
     }
 
