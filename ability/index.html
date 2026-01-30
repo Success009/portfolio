@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="Slayer_MC_Logo.ico" type="image/x-icon">
-  <title>Ability SMP - Live Bridge</title>
+  <title>Ability SMP</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Minecraft&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -29,10 +29,11 @@
     @keyframes initial-fade-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes initial-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes content-fade-out { to { opacity: 0; } }
+    @keyframes pulse-glow { 0% { box-shadow: 0 0 5px var(--primary); } 50% { box-shadow: 0 0 20px var(--primary), 0 0 10px #fff; } 100% { box-shadow: 0 0 5px var(--primary); } }
+    @keyframes pulse-dot { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
     @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
     @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
     @keyframes blockFloat { 0% { transform: translate3d(0, 100vh, 0) rotate(0deg); } 100% { transform: translate3d(0, -100px, 0) rotate(360deg); } }
-    @keyframes pulse-dot { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
 
     /* Header */
     header { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(12px); padding: 15px 0; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--card-border); animation: initial-fade-down 0.6s ease-out; }
@@ -72,13 +73,8 @@
     .section-title::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); width: 80px; height: 3px; background: var(--primary); border-radius: 3px; }
     
     /* --- LIVE BRIDGE STYLES --- */
-    .status-banner {
-        background: rgba(0,0,0,0.4); padding: 25px; border-radius: 12px; border: 1px solid var(--card-border);
-        margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between;
-        backdrop-filter: blur(5px);
-    }
+    .status-banner { background: rgba(0,0,0,0.4); padding: 25px; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(5px); }
     .status-left { display: flex; align-items: center; gap: 20px; }
-    
     .status-dot-container { position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
     .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #7f8c8d; z-index: 2; }
     .status-ping { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: inherit; opacity: 0.6; z-index: 1; }
@@ -86,80 +82,35 @@
     .status-dot-container.online .status-ping { background: var(--primary); animation: pulse-green 2s infinite; }
     .status-dot-container.offline .status-dot { background: var(--danger); }
     .status-dot-container.offline .status-ping { background: var(--danger); animation: pulse-red 2s infinite; }
-    
     .status-info h3 { margin: 0; font-size: 1.6rem; letter-spacing: 0.5px; line-height: 1; margin-bottom: 8px; }
     .stat-badges { display: flex; gap: 10px; transition: opacity 0.3s; }
-    .badge { 
-        background: rgba(255,255,255,0.07); padding: 5px 12px; border-radius: 20px; 
-        font-size: 0.85rem; display: flex; align-items: center; gap: 8px; 
-        border: 1px solid rgba(255,255,255,0.1); color: #ccc;
-    }
+    .badge { background: rgba(255,255,255,0.07); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.1); color: #ccc; }
     .badge.tps-high { color: #2ecc71; border-color: rgba(46, 204, 113, 0.3); }
     .badge.tps-med { color: #f1c40f; }
     .badge.tps-low { color: #e74c3c; }
-
     .server-address-box { text-align: right; }
     .address-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 5px; }
-    .address-pill {
-        background: rgba(0,0,0,0.3); padding: 8px 16px; border-radius: 8px;
-        font-family: 'Minecraft', monospace; color: var(--secondary); border: 1px dashed var(--secondary);
-        font-size: 1.1rem; letter-spacing: 1px;
-    }
-
+    .address-pill { background: rgba(0,0,0,0.3); padding: 8px 16px; border-radius: 8px; font-family: 'Minecraft', monospace; color: var(--secondary); border: 1px dashed var(--secondary); font-size: 1.1rem; letter-spacing: 1px; }
     .bridge-container { display: grid; grid-template-columns: 280px 1fr; gap: 20px; height: 550px; }
-    
-    .player-list-panel, .chat-panel {
-        background: rgba(16, 20, 30, 0.6); border: 1px solid var(--card-border); border-radius: 12px;
-        display: flex; flex-direction: column; overflow: hidden;
-    }
-    .panel-header { 
-        background: rgba(255,255,255,0.03); padding: 15px; font-weight: 600; 
-        border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;
-    }
-    
-    /* Player List Items */
+    .player-list-panel, .chat-panel { background: rgba(16, 20, 30, 0.6); border: 1px solid var(--card-border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+    .panel-header { background: rgba(255,255,255,0.03); padding: 15px; font-weight: 600; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; }
     .player-list-content { overflow-y: auto; flex-grow: 1; padding: 10px; scrollbar-width: thin; }
-    .player-item { 
-        display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; 
-        margin-bottom: 5px; background: rgba(255,255,255,0.02); border: 1px solid transparent; transition: 0.2s; 
-    }
+    .player-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; margin-bottom: 5px; background: rgba(255,255,255,0.02); border: 1px solid transparent; transition: 0.2s; }
     .player-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.1); transform: translateX(3px); }
     .player-head { width: 36px; height: 36px; border-radius: 6px; background: #000; border: 2px solid rgba(255,255,255,0.1); }
     .player-name { font-size: 0.95rem; }
-
-    /* Chat Styling */
-    .chat-messages {
-        flex-grow: 1; overflow-y: auto; padding: 20px;
-        font-family: 'Minecraft', sans-serif; font-size: 0.95rem; line-height: 1.6;
-        background: rgba(0, 0, 0, 0.2); scrollbar-width: thin;
-    }
+    .chat-messages { flex-grow: 1; overflow-y: auto; padding: 20px; font-family: 'Minecraft', sans-serif; font-size: 0.95rem; line-height: 1.6; background: rgba(0, 0, 0, 0.2); scrollbar-width: thin; }
     .chat-msg { margin-bottom: 8px; word-wrap: break-word; }
     .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 8px; vertical-align: middle; display: inline-block; }
     .tag.web { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
     .tag.game { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
-    
-    .chat-input-area {
-        padding: 15px; background: rgba(255,255,255,0.03); border-top: 1px solid var(--card-border);
-        display: flex; gap: 10px;
-    }
-    .chat-input {
-        background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white;
-        padding: 12px 15px; border-radius: 8px; outline: none; transition: 0.3s;
-    }
+    .chat-input-area { padding: 15px; background: rgba(255,255,255,0.03); border-top: 1px solid var(--card-border); display: flex; gap: 10px; }
+    .chat-input { background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 12px 15px; border-radius: 8px; outline: none; transition: 0.3s; }
     .chat-input:disabled { opacity: 0.5; cursor: not-allowed; }
     .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(46, 204, 113, 0.1); }
-    
-    .send-btn {
-        background: var(--primary); color: #fff; border: none; padding: 0 25px; border-radius: 8px;
-        font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 1.1rem;
-    }
+    .send-btn { background: var(--primary); color: #fff; border: none; padding: 0 25px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
     .send-btn:hover { background: #27ae60; transform: translateY(-2px); }
-    
-    /* Link Account Button */
-    .link-btn {
-        background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.2); color: #aaa;
-        padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.3s;
-    }
+    .link-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.2); color: #aaa; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
     .link-btn:hover { background: rgba(255,255,255,0.2); color: white; }
     .link-btn.linked { border-color: var(--primary); color: var(--primary); cursor: default; }
 
@@ -169,7 +120,6 @@
     .feature-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 25px; display: flex; flex-direction: column; align-items: center; text-align: center; }
     .feature-icon { font-size: 2.5rem; margin-bottom: 15px; color: var(--primary); }
     .feature-title { font-size: 1.2rem; margin-bottom: 10px; font-weight: 600; }
-    
     .abilities-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
     .ability-card { background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
     .ability-card:hover { border-color: var(--primary); transform: translateY(-5px); }
@@ -178,12 +128,10 @@
     .ability-type { background: var(--primary); color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; margin-left: 10px; text-transform: uppercase; }
     .ability-body { padding: 20px; }
     .ability-description { font-size: 0.95rem; line-height: 1.6; }
-    
     .rules-list { counter-reset: rule-counter; list-style-type: none; display: grid; gap: 15px; }
     .rule-item { position: relative; padding: 20px 20px 20px 60px; background: var(--card-bg); border-radius: 8px; }
     .rule-item::before { counter-increment: rule-counter; content: counter(rule-counter); position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     .rule-title { font-size: 1.1rem; margin-bottom: 10px; color: var(--primary); }
-    
     .announcement-card { background: var(--card-bg); border-radius: 10px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--primary); position: relative; }
     .announcement-title { font-size: 1.3rem; margin-bottom: 10px; color: var(--primary); }
     .announcement-date { font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; }
@@ -192,7 +140,6 @@
     .vote-btn:hover { background: rgba(255,255,255,0.2); }
     .vote-btn.active { background: var(--primary); color: #000; font-weight: 600; box-shadow: 0 0 10px var(--primary); }
     .vote-btn.active.dislike { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; color: white;}
-
     .animate-on-scroll { opacity: 0; transform: translateY(20px); transition: opacity 0.5s, transform 0.5s; }
     .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
     .interactive-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
@@ -290,7 +237,7 @@
             </div>
             <div class="server-address-box">
                 <div class="address-label">Server IP</div>
-                <div class="address-pill">just.ask.owner</div>
+                <div class="address-pill">just.ask.creator</div>
             </div>
         </div>
 
@@ -330,7 +277,7 @@
     </div>
   </div>
 
-  <!-- Link Account Modal -->
+  <!-- Link Modal -->
   <div id="linkModal" class="modal">
     <div class="modal-content" style="max-width:400px; text-align:center;">
         <div class="modal-header" style="border:none;"><span class="close" onclick="closeLinkModal()">&times;</span></div>
@@ -368,18 +315,14 @@
     const auth = firebase.auth();
     const abilityRef = db.ref('Ability');
 
-    // --- AUTHENTICATION & LINKING ---
-    let currentUserIGN = null;
-    let currentUserUID = null;
-
+    // --- AUTH & LINKING ---
+    let currentUserIGN = null, currentUserUID = null;
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUserUID = user.uid;
-            // Check if account is linked
             db.ref(`Ability/security/users/${user.uid}`).on('value', snap => {
                 const nameInput = document.getElementById('web-username');
                 const linkBtn = document.getElementById('link-account-btn');
-                
                 if (snap.exists()) {
                     currentUserIGN = snap.val().ign;
                     nameInput.value = currentUserIGN;
@@ -397,10 +340,10 @@
                     linkBtn.classList.remove("linked");
                     linkBtn.onclick = openLinkModal;
                 }
-                nameInput.disabled = true; // Always lock name input for security
+                nameInput.disabled = true;
             });
         } else {
-            auth.signInAnonymously().catch(e => console.error(e));
+            auth.signInAnonymously().catch(console.error);
         }
     });
 
@@ -410,35 +353,19 @@
     function submitLinkCode() {
         const code = document.getElementById('link-code-input').value.trim();
         const status = document.getElementById('link-status');
-        
-        if (code.length !== 6) {
-            status.innerText = "Invalid code length.";
-            status.style.color = "var(--danger)";
-            return;
-        }
-        
-        status.innerText = "Verifying...";
-        status.style.color = "#aaa";
-        
-        // Send request to secure node
+        if (code.length !== 6) { status.innerText = "Invalid code length."; status.style.color = "var(--danger)"; return; }
+        status.innerText = "Verifying..."; status.style.color = "#aaa";
         db.ref(`Ability/security/link_requests/${currentUserUID}`).set(code)
-            .then(() => {
-                status.innerText = "Request sent! Check game chat.";
-                status.style.color = "var(--primary)";
-                setTimeout(closeLinkModal, 2000);
-            })
-            .catch(e => {
-                status.innerText = "Error: " + e.message;
-                status.style.color = "var(--danger)";
-            });
+            .then(() => { status.innerText = "Request sent! Check game chat."; status.style.color = "var(--primary)"; setTimeout(closeLinkModal, 2000); })
+            .catch(e => { status.innerText = "Error: " + e.message; status.style.color = "var(--danger)"; });
     }
 
-    // --- LIVE BRIDGE LOGIC ---
+    // --- BRIDGE LOGIC ---
     const MC_PATHS = { root: 'Ability/minecraft', status: 'status', chat: 'chatLogs', players: 'onlinePlayers' };
     const mcRef = db.ref(MC_PATHS.root);
 
     function initServerMonitor() {
-        mcRef.child(MC_PATHS.status).on('value', (snapshot) => {
+        mcRef.child(MC_PATHS.status).on('value', snapshot => {
             const data = snapshot.val();
             const container = document.getElementById('status-container');
             const label = document.getElementById('status-text-label');
@@ -446,27 +373,23 @@
             const plStat = document.getElementById('stat-players');
             const tpsStat = document.getElementById('stat-tps');
             const tpsBadge = document.getElementById('badge-tps');
-
             const now = Date.now();
             const lastUpdate = data ? (data.timestamp || 0) : 0;
             const isOnline = data && data.online && (now - lastUpdate < 45000);
 
             if (isOnline) {
                 container.className = 'status-dot-container online';
-                label.innerText = "ONLINE";
-                label.style.color = "var(--primary)";
+                label.innerText = "ONLINE"; label.style.color = "var(--primary)";
                 badges.style.opacity = "1";
                 plStat.innerText = `${data.onlinePlayers || 0}/${data.maxPlayers || 0}`;
                 tpsStat.innerText = data.tps || "20.0";
-
                 const tps = parseFloat(data.tps);
                 if (tps >= 18) tpsBadge.className = 'badge tps-high';
                 else if (tps >= 15) tpsBadge.className = 'badge tps-med';
                 else tpsBadge.className = 'badge tps-low';
             } else {
                 container.className = 'status-dot-container offline';
-                label.innerText = "OFFLINE";
-                label.style.color = "var(--danger)";
+                label.innerText = "OFFLINE"; label.style.color = "var(--danger)";
                 badges.style.opacity = "0";
                 document.getElementById('player-count-badge').innerText = "0";
                 document.getElementById('player-list-container').innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">Server is Offline</div>';
@@ -475,29 +398,18 @@
     }
 
     function initPlayerList() {
-        mcRef.child(MC_PATHS.players).on('value', (snapshot) => {
+        mcRef.child(MC_PATHS.players).on('value', snapshot => {
             const data = snapshot.val();
             const container = document.getElementById('player-list-container');
             const countBadge = document.getElementById('player-count-badge');
-            
             if (!data) return;
-            
             const players = [];
-            Object.keys(data).forEach(key => {
-                if (key !== 'count' && key !== 'timestamp') players.push({ uuid: key, ...data[key] });
-            });
-
+            Object.keys(data).forEach(key => { if (key !== 'count' && key !== 'timestamp') players.push({ uuid: key, ...data[key] }); });
             countBadge.innerText = players.length;
             container.innerHTML = '';
-
-            if (players.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa; font-size: 0.9rem;">No players online</div>';
-                return;
-            }
-
+            if (players.length === 0) { container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa; font-size: 0.9rem;">No players online</div>'; return; }
             players.forEach(p => {
-                const row = document.createElement('div');
-                row.className = 'player-item';
+                const row = document.createElement('div'); row.className = 'player-item';
                 row.innerHTML = `<img src="https://crafatar.com/avatars/${p.uuid}?size=32&overlay" class="player-head" onerror="this.src='https://crafatar.com/avatars/Steve?size=32'"><div class="player-name" style="color:${p.op ? '#e74c3c' : 'white'}">${p.name}</div>`;
                 container.appendChild(row);
             });
@@ -506,48 +418,33 @@
 
     function initChat() {
         const container = document.getElementById('chat-messages');
-        mcRef.child(MC_PATHS.chat).limitToLast(50).on('child_added', (snapshot) => {
-            const msg = snapshot.val();
-            if (!msg) return;
-
+        mcRef.child(MC_PATHS.chat).limitToLast(50).on('child_added', snapshot => {
+            const msg = snapshot.val(); if (!msg) return;
             if (container.children.length > 0 && container.children[0].innerText.includes('Connecting')) container.innerHTML = '';
-
-            const div = document.createElement('div');
-            div.className = 'chat-msg';
+            const div = document.createElement('div'); div.className = 'chat-msg';
             const safeUser = escapeHtml(msg.player || 'Unknown');
             const safeMsg = escapeHtml(msg.message || '');
-
             if (msg.source === 'WEB') div.innerHTML = `<span class="tag web">WEB</span> <span class="msg-user" style="color:#3498db">${safeUser}</span> <span class="msg-content">${safeMsg}</span>`;
             else div.innerHTML = `<span class="tag game">GAME</span> <span class="msg-user" style="color:#2ecc71">${safeUser}</span> <span class="msg-content">${safeMsg}</span>`;
-
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         });
     }
 
     window.sendToMinecraft = function() {
+        const userIn = document.getElementById('web-username');
         const msgIn = document.getElementById('web-message');
+        const user = userIn.value.trim();
         const msg = msgIn.value.trim();
-        
-        if (!msg) return;
-        
-        const senderName = currentUserIGN || "Anonymous";
-        
-        mcRef.child(MC_PATHS.chat).push({ 
-            player: senderName, 
-            message: msg, 
-            source: "WEB", 
-            timestamp: firebase.database.ServerValue.TIMESTAMP 
-        }).catch(error => {
-            alert("Error sending message: " + error.message);
-        });
-        
+        if (!user || !msg) return alert("Enter username and message!");
+        mcRef.child(MC_PATHS.chat).push({ player: user, message: msg, source: "WEB", timestamp: firebase.database.ServerValue.TIMESTAMP })
+            .catch(error => { alert("Error sending message: " + error.message); });
         msgIn.value = '';
     };
 
     function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
 
-    // --- GENERIC LOGIC ---
+    // --- GENERIC CONTENT ---
     let userIP = null;
     async function fetchUserIP() {
         try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); userIP = d.ip.replace(/\./g, '-').replace(/:/g, '_'); }
@@ -562,7 +459,15 @@
 
     const modal = document.getElementById('abilityModal');
     const linkModal = document.getElementById('linkModal');
-    document.querySelector('.close').onclick = () => modal.classList.remove('show');
+    
+    // Fixed closing logic to handle multiple modals
+    document.querySelectorAll('.close').forEach(btn => {
+        btn.onclick = () => {
+            modal.classList.remove('show');
+            linkModal.classList.remove('show');
+        };
+    });
+    
     window.onclick = (e) => { 
         if (e.target == modal) modal.classList.remove('show');
         if (e.target == linkModal) linkModal.classList.remove('show');
@@ -655,14 +560,14 @@
     };
 
     function createMinecraftBlocks() {
-        const container = document.getElementById('minecraft-blocks');
-        const types = ['https://minecraft.wiki/images/Grass_Block_JE6.png', 'https://minecraft.wiki/images/Diamond_Ore_JE6_BE6.png', 'https://minecraft.wiki/images/Stone_JE4_BE2.png'];
-        if (!container) return;
-        for (let i = 0; i < 15; i++) {
-            const block = document.createElement('div'); block.className = 'block';
-            block.style.cssText = `background-image: url(${types[Math.floor(Math.random()*types.length)]}); left: ${Math.random()*100}%; animation-duration: ${20+Math.random()*20}s; animation-delay: ${Math.random()*15}s;`;
-            container.appendChild(block);
-        }
+      const container = document.getElementById('minecraft-blocks');
+      const types = ['https://minecraft.wiki/images/Grass_Block_JE6.png', 'https://minecraft.wiki/images/Diamond_Ore_JE6_BE6.png', 'https://minecraft.wiki/images/Stone_JE4_BE2.png'];
+      if (!container) return;
+      for (let i = 0; i < 15; i++) {
+        const block = document.createElement('div'); block.className = 'block';
+        block.style.cssText = `background-image: url(${types[Math.floor(Math.random()*types.length)]}); left: ${Math.random()*100}%; animation-duration: ${20+Math.random()*20}s; animation-delay: ${Math.random()*15}s;`;
+        container.appendChild(block);
+      }
     }
 
     document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
