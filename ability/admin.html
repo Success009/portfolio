@@ -101,6 +101,23 @@
         .tag.web { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
         .tag.game { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
 
+        /* Admin Comment Management Polish */
+        .comments-section { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; border: 1px solid var(--border); }
+        .comment-wrapper { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        .comment-wrapper:last-child { border-bottom: none; }
+        .comment-item { margin-bottom: 5px; }
+        .comment-user { font-weight: bold; font-size: 0.85rem; color: var(--primary); margin-bottom: 2px; }
+        .comment-text { font-size: 0.9rem; color: #ddd; line-height: 1.4; }
+        .comment-actions { display: flex; gap: 12px; margin-top: 5px; font-size: 0.75rem; opacity: 0.6; }
+        .comment-actions span { cursor: pointer; transition: opacity 0.2s; }
+        .comment-actions span:hover { opacity: 1; color: var(--primary); }
+        
+        .reply-item { margin-left: 30px; border-left: 2px solid var(--primary); padding-left: 12px; margin-top: 8px; }
+        .reply-input-box { margin-top: 10px; display: flex; gap: 8px; }
+        .comment-input { flex-grow: 1; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); color: white; border-radius: 4px; font-size: 0.85rem; }
+        
+        .btn-tiny { background: var(--primary); color: var(--bg); border: none; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+
         @media (max-width: 768px) {
             body { flex-direction: column; overflow: auto; }
             .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
@@ -181,9 +198,25 @@
         </div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <div style="padding: 30px;">
+                <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; color: var(--danger); margin-bottom: 15px;"></i>
+                <h2 style="color: white; margin-bottom: 10px;">Are you sure?</h2>
+                <p id="confirmMessage" style="color: #aaa; margin-bottom: 25px; font-size: 0.9rem;">This action cannot be undone.</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn btn-secondary" id="confirmCancel">Cancel</button>
+                    <button class="btn btn-danger" id="confirmProceed">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="js/comment_logic.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
     <script>
         const firebaseConfig = {
@@ -196,6 +229,9 @@
         const auth = firebase.auth();
         const mainRef = db.ref('Ability'); 
         
+        let currentUserUID = null;
+        let currentUserIGN = "Admin"; // Default for Admin Panel
+
         // --- AUTH LOGIC ---
         function adminLogin() {
             const email = document.getElementById('login-email').value;
@@ -211,6 +247,7 @@
         auth.onAuthStateChanged(user => {
             const errDiv = document.getElementById('login-error');
             if (user) {
+                currentUserUID = user.uid;
                 // Only allow users who are signed in via email/password (not anonymous)
                 if(!user.isAnonymous) {
                     document.getElementById('login-screen').style.display = 'none';
@@ -220,6 +257,7 @@
                     document.getElementById('login-screen').style.display = 'flex';
                 }
             } else {
+                currentUserUID = null;
                 document.getElementById('login-screen').style.display = 'flex';
             }
         });
@@ -253,9 +291,11 @@
                 let tag = "<span class=\"tag game\">GAME</span>";
                 let userColor = '#2ecc71';
                 if(msg.source === 'WEB') { tag = "<span class=\"tag web\">WEB</span>"; userColor = '#3498db'; }
-                if(user === 'Admin') { userColor = '#e74c3c'; }
+                
+                // Override color for Admin
+                if(msg.player === 'Admin') { userColor = '#e74c3c'; }
 
-                div.innerHTML = `${tag} <span style=\"color:${userColor}; font-weight:bold;">${user}</span>: <span style=\"color:#ddd;">${content}</span>`;
+                div.innerHTML = `${tag} <span style=\"color:${userColor}; font-weight:bold;\">${user}</span>: <span style=\"color:#ddd;\">${content}</span>`;
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;
             });
@@ -379,11 +419,25 @@
                 const downDisabled = index === total - 1 ? 'disabled' : '';
                 return `<div class="item-card-header"><span>${item.order}. ${item.title}</span><div class="reorder-controls"><button class="reorder-btn move-up" data-key="${key}" ${upDisabled}><i class="fa-solid fa-arrow-up"></i></button><button class="reorder-btn move-down" data-key="${key}" ${downDisabled}><i class="fa-solid fa-arrow-down"></i></button></div></div><div class="item-card-body">${item.description}</div>`;
             },
-            announcements: (item) => {
+            announcements: (item, key) => {
                 const badge = item.status === 'draft' 
                     ? `<span class="badge badge-draft">Draft</span>` 
                     : `<span class="badge badge-published">Published</span>`;
-                return `<div class="item-card-header">${item.title} ${badge}</div><div class="item-card-body">Posted: ${new Date(item.timestamp).toLocaleString()}</div>`;
+                return `
+                    <div class="item-card-header">${item.title} ${badge}</div>
+                    <div class="item-card-body">
+                        <div style="font-size:0.8rem; opacity:0.6; margin-bottom:10px;">Posted: ${new Date(item.timestamp).toLocaleString()}</div>
+                        <button class="btn btn-secondary" style="width:100%; justify-content:center;" onclick="toggleComments('${key}')">
+                            <i class="fa-solid fa-comments"></i> Manage Comments (<span id="count-${key}">0</span>)
+                        </button>
+                        <div id="comments-${key}" class="comments-section" style="margin-top:15px; display:none;">
+                            <div id="list-${key}" class="comment-list" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
+                            <div class="comment-input-area">
+                                <input type="text" id="input-${key}" class="admin-chat-input" style="background:var(--bg)" placeholder="Write a comment as Admin...">
+                                <button class="btn btn-primary" onclick="postComment('${key}')"><i class="fas fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>`;
             }
         };
 
