@@ -196,8 +196,6 @@
         const auth = firebase.auth();
         const mainRef = db.ref('Ability'); 
         
-        const ADMIN_UIDS = ['IHBGA0fWiLNBheAPdabJCQCEW2H3', 'QDdGoWJkJOYrbwreBDuFxPxZLbJ2'];
-
         // --- AUTH LOGIC ---
         function adminLogin() {
             const email = document.getElementById('login-email').value;
@@ -211,13 +209,15 @@
         }
 
         auth.onAuthStateChanged(user => {
+            const errDiv = document.getElementById('login-error');
             if (user) {
-                if(ADMIN_UIDS.includes(user.uid)) {
+                // Only allow users who are signed in via email/password (not anonymous)
+                if(!user.isAnonymous) {
                     document.getElementById('login-screen').style.display = 'none';
                     initAdminPanel();
                 } else {
-                    document.getElementById('login-error').innerText = "Access Denied: Not an Admin Account";
-                    auth.signOut();
+                    // If they are anonymous (from main page), keep showing login screen
+                    document.getElementById('login-screen').style.display = 'flex';
                 }
             } else {
                 document.getElementById('login-screen').style.display = 'flex';
