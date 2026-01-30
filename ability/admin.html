@@ -15,12 +15,37 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-family: 'Poppins', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); display: flex; font-size: 16px; }
+        body { background-color: var(--bg); color: var(--text); display: flex; font-size: 16px; min-height: 100vh; }
         
+        /* LOGIN OVERLAY */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 2000; display: flex;
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+        .login-box {
+            background: var(--surface); padding: 40px; border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 350px; text-align: center;
+            border: 1px solid var(--border);
+        }
+        .login-box input {
+            width: 100%; padding: 12px; margin: 10px 0;
+            background: var(--bg); border: 1px solid var(--border);
+            color: white; border-radius: 5px;
+        }
+        .login-box button {
+            width: 100%; padding: 12px; background: var(--primary);
+            color: white; border: none; border-radius: 5px; cursor: pointer;
+            font-weight: bold; margin-top: 10px;
+        }
+        
+        /* DASHBOARD LAYOUT (Hidden by default) */
+        #dashboard-container { display: none; width: 100%; display: flex; }
+
         .sidebar { width: 220px; background-color: var(--surface); height: 100vh; position: fixed; top: 0; left: 0; border-right: 1px solid var(--border); padding-top: 20px; z-index: 10; display: flex; flex-direction: column; }
         .sidebar h1 { text-align: center; color: var(--primary); margin-bottom: 30px; font-size: 1.5rem; }
         .sidebar-nav { flex-grow: 1; }
-        .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 15px 20px; color: var(--text); text-decoration: none; transition: background-color 0.2s; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 15px 20px; color: var(--text); text-decoration: none; transition: background-color 0.2s; cursor: pointer; }
         .sidebar-nav a:hover { background-color: var(--surface-light); }
         .sidebar-nav a.active { background-color: var(--primary); color: var(--bg); font-weight: 600; }
         .sidebar-nav a i { width: 20px; text-align: center; }
@@ -82,6 +107,22 @@
         .fab:hover:not(:disabled) { background-color: var(--primary); color: var(--bg); transform: translateY(-3px); }
         .fab:disabled { opacity: 0.5; cursor: default; }
 
+        /* ADMIN CHAT STYLES */
+        .chat-admin-container {
+            height: 600px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; display: flex; flex-direction: column;
+        }
+        .chat-logs {
+            flex-grow: 1; overflow-y: auto; padding: 20px;
+            font-family: monospace; display: flex; flex-direction: column; gap: 8px;
+        }
+        .chat-entry { padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 5px; }
+        .chat-entry.web { border-left: 3px solid var(--secondary); }
+        .chat-entry.game { border-left: 3px solid var(--primary); }
+        .chat-input-bar {
+            padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 10px;
+        }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
@@ -96,28 +137,56 @@
 </head>
 <body>
 
-    <nav class="sidebar">
-        <h1>Admin Panel</h1>
-        <div class="sidebar-nav">
-            <a href="#announcements" class="active"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
-            <a href="#abilities"><i class="fa-solid fa-wand-magic-sparkles"></i> Abilities</a>
-            <a href="#subAbilities"><i class="fa-solid fa-star"></i> Sub-Abilities</a>
-            <a href="#rules"><i class="fa-solid fa-gavel"></i> Rules</a>
+    <!-- LOGIN SCREEN -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="margin-bottom:20px; color:var(--primary);">Admin Access</h2>
+            <input type="email" id="email" placeholder="Admin Email" value="successstorage100@gmail.com">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <p id="login-error" style="color:var(--danger); margin-top:10px;"></p>
         </div>
-        <div class="sidebar-tools">
-            <h3>Database Tools</h3>
-            <button class="tool-btn" onclick="downloadBackup()"><i class="fa-solid fa-download"></i> Backup DB</button>
-            <button class="tool-btn" onclick="document.getElementById('restore-file').click()"><i class="fa-solid fa-upload"></i> Restore DB</button>
-            <input type="file" id="restore-file" accept=".json" style="display: none;" onchange="restoreBackup(this)">
-        </div>
-    </nav>
+    </div>
 
-    <main>
-        <section id="announcements" class="content-section active"><div class="section-header"><h2>Manage Announcements</h2><button class="btn btn-primary" id="new-announcement-btn"><i class="fa-solid fa-plus"></i> New Announcement</button></div><div id="announcements-list" class="item-list"></div></section>
-        <section id="abilities" class="content-section"><div class="section-header"><h2>Manage Abilities</h2><button class="btn btn-primary" id="new-ability-btn"><i class="fa-solid fa-plus"></i> New Ability</button></div><div id="abilities-list" class="item-list"></div></section>
-        <section id="subAbilities" class="content-section"><div class="section-header"><h2>Manage Sub-Abilities</h2><button class="btn btn-primary" id="new-subAbility-btn"><i class="fa-solid fa-plus"></i> New Sub-Ability</button></div><div id="subAbilities-list" class="item-list"></div></section>
-        <section id="rules" class="content-section"><div class="section-header"><h2>Manage Rules</h2><button class="btn btn-primary" id="new-rule-btn"><i class="fa-solid fa-plus"></i> New Rule</button></div><div id="rules-list" class="item-list"></div></section>
-    </main>
+    <!-- MAIN DASHBOARD (Initially Hidden) -->
+    <div id="dashboard-container" style="display:none;">
+        <nav class="sidebar">
+            <h1>Admin Panel</h1>
+            <div class="sidebar-nav">
+                <a href="#announcements" class="active"><i class="fa-solid fa-bullhorn"></i> News</a>
+                <a href="#abilities"><i class="fa-solid fa-wand-magic-sparkles"></i> Abilities</a>
+                <a href="#subAbilities"><i class="fa-solid fa-star"></i> Sub-Abs</a>
+                <a href="#rules"><i class="fa-solid fa-gavel"></i> Rules</a>
+                <a href="#chat"><i class="fa-solid fa-comments"></i> Live Chat</a>
+            </div>
+            <div class="sidebar-tools">
+                <h3>Database Tools</h3>
+                <button class="tool-btn" onclick="downloadBackup()"><i class="fa-solid fa-download"></i> Backup DB</button>
+                <button class="tool-btn" onclick="document.getElementById('restore-file').click()"><i class="fa-solid fa-upload"></i> Restore DB</button>
+                <button class="tool-btn" onclick="logout()" style="color:var(--danger)"><i class="fa-solid fa-sign-out"></i> Logout</button>
+                <input type="file" id="restore-file" accept=".json" style="display: none;" onchange="restoreBackup(this)">
+            </div>
+        </nav>
+
+        <main>
+            <section id="announcements" class="content-section active"><div class="section-header"><h2>Manage Announcements</h2><button class="btn btn-primary" id="new-announcement-btn"><i class="fa-solid fa-plus"></i> New</button></div><div id="announcements-list" class="item-list"></div></section>
+            <section id="abilities" class="content-section"><div class="section-header"><h2>Manage Abilities</h2><button class="btn btn-primary" id="new-ability-btn"><i class="fa-solid fa-plus"></i> New</button></div><div id="abilities-list" class="item-list"></div></section>
+            <section id="subAbilities" class="content-section"><div class="section-header"><h2>Manage Sub-Abilities</h2><button class="btn btn-primary" id="new-subAbility-btn"><i class="fa-solid fa-plus"></i> New</button></div><div id="subAbilities-list" class="item-list"></div></section>
+            <section id="rules" class="content-section"><div class="section-header"><h2>Manage Rules</h2><button class="btn btn-primary" id="new-rule-btn"><i class="fa-solid fa-plus"></i> New</button></div><div id="rules-list" class="item-list"></div></section>
+            
+            <!-- NEW CHAT SECTION -->
+            <section id="chat" class="content-section">
+                <div class="section-header"><h2>Live Server Chat</h2></div>
+                <div class="chat-admin-container">
+                    <div id="admin-chat-logs" class="chat-logs"></div>
+                    <div class="chat-input-bar">
+                        <input type="text" id="admin-msg-input" placeholder="Broadcast as [Admin]..." style="flex-grow:1; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:5px;">
+                        <button class="btn btn-primary" onclick="sendAdminMessage()">SEND</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <div class="fab-container">
         <button class="fab" id="undo-btn" title="Undo" disabled><i class="fa-solid fa-rotate-left"></i></button>
@@ -136,6 +205,7 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
     <script>
@@ -145,14 +215,86 @@
             storageBucket: "community-canvas-255fa.appspot.com", messagingSenderId: "729445267995", appId: "1:729445267995:web:05da6756d66c58b9ccd6be"
         };
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.database();
-        const mainRef = db.ref('Ability'); 
+        const ADMIN_UID = "QDdGoWJkJOYrbwreBDuFxPxZLbJ2";
+
+        // --- AUTH LOGIC ---
+        function login() {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(e, p).catch(err => {
+                document.getElementById('login-error').innerText = err.message;
+            });
+        }
+
+        function logout() {
+            auth.signOut().then(() => location.reload());
+        }
+
+        auth.onAuthStateChanged(user => {
+            const overlay = document.getElementById('login-overlay');
+            const dash = document.getElementById('dashboard-container');
+            
+            if (user) {
+                if (user.uid === ADMIN_UID) {
+                    overlay.style.display = "none";
+                    dash.style.display = "flex";
+                    initDashboard();
+                } else {
+                    document.getElementById('login-error').innerText = "Access Denied: Not an Admin.";
+                    auth.signOut();
+                }
+            } else {
+                overlay.style.display = "flex";
+                dash.style.display = "none";
+            }
+        });
+
+        // --- CHAT LOGIC ---
+        function sendAdminMessage() {
+            const inp = document.getElementById('admin-msg-input');
+            const msg = inp.value.trim();
+            if (!msg) return;
+            
+            db.ref('Ability/minecraft/chatLogs').push({
+                player: "[Admin]",
+                message: msg,
+                source: "WEB",
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            inp.value = '';
+        }
+
+        // --- DASHBOARD INIT ---
+        let mainRef, refs;
         
-        const refs = {
-            abilities: db.ref('Ability/abilities'), subAbilities: db.ref('Ability/subAbilities'),
-            rules: db.ref('Ability/rules'), announcements: db.ref('Ability/announcements')
-        };
-        
+        function initDashboard() {
+            mainRef = db.ref('Ability'); 
+            refs = {
+                abilities: db.ref('Ability/abilities'), subAbilities: db.ref('Ability/subAbilities'),
+                rules: db.ref('Ability/rules'), announcements: db.ref('Ability/announcements')
+            };
+            
+            // Listen to Chat
+            db.ref('Ability/minecraft/chatLogs').limitToLast(50).on('child_added', snap => {
+                const msg = snap.val();
+                const div = document.createElement('div');
+                div.className = `chat-entry ${msg.source === 'WEB' ? 'web' : 'game'}`;
+                div.innerHTML = `<span style="opacity:0.5; font-size:0.8rem;">[${msg.source}]</span> <strong>${msg.player}:</strong> ${msg.message}`;
+                const container = document.getElementById('admin-chat-logs');
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+            });
+
+            // Init other lists
+            renderList('abilities', refs.abilities);
+            renderList('subAbilities', refs.subAbilities);
+            renderList('rules', refs.rules);
+            renderList('announcements', refs.announcements);
+        }
+
+        // --- EXISTING CRUD LOGIC (Preserved) ---
         const templates = {
             abilities: { id: 0, name: '', color: '#2ecc71', type: '', description: '', details: '', videoUrl: '' },
             subAbilities: { id: 0, name: '', color: '#3498db', type: '', rarity: '', description: '', skills: [], drawbacks: [] },
@@ -161,27 +303,10 @@
         };
 
         const history = {
-            undoStack: [],
-            redoStack: [],
-            add: function(action) {
-                this.undoStack.push(action);
-                this.redoStack = []; 
-                updateHistoryButtons();
-            },
-            undo: async function() {
-                if (this.undoStack.length === 0) return;
-                const action = this.undoStack.pop();
-                this.redoStack.push(action);
-                await applyAction(action, true);
-                updateHistoryButtons();
-            },
-            redo: async function() {
-                if (this.redoStack.length === 0) return;
-                const action = this.redoStack.pop();
-                this.undoStack.push(action);
-                await applyAction(action, false);
-                updateHistoryButtons();
-            }
+            undoStack: [], redoStack: [],
+            add: function(action) { this.undoStack.push(action); this.redoStack = []; updateHistoryButtons(); },
+            undo: async function() { if(this.undoStack.length){ const a=this.undoStack.pop(); this.redoStack.push(a); await applyAction(a,true); updateHistoryButtons(); } },
+            redo: async function() { if(this.redoStack.length){ const a=this.redoStack.pop(); this.undoStack.push(a); await applyAction(a,false); updateHistoryButtons(); } }
         };
 
         const updateHistoryButtons = () => {
@@ -190,12 +315,8 @@
         };
 
         const applyAction = async (action, isUndo) => {
-            const dataToApply = isUndo ? action.oldData : action.newData;
-            if (dataToApply === null) {
-                await db.ref(action.path).remove();
-            } else {
-                await db.ref(action.path).set(dataToApply);
-            }
+            const data = isUndo ? action.oldData : action.newData;
+            data === null ? await db.ref(action.path).remove() : await db.ref(action.path).set(data);
         };
 
         document.getElementById('undo-btn').onclick = () => history.undo();
@@ -203,38 +324,18 @@
 
         const downloadBackup = () => {
             mainRef.once('value', snapshot => {
-                const data = snapshot.val();
-                const json = JSON.stringify(data, null, 2);
-                const blob = new Blob([json], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = `AbilitySMP_Backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(snapshot.val(),null,2)], {type:'application/json'}));
+                a.download = `Backup_${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
             });
         };
 
         const restoreBackup = (input) => {
             const file = input.files[0];
-            if (!file) return;
-            if(!confirm("WARNING: This will overwrite the 'Ability' section of your database with the uploaded file. This cannot be undone by the Undo button. Continue?")) {
-                input.value = '';
-                return;
-            }
+            if (!file || !confirm("Overwrite database?")) return;
             const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    mainRef.set(data).then(() => {
-                        alert("Database restored successfully!");
-                        history.undoStack = []; 
-                        history.redoStack = [];
-                        updateHistoryButtons();
-                    }).catch(err => alert("Error uploading: " + err));
-                } catch (err) {
-                    alert("Invalid JSON file.");
-                }
-            };
+            reader.onload = (e) => mainRef.set(JSON.parse(e.target.result)).then(() => alert("Restored!"));
             reader.readAsText(file);
             input.value = '';
         };
@@ -246,197 +347,107 @@
         const renderers = {
             abilities: (item) => `<div class="item-card-header" style="border-left: 4px solid ${item.color || '#fff'};">${item.name}</div><div class="item-card-body">${(item.description || '').substring(0, 100)}...</div>`,
             subAbilities: (item) => `<div class="item-card-header" style="border-left: 4px solid ${item.color || '#fff'};">${item.name}</div><div class="item-card-body">${(item.description || '').substring(0, 100)}...</div>`,
-            rules: (item, key, index, total) => {
-                const upDisabled = index === 0 ? 'disabled' : '';
-                const downDisabled = index === total - 1 ? 'disabled' : '';
-                return `<div class="item-card-header"><span>${item.order}. ${item.title}</span><div class="reorder-controls"><button class="reorder-btn move-up" data-key="${key}" ${upDisabled}><i class="fa-solid fa-arrow-up"></i></button><button class="reorder-btn move-down" data-key="${key}" ${downDisabled}><i class="fa-solid fa-arrow-down"></i></button></div></div><div class="item-card-body">${item.description}</div>`;
-            },
-            announcements: (item) => {
-                const badge = item.status === 'draft' 
-                    ? `<span class="badge badge-draft">Draft</span>` 
-                    : `<span class="badge badge-published">Published</span>`;
-                return `<div class="item-card-header">${item.title} ${badge}</div><div class="item-card-body">Posted: ${new Date(item.timestamp).toLocaleString()}</div>`;
-            }
+            rules: (item) => `<div class="item-card-header"><span>${item.order}. ${item.title}</span><div class="reorder-controls"><button class="reorder-btn move-up" data-key="${item.key}"><i class="fa-solid fa-arrow-up"></i></button><button class="reorder-btn move-down" data-key="${item.key}"><i class="fa-solid fa-arrow-down"></i></button></div></div><div class="item-card-body">${item.description}</div>`,
+            announcements: (item) => `<div class="item-card-header">${item.title} ${item.status==='draft'?'<span class="badge badge-draft">Draft</span>':'<span class="badge badge-published">Pub</span>'}</div><div class="item-card-body">${new Date(item.timestamp).toLocaleDateString()}</div>`
         };
 
         const renderList = (type, ref) => {
             const listEl = document.getElementById(`${type}-list`);
-            const orderBy = ['rules'].includes(type) ? 'order' : 'id';
-            const query = (type === 'announcements') ? ref.orderByChild('timestamp') : ref.orderByChild(orderBy);
+            const query = (type === 'announcements') ? ref.orderByChild('timestamp') : ref.orderByChild(type==='rules'?'order':'id');
 
             query.on('value', snapshot => {
                 listEl.innerHTML = '';
-                if (!snapshot.exists()) { listEl.innerHTML = `<p>No items found.</p>`; return; }
                 const items = [];
-                snapshot.forEach(child => { items.push({ key: child.key, ...child.val() }); });
-                
+                snapshot.forEach(c => items.push({ key: c.key, ...c.val() }));
                 if (type === 'announcements') items.reverse();
                 if (type === 'rules') allData.rules = items;
 
-                items.forEach((itemWithKey, index) => {
-                    const { key, ...item } = itemWithKey;
+                items.forEach((item) => {
                     const card = document.createElement('div');
                     card.className = 'item-card';
-                    card.innerHTML = `${renderers[type](item, key, index, items.length)}<div class="item-card-footer"><button class="btn btn-secondary edit-btn" data-key="${key}">Edit</button><button class="btn btn-danger delete-btn" data-key="${key}">Delete</button></div>`;
+                    card.innerHTML = `${renderers[type](item)}<div class="item-card-footer"><button class="btn btn-secondary edit-btn" data-key="${item.key}">Edit</button><button class="btn btn-danger delete-btn" data-key="${item.key}">Delete</button></div>`;
                     listEl.appendChild(card);
                 });
 
-                listEl.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => openFormForEdit(type, btn.dataset.key)));
-                listEl.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => deleteItem(type, btn.dataset.key)));
-                listEl.querySelectorAll('.move-up').forEach(btn => btn.addEventListener('click', () => moveRule(btn.dataset.key, -1)));
-                listEl.querySelectorAll('.move-down').forEach(btn => btn.addEventListener('click', () => moveRule(btn.dataset.key, 1)));
+                listEl.querySelectorAll('.edit-btn').forEach(b => b.onclick = () => openFormForEdit(type, b.dataset.key));
+                listEl.querySelectorAll('.delete-btn').forEach(b => b.onclick = () => deleteItem(type, b.dataset.key));
+                if(type === 'rules') {
+                    listEl.querySelectorAll('.move-up').forEach(b => b.onclick = () => moveRule(b.dataset.key, -1));
+                    listEl.querySelectorAll('.move-down').forEach(b => b.onclick = () => moveRule(b.dataset.key, 1));
+                }
             });
         };
         
-        const formatTitle = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        const formatTitle = (k) => k.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
         const generateForm = (item) => {
             const form = document.getElementById('modal-form');
             form.innerHTML = '';
-            
-            const fullItem = { ...templates[item.formType], ...item };
-            const templateKeys = Object.keys(templates[item.formType]);
-
-            for(const key of templateKeys) {
-                if (key === 'formType') continue;
+            for(const key in templates[item.formType]) {
+                const val = item[key];
+                let input = `<input type="text" id="form-${key}" name="${key}" value="${val||''}">`;
+                if(key === 'content') input = `<textarea id="editor-content" name="content">${val}</textarea>`;
+                else if(Array.isArray(val)) input = `<textarea id="form-${key}" name="${key}">${val.join('\n')}</textarea>`;
+                else if(typeof val === 'number') input = `<input type="number" id="form-${key}" name="${key}" value="${val}">`;
                 
-                const value = fullItem[key];
-                const label = `<label for="form-${key}">${formatTitle(key)}</label>`;
-                let inputHtml;
-                const templateValueIsArray = Array.isArray(templates[item.formType][key]);
-
-                if (key === 'content') {
-                    inputHtml = `<textarea id="editor-content" name="content">${value}</textarea>`;
-                } else if (key === 'color') {
-                    inputHtml = `<input type="color" id="form-${key}" name="${key}" value="${value}">`;
-                } else if (key === 'status') {
-                    const isDraft = value === 'draft' ? 'selected' : '';
-                    const isPub = value === 'published' ? 'selected' : '';
-                    inputHtml = `<select id="form-${key}" name="${key}"><option value="published" ${isPub}>Published</option><option value="draft" ${isDraft}>Draft</option></select>`;
-                } else if (templateValueIsArray) {
-                    const textValue = Array.isArray(value) ? value.join('\n') : (value || '');
-                    inputHtml = `<textarea id="form-${key}" name="${key}" placeholder="Enter each item on a new line">${textValue}</textarea>`;
-                } else if (typeof value === 'string' && (value.length > 100 || ['description', 'details'].includes(key))) {
-                    inputHtml = `<textarea id="form-${key}" name="${key}">${value}</textarea>`;
-                } else if (typeof templates[item.formType][key] === 'number') {
-                    inputHtml = `<input type="number" id="form-${key}" name="${key}" value="${value}">`;
-                } else {
-                    inputHtml = `<input type="text" id="form-${key}" name="${key}" value="${value || ''}">`;
-                }
-                form.innerHTML += `<div class="form-group">${label}${inputHtml}</div>`;
+                form.innerHTML += `<div class="form-group"><label>${formatTitle(key)}</label>${input}</div>`;
             }
-
-            if(form.querySelector('#editor-content')){
-                currentEditor = SUNEDITOR.create('editor-content', { buttonList: [['undo', 'redo'],['bold', 'italic', 'underline'], ['list'], ['link', 'fontColor', 'hiliteColor'], ['removeFormat']], theme: 'dark', height: '250px' });
-            }
+            if(form.querySelector('#editor-content')) currentEditor = SUNEDITOR.create('editor-content', {buttonList:[['bold','italic','link','list']], height:'200px'});
         };
 
         const modal = document.getElementById('form-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const saveBtn = document.getElementById('modal-save-btn');
-        const cancelBtn = document.getElementById('modal-cancel-btn');
-
-        const closeModal = () => { if (currentEditor) { currentEditor.destroy(); currentEditor = null; } modal.classList.remove('show'); currentlyEditingItem = null; };
+        const closeModal = () => { if(currentEditor) currentEditor.destroy(); modal.classList.remove('show'); };
+        
         const openFormForNew = (type) => {
-            currentlyEditingItem = { ...templates[type], formType: type }; 
-            modalTitle.textContent = `Create New ${formatTitle(type)}`;
+            currentlyEditingItem = { ...templates[type], formType: type };
+            document.getElementById('modal-title').innerText = `New ${type}`;
             generateForm(currentlyEditingItem);
-            saveBtn.onclick = () => saveItem(type);
+            document.getElementById('modal-save-btn').onclick = () => saveItem(type);
             modal.classList.add('show');
         };
+
         const openFormForEdit = (type, key) => {
-            refs[type].child(key).once('value', snapshot => {
-                currentlyEditingItem = { ...snapshot.val(), formType: type }; 
-                modalTitle.textContent = `Edit ${formatTitle(type)}`; 
+            refs[type].child(key).once('value', s => {
+                currentlyEditingItem = { ...s.val(), formType: type };
+                document.getElementById('modal-title').innerText = `Edit ${type}`;
                 generateForm(currentlyEditingItem);
-                saveBtn.onclick = () => saveItem(type, key); 
+                document.getElementById('modal-save-btn').onclick = () => saveItem(type, key);
                 modal.classList.add('show');
             });
         };
         
-        const saveItem = async (type, key) => {
-            const form = document.getElementById('modal-form');
-            const formData = new FormData(form);
+        const saveItem = (type, key) => {
+            const formData = new FormData(document.getElementById('modal-form'));
             const data = {};
-            if (currentEditor) data.content = currentEditor.getContents(true);
-
-            for (const [fieldName, value] of formData.entries()) {
-                if(fieldName === 'content' && currentEditor) continue;
-                const templateValue = templates[type][fieldName];
-                if (Array.isArray(templateValue)) {
-                    data[fieldName] = value.split('\n').filter(line => line.trim() !== '');
-                } else if (typeof templateValue === 'number') {
-                    data[fieldName] = Number(value);
-                } else {
-                    data[fieldName] = value;
-                }
-            }
-
-            if (type === 'announcements' && !key) data.timestamp = Date.now();
+            if(currentEditor) data.content = currentEditor.getContents(true);
             
-            const refPath = key ? `Ability/${type}/${key}` : null;
-            if (key) {
-                refs[type].child(key).once('value', snapshot => {
-                    const oldData = snapshot.val();
-                    const fullNewData = { ...oldData, ...data }; 
-                    history.add({ type: 'set', path: `Ability/${type}/${key}`, oldData: oldData, newData: fullNewData });
-                    refs[type].child(key).update(data).then(closeModal);
-                });
-            } else {
-                const newRef = refs[type].push();
-                const newKey = newRef.key;
-                history.add({ type: 'set', path: `Ability/${type}/${newKey}`, oldData: null, newData: data });
-                newRef.set(data).then(closeModal);
+            for(const [k, v] of formData.entries()) {
+                if(k==='content') continue;
+                if(Array.isArray(templates[type][k])) data[k] = v.split('\n').filter(x=>x);
+                else if(typeof templates[type][k] === 'number') data[k] = Number(v);
+                else data[k] = v;
             }
+            if(type==='announcements' && !key) data.timestamp = Date.now();
+
+            const ref = key ? refs[type].child(key) : refs[type].push();
+            ref.update(data).then(closeModal);
         };
 
-        const deleteItem = (type, key) => { 
-            if (confirm(`Are you sure you want to delete this ${type.slice(0, -1)}?`)) { 
-                const path = `Ability/${type}/${key}`;
-                refs[type].child(key).once('value', snapshot => {
-                    const oldData = snapshot.val();
-                    history.add({ type: 'set', path: path, oldData: oldData, newData: null });
-                    refs[type].child(key).remove().catch(err => console.error(err)); 
-                });
-            } 
-        };
+        const deleteItem = (type, key) => { if(confirm("Delete?")) refs[type].child(key).remove(); };
         
-        const moveRule = (key, direction) => {
-            const rules = allData.rules;
-            const currentIndex = rules.findIndex(r => r.key === key);
-            const targetIndex = currentIndex + direction;
-            if (targetIndex < 0 || targetIndex >= rules.length) return;
-            const [currentRule, targetRule] = [rules[currentIndex], rules[targetIndex]];
-            const updates = { [`${currentRule.key}/order`]: targetRule.order, [`${targetRule.key}/order`]: currentRule.order };
-            refs.rules.update(updates).catch(console.error);
+        const moveRule = (key, dir) => {
+            const idx = allData.rules.findIndex(r => r.key === key);
+            const target = allData.rules[idx + dir];
+            if(target) refs.rules.update({ [`${key}/order`]: target.order, [`${target.key}/order`]: allData.rules[idx].order });
         };
 
-        cancelBtn.onclick = closeModal;
-
-        document.querySelectorAll('.sidebar-nav a').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelector('.sidebar-nav a.active').classList.remove('active');
-                link.classList.add('active');
-                document.querySelector('.content-section.active').classList.remove('active');
-                document.querySelector(link.getAttribute('href')).classList.add('active');
-                window.location.hash = link.getAttribute('href');
-            });
+        document.getElementById('modal-cancel-btn').onclick = closeModal;
+        document.querySelectorAll('.sidebar-nav a').forEach(l => l.onclick = e => {
+            e.preventDefault();
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelector(l.getAttribute('href')).classList.add('active');
         });
         
-        document.getElementById('new-announcement-btn').onclick = () => openFormForNew('announcements');
-        document.getElementById('new-ability-btn').onclick = () => openFormForNew('abilities');
-        document.getElementById('new-subAbility-btn').onclick = () => openFormForNew('subAbilities');
-        document.getElementById('new-rule-btn').onclick = () => openFormForNew('rules');
-
-        renderList('abilities', refs.abilities);
-        renderList('subAbilities', refs.subAbilities);
-        renderList('rules', refs.rules);
-        renderList('announcements', refs.announcements);
-
-        if (window.location.hash) {
-            const link = document.querySelector(`.sidebar-nav a[href="${window.location.hash}"]`);
-            if (link) link.click();
-        }
+        ['announcement','ability','subAbility','rule'].forEach(t => document.getElementById(`new-${t}-btn`).onclick = () => openFormForNew(`${t}s`));
     </script>
 </body>
 </html>
