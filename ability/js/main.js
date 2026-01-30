@@ -105,8 +105,11 @@
             const div = document.createElement('div'); div.className = 'chat-msg';
             const safeUser = escapeHtml(msg.player || 'Unknown');
             const safeMsg = escapeHtml(msg.message || '');
-            if (msg.source === 'WEB') div.innerHTML = `<span class="tag web">WEB</span> <span class="msg-user" style="color:#3498db">${safeUser}</span> <span class="msg-content">${safeMsg}</span>`;
-            else div.innerHTML = `<span class="tag game">GAME</span> <span class="msg-user" style="color:#2ecc71">${safeUser}</span> <span class="msg-content">${safeMsg}</span>`;
+            let userColor = msg.source === 'WEB' ? '#3498db' : '#2ecc71';
+            if (msg.player === 'Admin') userColor = '#e74c3c';
+
+            if (msg.source === 'WEB') div.innerHTML = `<span class="tag web">WEB</span> <span class="msg-user" style="color:${userColor}; font-weight:bold;">${safeUser}</span> <span class="msg-content">${safeMsg}</span>`;
+            else div.innerHTML = `<span class="tag game">GAME</span> <span class="msg-user" style="color:${userColor}; font-weight:bold;">${safeUser}</span> <span class="msg-content">${safeMsg}</span>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         });
