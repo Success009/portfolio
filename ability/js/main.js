@@ -155,44 +155,6 @@
 
     window.showLoginModal = () => loginModal.classList.add('show');
 
-    window.toggleComments = (key) => {
-        const sec = document.getElementById(`comments-${key}`);
-        if(sec.classList.contains('show')) sec.classList.remove('show');
-        else { sec.classList.add('show'); loadComments(key); }
-    };
-
-    window.loadComments = (key) => {
-        db.ref(`Ability/announcements/${key}/comments`).on('value', snap => {
-            const list = document.getElementById(`list-${key}`);
-            const countSpan = document.getElementById(`count-${key}`);
-            if(!list) return;
-            list.innerHTML = '';
-            let count = 0;
-            if(snap.exists()) {
-                const comments = [];
-                snap.forEach(c => comments.push(c.val()));
-                count = comments.length;
-                comments.forEach(c => {
-                    const div = document.createElement('div'); div.className = 'comment-item';
-                    div.innerHTML = `<div class="comment-user">${escapeHtml(c.ign)}</div><div class="comment-text">${escapeHtml(c.text)}</div>`;
-                    list.appendChild(div);
-                });
-            } else { list.innerHTML = '<div style="color:#aaa; text-align:center; padding:10px;">No comments yet. Be the first!</div>'; }
-            if(countSpan) countSpan.innerText = count;
-        });
-    };
-
-    window.postComment = (key) => {
-        if(!currentUserIGN) return showLoginModal();
-        const input = document.getElementById(`input-${key}`);
-        const text = input.value.trim();
-        if(!text) return;
-        db.ref(`Ability/announcements/${key}/comments`).push({
-            ign: currentUserIGN, uid: currentUserUID, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP
-        });
-        input.value = '';
-    };
-
     function getYoutubeId(url) {
         if(!url) return null;
         const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
