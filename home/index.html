@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><title>HomeOS Dashboard</title></head>
+<body style="background:#111; color:#0f0; font-family:monospace; padding:15px; font-size:12px;">
+    <h2>HOME_OS_NODE: <span id="ip_val">...</span></h2>
+    <div style="border:1px solid #333; padding:10px; margin-bottom:10px;">
+        CPU: <span id="cpu_val">0</span>% | RAM: <span id="ram_val">0</span>% | UP: <span id="up_val">0</span>m
+    </div>
+
+    <!-- VOICE SECTION -->
+    <section style="margin-bottom:15px;">
+        <input id="tts_in" placeholder="Text to speak..." style="width:70%; background:#222; color:#fff; border:1px solid #444;">
+        <button onclick="sendCmd({type:'speak', text:document.getElementById('tts_in').value})">SAY</button>
+    </section>
+
+    <!-- NAVIGATION (Virtual Remote) -->
+    <section style="margin-bottom:15px;">
+        <button onclick="sendCmd({type:'nav', key:19})">UP</button><br>
+        <button onclick="sendCmd({type:'nav', key:21})">LFT</button>
+        <button onclick="sendCmd({type:'nav', key:66})">OK</button>
+        <button onclick="sendCmd({type:'nav', key:22})">RGT</button><br>
+        <button onclick="sendCmd({type:'nav', key:20})">DWN</button>
+        <div style="margin-top:5px;">
+            <button onclick="sendCmd({type:'nav', key:3})">HOME</button>
+            <button onclick="sendCmd({type:'nav', key:4})">BACK</button>
+        </div>
+    </section>
+
+    <!-- MEDIA SECTION -->
+    <section>
+        <button onclick="sendCmd({type:'media', key:24})">VOL+</button>
+        <button onclick="sendCmd({type:'media', key:25})">VOL-</button>
+        <button onclick="sendCmd({type:'media', key:85})">PLAY/PAUSE</button>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        const config = {
+            apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+            projectId: "community-canvas-255fa",
+        };
+        firebase.initializeApp(config);
+        const db = firebase.database();
+
+        function sendCmd(payload) { db.ref('home_system/commands').set(payload); }
+
+        // Live Stats Update
+        db.ref('home_system/server_info').on('value', (s) => {
+            const d = s.val();
+            document.getElementById('ip_val').innerText = d.ip;
+            document.getElementById('cpu_val').innerText = d.cpu;
+            document.getElementById('ram_val').innerText = d.ram;
+            document.getElementById('up_val').innerText = d.uptime_m;
+        });
+    </script>
+</body>
+</html>
