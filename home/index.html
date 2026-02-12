@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success AI | Master Control v3.1</title>
+    <title>Success AI | Master Control v4.0</title>
     <style>
         /* TERMINAL AESTHETIC */
         body { 
@@ -11,16 +11,41 @@
             color: #00ff41; 
             font-family: 'Courier New', monospace; 
             margin: 0; 
-            padding: 20px; 
+            padding: 10px; 
             display: flex; 
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
         }
         .panel { 
-            width: 100%; 
-            max-width: 500px; 
             border: 1px solid #00ff41; 
-            padding: 20px; 
+            padding: 15px; 
             box-shadow: 0 0 15px rgba(0, 255, 65, 0.2); 
+            background: rgba(0, 20, 0, 0.9);
+            overflow-y: auto;
+        }
+        .log-panel {
+            border: 1px solid #00ff41;
+            padding: 10px;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+        }
+        #log_content {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 12px;
+            color: #00ff41;
+            white-space: pre-wrap;
         }
         h2 { 
             text-align: center; 
@@ -28,6 +53,7 @@
             border-bottom: 1px solid #00ff41; 
             padding-bottom: 10px; 
             margin-top: 0;
+            font-size: 16px;
             letter-spacing: 2px;
         }
 
@@ -37,24 +63,25 @@
             justify-content: space-between; 
             background: #111; 
             padding: 10px; 
-            margin-bottom: 20px; 
-            font-size: 12px;
+            margin-bottom: 15px; 
+            font-size: 11px;
             border: 1px dashed #333;
         }
         .stat-val { color: #fff; font-weight: bold; }
 
         /* INPUT STYLING */
-        section { margin-bottom: 25px; }
-        label { display: block; font-size: 10px; margin-bottom: 5px; color: #008f11; }
+        section { margin-bottom: 20px; }
+        label { display: block; font-size: 9px; margin-bottom: 3px; color: #008f11; }
         input { 
             width: 100%; 
             background: #000; 
             border: 1px solid #00ff41; 
             color: #00ff41; 
-            padding: 10px; 
+            padding: 8px; 
             box-sizing: border-box; 
             outline: none; 
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            font-size: 13px;
         }
         input:focus { border-color: #fff; box-shadow: 0 0 5px #fff; }
 
@@ -65,108 +92,99 @@
             background: #002200; 
             color: #00ff41; 
             border: 1px solid #00ff41; 
-            padding: 10px; 
+            padding: 8px; 
             cursor: pointer; 
-            font-size: 11px; 
+            font-size: 10px; 
             text-transform: uppercase;
         }
         button:hover { background: #00ff41; color: #000; }
-        button:active { background: #fff; border-color: #fff; }
 
         /* VIRTUAL REMOTE GRID */
         .remote-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 8px; 
-            width: 220px; 
+            gap: 5px; 
+            width: 180px; 
             margin: 0 auto; 
         }
-        .nav-btn { padding: 15px 5px; }
+        .nav-btn { padding: 10px 5px; }
 
-        .status-log { 
-            font-size: 10px; 
-            color: #444; 
-            text-align: center; 
-            margin-top: 10px; 
-            height: 15px;
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; }
+        .log-ts { color: #888; font-size: 10px; }
+        .log-type-ai { color: #00bfff; font-weight: bold; }
+        .log-type-info { color: #00ff41; }
+
+        @media (max-width: 800px) {
+            .main-container { grid-template-columns: 1fr; }
+            .log-panel { height: 300px; }
         }
     </style>
 </head>
 <body>
 
-<div class="panel">
-    <h2>[ BIGFISH_NODE: <span id="ip">OFFLINE</span> ]</h2>
+<h1 style="font-size: 20px; margin: 10px 0;">[ SUCCESS_AI_OS_CONTROL ]</h1>
 
-    <!-- REAL-TIME TELEMETRY -->
-    <div class="stats-bar">
-        <div>CPU: <span id="cpu" class="stat-val">0</span>%</div>
-        <div>RAM: <span id="ram" class="stat-val">0</span>%</div>
-        <div>UP: <span id="up" class="stat-val">0</span>m</div>
+<div class="main-container">
+    <!-- LEFT CONTROL PANEL -->
+    <div class="panel">
+        <h2>[ NODE: <span id="ip">OFFLINE</span> ]</h2>
+
+        <div class="stats-bar">
+            <div>CPU: <span id="cpu" class="stat-val">0</span>%</div>
+            <div>RAM: <span id="ram" class="stat-val">0</span>%</div>
+            <div>STATUS: <span id="status" class="stat-val">INIT</span></div>
+        </div>
+
+        <section>
+            <label>> BRAIN_INPUT (NATURAL LANGUAGE)</label>
+            <input id="ai_in" type="text" placeholder="Command AI..." onkeypress="if(event.key==='Enter') executeAI()">
+            <button style="width:100%" onclick="executeAI()">EXECUTE_REASONING</button>
+        </section>
+
+        <section>
+            <label>> TEXT_TO_SPEECH</label>
+            <div class="btn-row">
+                <input id="tts_in" type="text" placeholder="Speak..." style="margin-bottom:0">
+                <button onclick="executeSpeak()" style="flex:0.3">TALK</button>
+            </div>
+        </section>
+
+        <section>
+            <label style="text-align:center">> NAV_GRID</label>
+            <div class="remote-grid">
+                <div></div> <button class="nav-btn" onclick="sendNav(19)">UP</button> <div></div>
+                <button class="nav-btn" onclick="sendNav(21)">LEFT</button>
+                <button class="nav-btn" style="background:#004400" onclick="sendNav(66)">OK</button>
+                <button class="nav-btn" onclick="sendNav(22)">RIGHT</button>
+                <div></div> <button class="nav-btn" onclick="sendNav(20)">DOWN</button> <div></div>
+                <button onclick="sendNav(3)">HOME</button>
+                <button onclick="sendNav(4)" style="grid-column: span 2">BACK</button>
+            </div>
+        </section>
+
+        <section>
+            <label style="text-align:center">> MEDIA_VOLUME</label>
+            <div class="btn-row">
+                <button onclick="sendNav(24)">VOL+</button>
+                <button onclick="sendNav(25)">VOL-</button>
+                <button onclick="sendNav(164)">MUTE</button>
+            </div>
+        </section>
+
+        <button onclick="restartBridge()" style="background:#550000; color:#ff4444; border-color:#ff4444; width:100%">REBOOT_KERNEL</button>
     </div>
 
-    <!-- AI BRAIN INTERFACE -->
-    <section>
-        <label>> GEMINI INTELLIGENCE ROUTER (NATURAL LANGUAGE)</label>
-        <input id="ai_in" type="text" placeholder="e.g. 'Go home and tell me the time'" onkeypress="if(event.key==='Enter') executeAI()">
-        <button style="width:100%" onclick="executeAI()">SEND_TO_BRAIN</button>
-    </section>
-
-    <!-- MANUAL VOICE TRIGGER -->
-    <section>
-        <label>> DIRECT TEXT-TO-SPEECH (RHVOICE)</label>
-        <div class="btn-row">
-            <input id="tts_in" type="text" placeholder="Type to speak..." style="margin-bottom:0">
-            <button onclick="executeSpeak()" style="flex:0.3">SPEAK</button>
-        </div>
-    </section>
-
-    <!-- VIRTUAL REMOTE (Bypasses lost physical remote) -->
-    <section>
-        <label style="text-align:center">> VIRTUAL NAVIGATION OVERRIDE</label>
-        <div class="remote-grid">
-            <div></div> 
-            <button class="nav-btn" onclick="sendNav(19)">UP</button> 
-            <div></div>
-            
-            <button class="nav-btn" onclick="sendNav(21)">LEFT</button>
-            <button class="nav-btn" style="background:#004400" onclick="sendNav(66)">OK</button>
-            <button class="nav-btn" onclick="sendNav(22)">RIGHT</button>
-            
-            <div></div> 
-            <button class="nav-btn" onclick="sendNav(20)">DOWN</button> 
-            <div></div>
-
-            <button onclick="sendNav(3)">HOME</button>
-            <button onclick="sendNav(4)" style="grid-column: span 2">BACK</button>
-        </div>
-    </section>
-
-    <!-- MEDIA CONTROLS -->
-    <section>
-        <label style="text-align:center">> MEDIA & VOLUME</label>
-        <div class="btn-row">
-            <button onclick="sendNav(24)">VOL +</button>
-            <button onclick="sendNav(25)">VOL -</button>
-            <button onclick="sendNav(164)">MUTE</button>
-            <button onclick="sendNav(85)">PLAY/PAUSE</button>
-        </div>
-    </section>
-
-    <!-- SYSTEM CONTROLS -->
-    <section>
-        <label style="text-align:center">> SYSTEM KERNEL</label>
-        <button onclick="restartBridge()" style="background:#550000; color:#ff4444; border-color:#ff4444; width:100%">EMERGENCY RESTART</button>
-    </section>
-
-    <div id="log" class="status-log">System Standing By...</div>
+    <!-- RIGHT LOG PANEL -->
+    <div class="log-panel">
+        <h2>[ SYSTEM_LIVE_LOGS ]</h2>
+        <div id="log_content"></div>
+    </div>
 </div>
 
-<!-- Firebase Logic -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // 1. FIREBASE INITIALIZATION
     const firebaseConfig = {
         apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
         databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
@@ -176,59 +194,52 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. ACTION FUNCTIONS
     function executeAI() {
         const p = document.getElementById('ai_in').value;
         if(!p) return;
-        pushCmd({ type: 'ai', prompt: p });
+        db.ref('home_system/commands').set({ type: 'ai', prompt: p });
         document.getElementById('ai_in').value = "";
-        updateLog("AI Prompt Dispatched...");
     }
 
     function executeSpeak() {
         const t = document.getElementById('tts_in').value;
         if(!t) return;
-        pushCmd({ type: 'speak', text: t });
+        db.ref('home_system/commands').set({ type: 'speak', text: t });
         document.getElementById('tts_in').value = "";
-        updateLog("Speech Command Dispatched...");
     }
 
     function sendNav(code) {
-        pushCmd({ type: 'nav', key: code });
-        updateLog("KeyEvent " + code + " Dispatched...");
+        db.ref('home_system/commands').set({ type: 'nav', key: code });
     }
 
     function restartBridge() {
         if(confirm("CONFIRM KERNEL REBOOT?")) {
             db.ref('home_system/control/restart').set(true);
-            updateLog("REBOOT SIGNAL SENT...");
         }
     }
 
-    // 3. DATABASE PUSH ENGINE
-    function pushCmd(payload) {
-        // Path matches the bridge.py listener
-        db.ref('home_system/commands').set(payload)
-          .catch(e => updateLog("CRITICAL_ERROR: " + e.message));
-    }
+    // TELEMETRY
+    db.ref('home_system/server_info').on('value', (s) => {
+        const d = s.val();
+        if(!d) return;
+        document.getElementById('ip').innerText = d.ip || "OFFLINE";
+        document.getElementById('status').innerText = d.status || "UNKNOWN";
+    });
 
-    function updateLog(msg) {
-        const l = document.getElementById('log');
-        l.innerText = ">> " + msg;
-        setTimeout(() => { l.innerText = "System Standing By..."; }, 3000);
-    }
-
-    // 4. REAL-TIME TELEMETRY LISTENER
-    db.ref('home_system/server_info').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if(!data) return;
+    // LIVE LOGS
+    const logContent = document.getElementById('log_content');
+    db.ref('home_system/logs').limitToLast(50).on('child_added', (s) => {
+        const d = s.val();
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
         
-        document.getElementById('ip').innerText = data.ip || "UNKNOWN";
-        document.getElementById('cpu').innerText = data.cpu || "0";
-        document.getElementById('ram').innerText = data.ram || "0";
-        document.getElementById('up').innerText = data.uptime_m || "0";
+        const time = new Date(d.timestamp * 1000).toLocaleTimeString();
+        const typeClass = d.message.includes('AI THOUGHT') ? 'log-type-ai' : 'log-type-info';
+        
+        entry.innerHTML = `<span class="log-ts">[${time}]</span> <span class="${typeClass}">${d.message}</span>`;
+        logContent.appendChild(entry);
+        logContent.scrollTop = logContent.scrollHeight;
     });
 </script>
-
 </body>
 </html>
