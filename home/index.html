@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success AI | Master Control v4.0</title>
+    <title>Success AI | Master Control v6.1 (Stable)</title>
     <style>
         /* TERMINAL AESTHETIC */
         body { 
@@ -70,7 +70,7 @@
         .stat-val { color: #fff; font-weight: bold; }
 
         /* INPUT STYLING */
-        section { margin-bottom: 20px; }
+        section { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 10px; }
         label { display: block; font-size: 9px; margin-bottom: 3px; color: #008f11; }
         input { 
             width: 100%; 
@@ -98,21 +98,35 @@
             text-transform: uppercase;
         }
         button:hover { background: #00ff41; color: #000; }
+        button.danger { background: #330000; color: #ff5555; border-color: #ff5555; }
+        button.danger:hover { background: #ff5555; color: white; }
 
-        /* VIRTUAL REMOTE GRID */
-        .remote-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 5px; 
-            width: 180px; 
-            margin: 0 auto; 
+        /* KEY LIST */
+        .key-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            padding: 2px 0;
+            border-bottom: 1px solid #111;
         }
-        .nav-btn { padding: 10px 5px; }
+        .key-active { color: #fff; background: #004400; }
 
-        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; position: relative; }
+        .log-entry.unread { border-left: 3px solid #ff0000; padding-left: 5px; background: rgba(255, 0, 0, 0.05); }
         .log-ts { color: #888; font-size: 10px; }
         .log-type-ai { color: #00bfff; font-weight: bold; }
         .log-type-info { color: #00ff41; }
+        .log-type-watcher { color: #ffaa00; font-weight: bold; }
+        .mark-read-btn { 
+            font-size: 8px; 
+            padding: 1px 3px; 
+            margin-left: 10px; 
+            cursor: pointer; 
+            background: #222; 
+            border: 1px solid #444; 
+            color: #888;
+        }
+        .mark-read-btn:hover { background: #444; color: #fff; }
 
         @media (max-width: 800px) {
             .main-container { grid-template-columns: 1fr; }
@@ -130,10 +144,21 @@
         <h2>[ NODE: <span id="ip">OFFLINE</span> ]</h2>
 
         <div class="stats-bar">
-            <div>CPU: <span id="cpu" class="stat-val">0</span>%</div>
-            <div>RAM: <span id="ram" class="stat-val">0</span>%</div>
+            <div>KEY_IDX: <span id="key_idx" class="stat-val">-</span></div>
             <div>STATUS: <span id="status" class="stat-val">INIT</span></div>
         </div>
+
+        <!-- API KEY MANAGER -->
+        <section>
+            <label>> API_KEY_MANAGER (GEMINI CYCLING)</label>
+            <div id="key_list" style="margin-bottom: 5px; max-height: 80px; overflow-y: auto;">
+                <!-- Keys injected here -->
+            </div>
+            <div class="btn-row">
+                <input id="new_key" type="text" placeholder="Paste new API Key..." style="margin-bottom:0">
+                <button onclick="addKey()" style="flex:0.4">ADD</button>
+            </div>
+        </section>
 
         <section>
             <label>> BRAIN_INPUT (NATURAL LANGUAGE)</label>
@@ -144,39 +169,23 @@
         <section>
             <label>> TEXT_TO_SPEECH</label>
             <div class="btn-row">
-                <input id="tts_in" type="text" placeholder="Speak..." style="margin-bottom:0">
+                <input id="tts_in" type="text" placeholder="Speak..." style="margin-bottom:0" onkeypress="if(event.key==='Enter') executeSpeak()">
                 <button onclick="executeSpeak()" style="flex:0.3">TALK</button>
             </div>
         </section>
 
-        <section>
-            <label style="text-align:center">> NAV_GRID</label>
-            <div class="remote-grid">
-                <div></div> <button class="nav-btn" onclick="sendNav(19)">UP</button> <div></div>
-                <button class="nav-btn" onclick="sendNav(21)">LEFT</button>
-                <button class="nav-btn" style="background:#004400" onclick="sendNav(66)">OK</button>
-                <button class="nav-btn" onclick="sendNav(22)">RIGHT</button>
-                <div></div> <button class="nav-btn" onclick="sendNav(20)">DOWN</button> <div></div>
-                <button onclick="sendNav(3)">HOME</button>
-                <button onclick="sendNav(4)" style="grid-column: span 2">BACK</button>
-            </div>
-        </section>
-
-        <section>
-            <label style="text-align:center">> MEDIA_VOLUME</label>
-            <div class="btn-row">
-                <button onclick="sendNav(24)">VOL+</button>
-                <button onclick="sendNav(25)">VOL-</button>
-                <button onclick="sendNav(164)">MUTE</button>
-            </div>
-        </section>
-
-        <button onclick="restartBridge()" style="background:#550000; color:#ff4444; border-color:#ff4444; width:100%">REBOOT_KERNEL</button>
+        <button onclick="restartBridge()" class="danger" style="width:100%">FORCE REBOOT (WATCHER)</button>
     </div>
 
     <!-- RIGHT LOG PANEL -->
     <div class="log-panel">
-        <h2>[ SYSTEM_LIVE_LOGS ]</h2>
+        <h2 style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
+            <span>[ SYSTEM_LIVE_LOGS ]</span>
+            <div>
+                <button onclick="markAllRead()" style="flex: none; width: 100px; padding: 2px; font-size: 8px; margin-right: 5px;">MARK ALL READ</button>
+                <button onclick="clearLogs()" style="flex: none; width: 60px; padding: 2px; font-size: 8px;">CLEAR</button>
+            </div>
+        </h2>
         <div id="log_content"></div>
     </div>
 </div>
@@ -194,6 +203,49 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    let apiKeys = [];
+    let activeKeyIndex = 0;
+
+    // --- KEY MANAGEMENT ---
+    db.ref('home_system/config/api_keys').on('value', (s) => {
+        apiKeys = s.val() || [];
+        renderKeys();
+    });
+
+    db.ref('home_system/server_info/active_key_index').on('value', (s) => {
+        activeKeyIndex = s.val() || 0;
+        renderKeys();
+        document.getElementById('key_idx').innerText = activeKeyIndex;
+    });
+
+    function renderKeys() {
+        const list = document.getElementById('key_list');
+        list.innerHTML = "";
+        apiKeys.forEach((k, i) => {
+            if(!k) return;
+            const div = document.createElement('div');
+            div.className = 'key-item ' + (i === activeKeyIndex ? 'key-active' : '');
+            const mask = k.substring(0,4) + "..." + k.substring(k.length-4);
+            div.innerHTML = `<span>[${i}] ${mask}</span> <span style="cursor:pointer; color:#ff5555" onclick="delKey(${i})">[X]</span>`;
+            list.appendChild(div);
+        });
+    }
+
+    function addKey() {
+        const k = document.getElementById('new_key').value.trim();
+        if(!k) return;
+        const newKeys = [...apiKeys, k];
+        db.ref('home_system/config/api_keys').set(newKeys);
+        document.getElementById('new_key').value = "";
+    }
+
+    function delKey(idx) {
+        if(!confirm("DELETE KEY?")) return;
+        const newKeys = apiKeys.filter((_, i) => i !== idx);
+        db.ref('home_system/config/api_keys').set(newKeys);
+    }
+
+    // --- COMMANDS ---
     function executeAI() {
         const p = document.getElementById('ai_in').value;
         if(!p) return;
@@ -208,17 +260,32 @@
         document.getElementById('tts_in').value = "";
     }
 
-    function sendNav(code) {
-        db.ref('home_system/commands').set({ type: 'nav', key: code });
-    }
-
     function restartBridge() {
         if(confirm("CONFIRM KERNEL REBOOT?")) {
             db.ref('home_system/control/restart').set(true);
         }
     }
 
-    // TELEMETRY
+    function clearLogs() {
+        document.getElementById('log_content').innerHTML = "";
+    }
+
+    function markRead(logId) {
+        db.ref('home_system/logs/' + logId).update({ read: true });
+    }
+
+    async function markAllRead() {
+        const snapshot = await db.ref('home_system/logs').once('value');
+        const logs = snapshot.val();
+        if (!logs) return;
+        const updates = {};
+        Object.keys(logs).forEach(id => {
+            if (!logs[id].read) updates[id + '/read'] = true;
+        });
+        db.ref('home_system/logs').update(updates);
+    }
+
+    // --- TELEMETRY ---
     db.ref('home_system/server_info').on('value', (s) => {
         const d = s.val();
         if(!d) return;
@@ -226,20 +293,43 @@
         document.getElementById('status').innerText = d.status || "UNKNOWN";
     });
 
-    // LIVE LOGS
+    // --- LIVE LOGS ---
     const logContent = document.getElementById('log_content');
     db.ref('home_system/logs').limitToLast(50).on('child_added', (s) => {
+        renderLog(s);
+    });
+
+    db.ref('home_system/logs').limitToLast(50).on('child_changed', (s) => {
+        const existing = document.getElementById('log-' + s.key);
+        if (existing) {
+            const newLog = renderLog(s, true);
+            existing.replaceWith(newLog);
+        }
+    });
+
+    function renderLog(s, returnOnly = false) {
         const d = s.val();
         const entry = document.createElement('div');
-        entry.className = 'log-entry';
+        entry.id = 'log-' + s.key;
+        entry.className = 'log-entry' + (d.read ? '' : ' unread');
         
         const time = new Date(d.timestamp * 1000).toLocaleTimeString();
-        const typeClass = d.message.includes('AI THOUGHT') ? 'log-type-ai' : 'log-type-info';
+        let typeClass = 'log-type-info';
+        if(d.message && d.message.includes('AI THOUGHT')) typeClass = 'log-type-ai';
+        if(d.type === 'watcher') typeClass = 'log-type-watcher';
         
-        entry.innerHTML = `<span class="log-ts">[${time}]</span> <span class="${typeClass}">${d.message}</span>`;
+        const readBtn = d.read ? '' : `<button class="mark-read-btn" onclick="markRead('${s.key}')">READ</button>`;
+        
+        entry.innerHTML = `<span class="log-ts">[${time}]</span> <span class="${typeClass}">${d.message}</span> ${readBtn}`;
+        
+        if (returnOnly) return entry;
+
         logContent.appendChild(entry);
-        logContent.scrollTop = logContent.scrollHeight;
-    });
+        // Auto-scroll to bottom
+        requestAnimationFrame(() => {
+            logContent.scrollTop = logContent.scrollHeight;
+        });
+    }
 </script>
 </body>
 </html>
