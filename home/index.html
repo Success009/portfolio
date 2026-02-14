@@ -3,136 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success AI | Master Control v6.1 (Stable)</title>
-    <style>
-        /* TERMINAL AESTHETIC */
-        body { 
-            background: #050505; 
-            color: #00ff41; 
-            font-family: 'Courier New', monospace; 
-            margin: 0; 
-            padding: 10px; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .main-container {
-            display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-            height: 90vh;
-        }
-        .panel { 
-            border: 1px solid #00ff41; 
-            padding: 15px; 
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2); 
-            background: rgba(0, 20, 0, 0.9);
-            overflow-y: auto;
-        }
-        .log-panel {
-            border: 1px solid #00ff41;
-            padding: 10px;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-        }
-        #log_content {
-            flex: 1;
-            overflow-y: auto;
-            font-size: 12px;
-            color: #00ff41;
-            white-space: pre-wrap;
-        }
-        h2 { 
-            text-align: center; 
-            text-transform: uppercase; 
-            border-bottom: 1px solid #00ff41; 
-            padding-bottom: 10px; 
-            margin-top: 0;
-            font-size: 16px;
-            letter-spacing: 2px;
-        }
-
-        /* TELEMETRY BAR */
-        .stats-bar { 
-            display: flex; 
-            justify-content: space-between; 
-            background: #111; 
-            padding: 10px; 
-            margin-bottom: 15px; 
-            font-size: 11px;
-            border: 1px dashed #333;
-        }
-        .stat-val { color: #fff; font-weight: bold; }
-
-        /* INPUT STYLING */
-        section { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 10px; }
-        label { display: block; font-size: 9px; margin-bottom: 3px; color: #008f11; }
-        input { 
-            width: 100%; 
-            background: #000; 
-            border: 1px solid #00ff41; 
-            color: #00ff41; 
-            padding: 8px; 
-            box-sizing: border-box; 
-            outline: none; 
-            margin-bottom: 5px;
-            font-size: 13px;
-        }
-        input:focus { border-color: #fff; box-shadow: 0 0 5px #fff; }
-
-        /* BUTTONS */
-        .btn-row { display: flex; gap: 5px; }
-        button { 
-            flex: 1;
-            background: #002200; 
-            color: #00ff41; 
-            border: 1px solid #00ff41; 
-            padding: 8px; 
-            cursor: pointer; 
-            font-size: 10px; 
-            text-transform: uppercase;
-        }
-        button:hover { background: #00ff41; color: #000; }
-        button.danger { background: #330000; color: #ff5555; border-color: #ff5555; }
-        button.danger:hover { background: #ff5555; color: white; }
-
-        /* KEY LIST */
-        .key-item {
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            padding: 2px 0;
-            border-bottom: 1px solid #111;
-        }
-        .key-active { color: #fff; background: #004400; }
-
-        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; position: relative; }
-        .log-entry.unread { border-left: 3px solid #ff0000; padding-left: 5px; background: rgba(255, 0, 0, 0.05); }
-        .log-ts { color: #888; font-size: 10px; }
-        .log-type-ai { color: #00bfff; font-weight: bold; }
-        .log-type-info { color: #00ff41; }
-        .log-type-watcher { color: #ffaa00; font-weight: bold; }
-        .mark-read-btn { 
-            font-size: 8px; 
-            padding: 1px 3px; 
-            margin-left: 10px; 
-            cursor: pointer; 
-            background: #222; 
-            border: 1px solid #444; 
-            color: #888;
-        }
-        .mark-read-btn:hover { background: #444; color: #fff; }
-
-        @media (max-width: 800px) {
-            .main-container { grid-template-columns: 1fr; }
-            .log-panel { height: 300px; }
-        }
-    </style>
+    <title>Success AI | Master Control v6.2</title>
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
@@ -156,25 +28,25 @@
             </div>
             <div class="btn-row">
                 <input id="new_key" type="text" placeholder="Paste new API Key..." style="margin-bottom:0">
-                <button onclick="addKey()" style="flex:0.4">ADD</button>
+                <button id="btn_add_key" style="flex:0.4">ADD</button>
             </div>
         </section>
 
         <section>
             <label>> BRAIN_INPUT (NATURAL LANGUAGE)</label>
-            <input id="ai_in" type="text" placeholder="Command AI..." onkeypress="if(event.key==='Enter') executeAI()">
-            <button style="width:100%" onclick="executeAI()">EXECUTE_REASONING</button>
+            <input id="ai_in" type="text" placeholder="Command AI..." >
+            <button id="btn_execute_ai" style="width:100%">EXECUTE_REASONING</button>
         </section>
 
         <section>
             <label>> TEXT_TO_SPEECH</label>
             <div class="btn-row">
-                <input id="tts_in" type="text" placeholder="Speak..." style="margin-bottom:0" onkeypress="if(event.key==='Enter') executeSpeak()">
-                <button onclick="executeSpeak()" style="flex:0.3">TALK</button>
+                <input id="tts_in" type="text" placeholder="Speak..." style="margin-bottom:0">
+                <button id="btn_execute_speak" style="flex:0.3">TALK</button>
             </div>
         </section>
 
-        <button onclick="restartBridge()" class="danger" style="width:100%">FORCE REBOOT (WATCHER)</button>
+        <button id="btn_restart_bridge" class="danger" style="width:100%">FORCE REBOOT (WATCHER)</button>
     </div>
 
     <!-- RIGHT LOG PANEL -->
@@ -182,154 +54,19 @@
         <h2 style="display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
             <span>[ SYSTEM_LIVE_LOGS ]</span>
             <div>
-                <button onclick="markAllRead()" style="flex: none; width: 100px; padding: 2px; font-size: 8px; margin-right: 5px;">MARK ALL READ</button>
-                <button onclick="clearLogs()" style="flex: none; width: 60px; padding: 2px; font-size: 8px;">CLEAR</button>
+                <button id="btn_clear_logs" style="flex: none; width: 60px; padding: 2px; font-size: 8px;">CLEAR</button>
             </div>
         </h2>
         <div id="log_content"></div>
     </div>
 </div>
 
+<!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
-        databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
-        projectId: "community-canvas-255fa",
-    };
+<!-- App Logic -->
+<script type="module" src="assets/js/app.js"></script>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let apiKeys = [];
-    let activeKeyIndex = 0;
-
-    // --- KEY MANAGEMENT ---
-    db.ref('home_system/config/api_keys').on('value', (s) => {
-        apiKeys = s.val() || [];
-        renderKeys();
-    });
-
-    db.ref('home_system/server_info/active_key_index').on('value', (s) => {
-        activeKeyIndex = s.val() || 0;
-        renderKeys();
-        document.getElementById('key_idx').innerText = activeKeyIndex;
-    });
-
-    function renderKeys() {
-        const list = document.getElementById('key_list');
-        list.innerHTML = "";
-        apiKeys.forEach((k, i) => {
-            if(!k) return;
-            const div = document.createElement('div');
-            div.className = 'key-item ' + (i === activeKeyIndex ? 'key-active' : '');
-            const mask = k.substring(0,4) + "..." + k.substring(k.length-4);
-            div.innerHTML = `<span>[${i}] ${mask}</span> <span style="cursor:pointer; color:#ff5555" onclick="delKey(${i})">[X]</span>`;
-            list.appendChild(div);
-        });
-    }
-
-    function addKey() {
-        const k = document.getElementById('new_key').value.trim();
-        if(!k) return;
-        const newKeys = [...apiKeys, k];
-        db.ref('home_system/config/api_keys').set(newKeys);
-        document.getElementById('new_key').value = "";
-    }
-
-    function delKey(idx) {
-        if(!confirm("DELETE KEY?")) return;
-        const newKeys = apiKeys.filter((_, i) => i !== idx);
-        db.ref('home_system/config/api_keys').set(newKeys);
-    }
-
-    // --- COMMANDS ---
-    function executeAI() {
-        const p = document.getElementById('ai_in').value;
-        if(!p) return;
-        db.ref('home_system/commands').set({ type: 'ai', prompt: p });
-        document.getElementById('ai_in').value = "";
-    }
-
-    function executeSpeak() {
-        const t = document.getElementById('tts_in').value;
-        if(!t) return;
-        db.ref('home_system/commands').set({ type: 'speak', text: t });
-        document.getElementById('tts_in').value = "";
-    }
-
-    function restartBridge() {
-        if(confirm("CONFIRM KERNEL REBOOT?")) {
-            db.ref('home_system/control/restart').set(true);
-        }
-    }
-
-    function clearLogs() {
-        document.getElementById('log_content').innerHTML = "";
-    }
-
-    function markRead(logId) {
-        db.ref('home_system/logs/' + logId).update({ read: true });
-    }
-
-    async function markAllRead() {
-        const snapshot = await db.ref('home_system/logs').once('value');
-        const logs = snapshot.val();
-        if (!logs) return;
-        const updates = {};
-        Object.keys(logs).forEach(id => {
-            if (!logs[id].read) updates[id + '/read'] = true;
-        });
-        db.ref('home_system/logs').update(updates);
-    }
-
-    // --- TELEMETRY ---
-    db.ref('home_system/server_info').on('value', (s) => {
-        const d = s.val();
-        if(!d) return;
-        document.getElementById('ip').innerText = d.ip || "OFFLINE";
-        document.getElementById('status').innerText = d.status || "UNKNOWN";
-    });
-
-    // --- LIVE LOGS ---
-    const logContent = document.getElementById('log_content');
-    db.ref('home_system/logs').limitToLast(50).on('child_added', (s) => {
-        renderLog(s);
-    });
-
-    db.ref('home_system/logs').limitToLast(50).on('child_changed', (s) => {
-        const existing = document.getElementById('log-' + s.key);
-        if (existing) {
-            const newLog = renderLog(s, true);
-            existing.replaceWith(newLog);
-        }
-    });
-
-    function renderLog(s, returnOnly = false) {
-        const d = s.val();
-        const entry = document.createElement('div');
-        entry.id = 'log-' + s.key;
-        entry.className = 'log-entry' + (d.read ? '' : ' unread');
-        
-        const time = new Date(d.timestamp * 1000).toLocaleTimeString();
-        let typeClass = 'log-type-info';
-        if(d.message && d.message.includes('AI THOUGHT')) typeClass = 'log-type-ai';
-        if(d.type === 'watcher') typeClass = 'log-type-watcher';
-        
-        const readBtn = d.read ? '' : `<button class="mark-read-btn" onclick="markRead('${s.key}')">READ</button>`;
-        
-        entry.innerHTML = `<span class="log-ts">[${time}]</span> <span class="${typeClass}">${d.message}</span> ${readBtn}`;
-        
-        if (returnOnly) return entry;
-
-        logContent.appendChild(entry);
-        // Auto-scroll to bottom
-        requestAnimationFrame(() => {
-            logContent.scrollTop = logContent.scrollHeight;
-        });
-    }
-</script>
 </body>
 </html>
