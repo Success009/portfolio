@@ -5,7 +5,7 @@ let state = {
     apiKeys: [],
     activeKeyIndex: 0,
     isInitialized: false,
-    adminEmail: "admin@success.ai"
+    adminEmail: "successadhikari1234@gmail.com"
 };
 
 // --- AUTH LOGIC ---
@@ -177,7 +177,7 @@ Database.onAuthStateChanged((user) => {
     const isLoginPage = path.endsWith('index.html') || path.endsWith('/') || path === '';
     const isDashboardPage = path.endsWith('dashboard.html');
 
-    if (user && user.uid === 'HePUPBxYTMWtIF0LnH6izvFPhPh1') {
+    if (user && user.uid === '3u6ylRq3pPe8FnAKilcJmADaooR2') {
         if (isLoginPage) {
             window.location.href = 'dashboard.html';
         } else if (isDashboardPage) {
@@ -200,3 +200,4 @@ if (btnLogin) btnLogin.onclick = handleLogin;
 
 const loginPass = document.getElementById('login_pass');
 if (loginPass) loginPass.onkeypress = (e) => { if (e.key === 'Enter') handleLogin(); };
+
