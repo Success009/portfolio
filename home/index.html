@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Success AI | Authentication</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <div id="login_overlay" class="overlay">
+        <div class="login-box" style="border: 1px solid var(--border); background: var(--bg-panel); padding: 40px; width: 380px;">
+            <div style="border-left: 3px solid var(--primary); padding-left: 15px; margin-bottom: 30px; text-align: left;">
+                <h1 style="font-size: 16px; margin: 0; color: #fff;">AGENT_AUTHENTICATION</h1>
+                <span style="font-size: 10px; color: var(--text-muted);">Provision access credentials</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="password" id="login_pass" placeholder="Enter Access Key..." autofocus 
+                       style="background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 15px; font-family: var(--font-mono); outline: none;">
+                <button id="btn_login" style="background: var(--primary); color: #fff; border: none; padding: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px;">Initialize Session</button>
+            </div>
+            <div id="login_error" style="color: var(--accent-red); font-size: 11px; margin-top: 20px; text-align: left;"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
