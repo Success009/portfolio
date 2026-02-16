@@ -25,46 +25,46 @@
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             background: var(--bg-dark); color: var(--text-main);
-            font-family: var(--font-mono); font-size: 14px;
+            font-family: var(--font-mono); font-size: 18px;
             overflow: hidden; display: flex; flex-direction: column;
         }
         #header {
-            padding: 8px 12px; background: var(--bg-panel); border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center; font-size: 11px; z-index: 10;
+            padding: 10px 15px; background: var(--bg-panel); border-bottom: 2px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; font-size: 14px; z-index: 10;
         }
-        .status-dot { width: 8px; height: 8px; display: inline-block; margin-right: 5px; border-radius: 50% !important; }
-        .dot-online { background: var(--accent-green); box-shadow: 0 0 5px var(--accent-green); }
+        .status-dot { width: 12px; height: 12px; display: inline-block; margin-right: 6px; border-radius: 50% !important; }
+        .dot-online { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
         .dot-offline { background: var(--accent-red); }
         .dot-warn { background: var(--accent-orange); }
 
         #log_container {
-            flex: 1; overflow-y: auto; padding: 12px;
-            display: flex; flex-direction: column; gap: 12px;
+            flex: 1; overflow-y: auto; padding: 15px;
+            display: flex; flex-direction: column; gap: 20px;
             scroll-behavior: smooth;
         }
         .log-entry {
-            border-left: 3px solid var(--border); padding-left: 10px;
+            border-left: 4px solid var(--border); padding-left: 15px;
             word-wrap: break-word; animation: fadeIn 0.2s ease-out;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .log-header { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 4px; font-weight: bold; }
-        .log-body { font-size: 15px; line-height: 1.4; white-space: pre-wrap; }
+        .log-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 800; text-transform: uppercase; }
+        .log-body { font-size: 22px; line-height: 1.3; white-space: pre-wrap; font-weight: 500; }
         .type-ai_raw { border-left-color: var(--primary); }
         .type-tool_exec { border-left-color: var(--accent-orange); }
         .type-error { border-left-color: var(--accent-red); }
 
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); display: none;
+            background: rgba(0,0,0,0.98); display: none;
             flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
         #overlay.active { display: flex; }
-        .mic-icon { width: 80px; height: 80px; border-radius: 50% !important; background: var(--accent-red); display: flex; justify-content: center; align-items: center; }
-        #overlay.active .mic-icon { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        #voice_preview { margin-top: 20px; font-size: 18px; color: #fff; text-align: center; padding: 0 15px; font-weight: 500; }
-        #hint { position: fixed; bottom: 15px; width: 100%; text-align: center; font-size: 10px; color: var(--text-muted); }
+        .mic-icon { width: 100px; height: 100px; border-radius: 50% !important; background: var(--accent-red); display: flex; justify-content: center; align-items: center; }
+        #overlay.active .mic-icon { animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { transform: scale(1); } }
+        #voice_preview { margin-top: 25px; font-size: 24px; color: #fff; text-align: center; padding: 0 10px; font-weight: 900; line-height: 1.2; }
+        #hint { position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 12px; color: var(--text-muted); font-weight: bold; }
 
         ::-webkit-scrollbar { width: 0; }
     </style>
