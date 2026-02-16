@@ -37,17 +37,6 @@
                 </div>
             </div>
 
-            <div class="sidebar-section">
-                <span class="section-label">System Controls</span>
-                <div class="stat-box" style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label style="font-size: 8px; color: var(--text-muted); text-transform: uppercase;">Master Volume</label>
-                        <span id="vol_val" style="font-size: 10px; color: var(--primary);">--</span>
-                    </div>
-                    <input type="range" id="vol_slider" min="0" max="15" value="0" style="width: 100%; cursor: pointer; accent-color: var(--primary);">
-                </div>
-            </div>
-
             <div class="sidebar-section" style="flex: 1;">
                 <span class="section-label">Engine Registry (API)</span>
                 <div class="key-registry-container">
@@ -114,6 +103,17 @@
             </div>
 
             <div class="settings-list" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; color: #fff;">Master Volume</div>
+                        <div style="font-size: 10px; color: var(--text-muted);">Adjust TV Box audio level</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; width: 150px;">
+                        <input type="range" id="vol_slider" min="0" max="15" value="0" style="flex: 1; cursor: pointer; accent-color: var(--primary);">
+                        <span id="vol_val" style="font-size: 11px; color: var(--primary); min-width: 15px; text-align: right;">--</span>
+                    </div>
+                </div>
+
                 <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="font-size: 13px; color: #fff;">Local Text-to-Speech (TTS)</div>
