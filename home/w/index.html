@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Watch Node</title>
     <!-- Dependencies -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ansi_up/5.2.1/ansi_up.min.js" onerror="window.ansiUpFailed=true"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ansi_up/5.2.1/ansi_up.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -59,15 +59,16 @@
             flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
         #overlay.active { display: flex; }
-        .mic-icon { width: 50px; height: 50px; border-radius: 50% !important; background: var(--primary); display: flex; justify-content: center; align-items: center; }
+        .mic-icon { width: 50px; height: 50px; border-radius: 50% !important; background: var(--accent-red); display: flex; justify-content: center; align-items: center; }
         #overlay.active .mic-icon { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
         #voice_preview { margin-top: 15px; font-size: 11px; color: #fff; text-align: center; padding: 0 15px; }
+        #hint { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 7px; color: var(--text-dim); }
 
         ::-webkit-scrollbar { width: 0; }
     </style>
 </head>
-<body onclick="handleTap()">
+<body id="app_body">
     <div id="header">
         <div>
             <span id="status_dot" class="status-dot dot-offline"></span>
@@ -76,9 +77,7 @@
         <div id="ai_status" style="color: var(--text-muted)">IDLE</div>
     </div>
 
-    <div id="log_container">
-        <!-- Diagnostic messages start here -->
-    </div>
+    <div id="log_container"></div>
 
     <div id="overlay">
         <div class="mic-icon">
@@ -87,10 +86,10 @@
             </svg>
         </div>
         <div id="voice_preview">Listening...</div>
+        <div style="margin-top: 20px; font-size: 8px; color: var(--text-muted);">SINGLE TAP TO CANCEL</div>
     </div>
 
     <script>
-        // Inline Config
         const firebaseConfig = {
             apiKey: "AIzaSyA6sANvYoAkXHYG8MjbZl6Pyq23CNdBuzA",
             databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
@@ -100,92 +99,89 @@
         const container = document.getElementById('log_container');
         const statusText = document.getElementById('status_text');
         const statusDot = document.getElementById('status_dot');
+        const overlay = document.getElementById('overlay');
+        const voicePreview = document.getElementById('voice_preview');
         
         let db;
         let ansiUp = null;
         let isListening = false;
         let recognition = null;
         let lastTranscript = "";
+        let lastTapTime = 0;
 
         function diag(msg, color) {
             const div = document.createElement('div');
             div.style.color = color || 'var(--text-muted)';
             div.style.fontSize = '8px';
-            div.style.marginBottom = '4px';
+            div.style.marginBottom = '2px';
             div.textContent = `[DIAG] ${msg}`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
 
         window.onload = function() {
-            diag("Checking dependencies...");
-            
-            // Check AnsiUp
-            if (typeof AnsiUp !== 'undefined') {
-                ansiUp = new AnsiUp();
-                diag("AnsiUp: LOADED", "var(--accent-green)");
-            } else {
-                diag("AnsiUp: FAILED (Using fallback)", "var(--accent-orange)");
-            }
-
-            // Check Firebase
+            if (typeof AnsiUp !== 'undefined') ansiUp = new AnsiUp();
             if (typeof firebase !== 'undefined') {
-                diag("Firebase: LOADED", "var(--accent-green)");
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
                 initApp();
             } else {
-                diag("Firebase: NOT FOUND", "var(--accent-red)");
-                statusText.textContent = "CORE_MISSING";
+                diag("CORE_LOAD_FAIL", "var(--accent-red)");
             }
         };
 
         function initApp() {
-            try {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-                diag("Firebase: INITIALIZED");
+            db.ref('.info/connected').on('value', s => {
+                const connected = s.val();
+                if (!connected) {
+                    statusText.textContent = "OFFLINE";
+                    statusDot.className = "status-dot dot-offline";
+                }
+            });
 
-                // Connection Listeners
-                db.ref('.info/connected').on('value', s => {
-                    const connected = s.val();
-                    diag("Socket: " + (connected ? "CONNECTED" : "DISCONNECTED"), connected ? "var(--accent-green)" : "var(--accent-red)");
-                    if (!connected) {
-                        statusText.textContent = "OFFLINE";
-                        statusDot.className = "status-dot dot-offline";
-                    }
-                });
+            db.ref('home_system/server_info').on('value', s => {
+                const info = s.val() || {};
+                const isOnline = info.status === 'ONLINE';
+                statusText.textContent = isOnline ? 'LINK_ON' : 'LINK_OFF';
+                statusDot.className = `status-dot ${isOnline ? 'dot-online' : 'dot-warn'}`;
+                document.getElementById('ai_status').textContent = info.ai_status || 'IDLE';
+            });
 
-                db.ref('home_system/server_info').on('value', s => {
-                    const info = s.val() || {};
-                    const isOnline = info.status === 'ONLINE';
-                    statusText.textContent = isOnline ? 'LINK_ON' : 'LINK_OFF';
-                    statusDot.className = `status-dot ${isOnline ? 'dot-online' : 'dot-warn'}`;
-                    document.getElementById('ai_status').textContent = info.ai_status || 'IDLE';
-                }, err => diag("DB_READ_ERR: " + err.message, "var(--accent-red)"));
+            db.ref('home_system/logs').limitToLast(15).on('child_added', s => {
+                const log = s.val();
+                if (log) renderLog(log);
+            });
 
-                db.ref('home_system/logs').limitToLast(10).on('child_added', s => {
-                    const log = s.val();
-                    if (log) renderLog(log);
-                });
+            setupVoice();
+            
+            // Interaction Handler
+            document.body.addEventListener('click', (e) => {
+                const now = Date.now();
+                const diff = now - lastTapTime;
+                lastTapTime = now;
 
-                setupVoice();
-            } catch (e) {
-                diag("INIT_ERROR: " + e.message, "var(--accent-red)");
-            }
+                if (diff < 300 && diff > 0) {
+                    // Double Tap
+                    if (!isListening) startListening();
+                } else {
+                    // Single Tap
+                    if (isListening) stopListening(true);
+                }
+            });
         }
 
         function renderLog(log) {
             const entry = document.createElement('div');
             const type = log.type || 'info';
             entry.className = `log-entry type-${type}`;
-            
             let content = log.message;
             if (ansiUp && (type === 'tool_exec' || content.includes('SHELL_RESULT:'))) {
                 content = ansiUp.ansi_to_html(content);
             }
-
             entry.innerHTML = `<div class="log-header"><span>${type.toUpperCase()}</span></div><div class="log-body">${content}</div>`;
             container.appendChild(entry);
             container.scrollTop = container.scrollHeight;
+            while(container.children.length > 30) container.removeChild(container.firstChild);
         }
 
         function setupVoice() {
@@ -194,36 +190,32 @@
                 recognition = new SpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = true;
-                
                 recognition.onresult = (event) => {
                     lastTranscript = event.results[0][0].transcript;
-                    document.getElementById('voice_preview').textContent = lastTranscript;
+                    voicePreview.textContent = lastTranscript;
                     if (event.results[0].isFinal) stopListening(false);
                 };
                 recognition.onend = () => { if (isListening) stopListening(false); };
-                recognition.onerror = (e) => { diag("STT_ERR: " + e.error); stopListening(true); };
-                diag("Voice: READY", "var(--accent-green)");
-            } else {
-                diag("Voice: NOT SUPPORTED", "var(--accent-orange)");
+                recognition.onerror = () => { stopListening(true); };
             }
         }
 
-        function handleTap() {
-            if (!isListening) {
-                isListening = true;
-                lastTranscript = "";
-                document.getElementById('voice_preview').textContent = "Listening...";
-                document.getElementById('overlay').classList.add('active');
-                if (recognition) recognition.start();
-                if (window.navigator.vibrate) window.navigator.vibrate(40);
-            } else {
-                stopListening(true);
-            }
+        function startListening() {
+            isListening = true;
+            lastTranscript = "";
+            voicePreview.textContent = "Listening...";
+            overlay.classList.add('active');
+            
+            // Immediate Termination Signal
+            if (db) db.ref('home_system/server_info/stop_requested').set(true);
+            
+            if (recognition) recognition.start();
+            if (window.navigator.vibrate) window.navigator.vibrate([30, 30]);
         }
 
         function stopListening(isCancel) {
             isListening = false;
-            document.getElementById('overlay').classList.remove('active');
+            overlay.classList.remove('active');
             if (recognition) recognition.stop();
             if (!isCancel && lastTranscript.trim()) {
                 sendCmd(lastTranscript.toLowerCase());
@@ -231,17 +223,37 @@
         }
 
         function sendCmd(text) {
-            let cmd = text;
-            if (text.includes("speaker")) cmd = text.split("speaker")[1].trim();
-            
-            if (cmd.includes("terminate reasoning")) {
-                db.ref('home_system/server_info/stop_requested').set(true);
-            } else if (cmd.includes("restart server")) {
-                db.ref('home_system/server_info/restart_requested').set(true);
+            let cmd = text.trim();
+            const isSpeaker = cmd.includes("speaker");
+
+            if (isSpeaker) {
+                // Handle as Direct Speak Command (Like . in dashboard)
+                const speakText = cmd.split("speaker")[1].trim();
+                if (speakText) {
+                    db.ref('home_system/commands').set({
+                        type: 'speak',
+                        text: speakText,
+                        timestamp: Date.now() / 1000
+                    });
+                    diag("DIRECT_SPEAK: " + speakText, "var(--accent-green)");
+                }
             } else {
-                db.ref('home_system/commands').set({ type: 'ai', prompt: cmd, timestamp: Date.now() / 1000 });
+                // Handle as AI Reasoning Prompt
+                if (cmd.includes("terminate reasoning")) {
+                    db.ref('home_system/server_info/stop_requested').set(true);
+                    diag("SIGNAL: STOP");
+                } else if (cmd.includes("restart server")) {
+                    db.ref('home_system/server_info/restart_requested').set(true);
+                    diag("SIGNAL: REBOOT");
+                } else {
+                    db.ref('home_system/commands').set({
+                        type: 'ai',
+                        prompt: cmd,
+                        timestamp: Date.now() / 1000
+                    });
+                    diag("AI_PROMPT: " + cmd, "var(--primary)");
+                }
             }
-            diag("SENT: " + cmd, "var(--primary)");
         }
     </script>
 </body>
