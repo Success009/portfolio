@@ -25,15 +25,15 @@
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             background: var(--bg-dark); color: var(--text-main);
-            font-family: var(--font-mono); font-size: 18px;
+            font-family: var(--font-mono); font-size: 22px;
             overflow: hidden; display: flex; flex-direction: column;
         }
         #header {
-            padding: 10px 15px; background: var(--bg-panel); border-bottom: 2px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center; font-size: 14px; z-index: 10;
+            padding: 12px 15px; background: var(--bg-panel); border-bottom: 3px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; font-size: 16px; z-index: 10;
         }
-        .status-dot { width: 12px; height: 12px; display: inline-block; margin-right: 6px; border-radius: 50% !important; }
-        .dot-online { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+        .status-dot { width: 14px; height: 14px; display: inline-block; margin-right: 8px; border-radius: 50% !important; }
+        .dot-online { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
         .dot-offline { background: var(--accent-red); }
         .dot-warn { background: var(--accent-orange); }
 
@@ -43,16 +43,18 @@
             scroll-behavior: smooth;
         }
         .log-entry {
-            border-left: 4px solid var(--border); padding-left: 15px;
+            border-left: 5px solid var(--border); padding-left: 15px;
             word-wrap: break-word; animation: fadeIn 0.2s ease-out;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .log-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 800; text-transform: uppercase; }
-        .log-body { font-size: 22px; line-height: 1.3; white-space: pre-wrap; font-weight: 500; }
+        .log-header { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); margin-bottom: 8px; font-weight: 900; text-transform: uppercase; }
+        .log-body { font-size: 24px; line-height: 1.3; white-space: pre-wrap; font-weight: 500; color: #fff; }
+        
         .type-ai_raw { border-left-color: var(--primary); }
         .type-tool_exec { border-left-color: var(--accent-orange); }
         .type-error { border-left-color: var(--accent-red); }
+        .type-diag { border-left-color: var(--text-muted); opacity: 0.7; }
 
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -60,11 +62,11 @@
             flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
         #overlay.active { display: flex; }
-        .mic-icon { width: 100px; height: 100px; border-radius: 50% !important; background: var(--accent-red); display: flex; justify-content: center; align-items: center; }
+        .mic-icon { width: 110px; height: 110px; border-radius: 50% !important; background: var(--accent-red); display: flex; justify-content: center; align-items: center; }
         #overlay.active .mic-icon { animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { transform: scale(1); } }
-        #voice_preview { margin-top: 25px; font-size: 24px; color: #fff; text-align: center; padding: 0 10px; font-weight: 900; line-height: 1.2; }
-        #hint { position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 12px; color: var(--text-muted); font-weight: bold; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 25px rgba(239, 68, 68, 0); } 100% { transform: scale(1); } }
+        #voice_preview { margin-top: 30px; font-size: 28px; color: #fff; text-align: center; padding: 0 15px; font-weight: 900; line-height: 1.2; }
+        #hint { position: fixed; bottom: 25px; width: 100%; text-align: center; font-size: 14px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
 
         ::-webkit-scrollbar { width: 0; }
     </style>
@@ -82,12 +84,12 @@
 
     <div id="overlay">
         <div class="mic-icon">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+            <svg viewBox="0 0 24 24" width="35" height="35" fill="white">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
             </svg>
         </div>
         <div id="voice_preview">Listening...</div>
-        <div style="margin-top: 20px; font-size: 8px; color: var(--text-muted);">SINGLE TAP TO CANCEL</div>
+        <div id="hint">TAP TO CANCEL</div>
     </div>
 
     <script>
@@ -111,12 +113,10 @@
         let lastTapTime = 0;
 
         function diag(msg, color) {
-            const div = document.createElement('div');
-            div.style.color = color || 'var(--text-muted)';
-            div.style.fontSize = '8px';
-            div.style.marginBottom = '2px';
-            div.textContent = `[DIAG] ${msg}`;
-            container.appendChild(div);
+            const entry = document.createElement('div');
+            entry.className = 'log-entry type-diag';
+            entry.innerHTML = `<div class="log-header"><span>SYSTEM</span></div><div class="log-body" style="color:${color || 'var(--text-muted)'}">${msg}</div>`;
+            container.appendChild(entry);
             container.scrollTop = container.scrollHeight;
         }
 
@@ -148,24 +148,21 @@
                 document.getElementById('ai_status').textContent = info.ai_status || 'IDLE';
             });
 
-            db.ref('home_system/logs').limitToLast(15).on('child_added', s => {
+            db.ref('home_system/logs').limitToLast(10).on('child_added', s => {
                 const log = s.val();
                 if (log) renderLog(log);
             });
 
             setupVoice();
             
-            // Interaction Handler
             document.body.addEventListener('click', (e) => {
                 const now = Date.now();
                 const diff = now - lastTapTime;
                 lastTapTime = now;
 
-                if (diff < 300 && diff > 0) {
-                    // Double Tap
+                if (diff < 350 && diff > 0) {
                     if (!isListening) startListening();
                 } else {
-                    // Single Tap
                     if (isListening) stopListening(true);
                 }
             });
@@ -182,7 +179,7 @@
             entry.innerHTML = `<div class="log-header"><span>${type.toUpperCase()}</span></div><div class="log-body">${content}</div>`;
             container.appendChild(entry);
             container.scrollTop = container.scrollHeight;
-            while(container.children.length > 30) container.removeChild(container.firstChild);
+            while(container.children.length > 20) container.removeChild(container.firstChild);
         }
 
         function setupVoice() {
@@ -191,10 +188,14 @@
                 recognition = new SpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
                 recognition.onresult = (event) => {
                     lastTranscript = event.results[0][0].transcript;
                     voicePreview.textContent = lastTranscript;
-                    if (event.results[0].isFinal) stopListening(false);
+                    if (event.results[0].isFinal) {
+                        setTimeout(() => stopListening(false), 500);
+                    }
                 };
                 recognition.onend = () => { if (isListening) stopListening(false); };
                 recognition.onerror = () => { stopListening(true); };
@@ -211,10 +212,11 @@
             if (db) db.ref('home_system/server_info/stop_requested').set(true);
             
             if (recognition) recognition.start();
-            if (window.navigator.vibrate) window.navigator.vibrate([30, 30]);
+            if (window.navigator.vibrate) window.navigator.vibrate([40, 40]);
         }
 
         function stopListening(isCancel) {
+            if (!isListening) return;
             isListening = false;
             overlay.classList.remove('active');
             if (recognition) recognition.stop();
@@ -228,7 +230,6 @@
             const isSpeaker = cmd.includes("speaker");
 
             if (isSpeaker) {
-                // Handle as Direct Speak Command (Like . in dashboard)
                 const speakText = cmd.split("speaker")[1].trim();
                 if (speakText) {
                     db.ref('home_system/commands').set({
@@ -236,14 +237,10 @@
                         text: speakText,
                         timestamp: Date.now() / 1000
                     });
-                    diag("DIRECT_SPEAK: " + speakText, "var(--accent-green)");
+                    diag("SPOKEN: " + speakText, "var(--accent-green)");
                 }
             } else {
-                // Handle as AI Reasoning Prompt
-                if (cmd.includes("terminate reasoning")) {
-                    db.ref('home_system/server_info/stop_requested').set(true);
-                    diag("SIGNAL: STOP");
-                } else if (cmd.includes("restart server")) {
+                if (cmd.includes("restart server") || cmd.includes("reboot")) {
                     db.ref('home_system/server_info/restart_requested').set(true);
                     diag("SIGNAL: REBOOT");
                 } else {
@@ -252,7 +249,7 @@
                         prompt: cmd,
                         timestamp: Date.now() / 1000
                     });
-                    diag("AI_PROMPT: " + cmd, "var(--primary)");
+                    diag("SENT: " + cmd, "var(--primary)");
                 }
             }
         }
