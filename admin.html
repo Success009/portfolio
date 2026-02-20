@@ -318,6 +318,16 @@
     <script src="portfolio_assets/firebase-logic.js"></script>
     <script>
         // --- 1. Utilities & UI ---
+        const getLatestTimestamp = (post) => {
+            let latest = post.timestamp || 0;
+            if (post.updates) {
+                Object.values(post.updates).forEach(up => {
+                    if (up.timestamp > latest) latest = up.timestamp;
+                });
+            }
+            return latest;
+        };
+
         const CustomModal = {
             overlay: document.getElementById('custom-modal'),
             title: document.getElementById('cm-title'),
@@ -527,7 +537,7 @@
                   3. The content you provide to the tool MUST follow the PERSONA and FORMATTING rules above.
                 
                 TOOLS_USAGE:
-                - Use 'read_posts_list' to see metadata.
+                - Use 'read_posts_list' to see metadata for ALL available blogs and projects. Use this to find the correct key before editing.
                 - Use 'read_post' to get full content before editing.
                 - Use 'update_post' to create (key='NEW') or edit the Main Vision.
                 - Use 'add_project_update' to add a technical, first-person log entry module.
@@ -658,10 +668,18 @@
             async executeTool(name, args) {
                 try {
                     if (name === "read_posts_list") {
-                        const s = await blogRef.limitToLast(args.limit || 10).once('value');
+                        const limit = args.limit || 50;
+                        const s = await blogRef.orderByChild('timestamp').limitToLast(limit).once('value');
                         const p = [];
-                        s.forEach(c => p.push({ key: c.key, title: c.val().title, date: new Date(c.val().timestamp).toISOString() }));
-                        return p;
+                        s.forEach(c => {
+                            const val = c.val();
+                            p.push({ 
+                                key: c.key, 
+                                title: val.title, 
+                                last_activity: new Date(getLatestTimestamp(val)).toISOString()
+                            });
+                        });
+                        return p.reverse(); // Newest first for AI
                     }
                     if (name === "read_post") {
                         const s = await blogRef.child(args.key).once('value');
@@ -762,16 +780,6 @@
                 snapshot.forEach(child => {
                     posts.push({ key: child.key, ...child.val() });
                 });
-
-                const getLatestTimestamp = (post) => {
-                    let latest = post.timestamp || 0;
-                    if (post.updates) {
-                        Object.values(post.updates).forEach(up => {
-                            if (up.timestamp > latest) latest = up.timestamp;
-                        });
-                    }
-                    return latest;
-                };
 
                 posts.sort((a, b) => getLatestTimestamp(b) - getLatestTimestamp(a));
                 
