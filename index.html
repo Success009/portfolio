@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success - Backend & System Developer</title>
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Assets -->
+    <link rel="stylesheet" href="portfolio_assets/style.css">
+</head>
+<body>
+    <nav class="nav desktop-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="logo.png" alt="Success Logo">
+            </div>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#skills">Skills</a>
+                <a href="#projects">Projects</a>
+                <a href="#experience">Experience</a>
+                <a href="blog.html">Blog</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <a href="#home" class="mobile-nav-item">
+            <i data-lucide="home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#about" class="mobile-nav-item">
+            <i data-lucide="user"></i>
+            <span>About</span>
+        </a>
+        <a href="blog.html" class="mobile-nav-item">
+            <i data-lucide="book-open"></i>
+            <span>Blog</span>
+        </a>
+        <a href="#contact" class="mobile-nav-item">
+            <i data-lucide="mail"></i>
+            <span>Contact</span>
+        </a>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-text">
+                <h1>Hello, I'm Success</h1>
+                <div class="subtitle">Backend & System Developer</div>
+                <p>A passionate 17-year-old developer from Nepal, specializing in Node.js, Python, and scalable backend architectures. I love building distributed systems, home automation OS, and complex web solutions.</p>
+
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">7+</div>
+                        <div class="stat-label">Years Coding</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">146+</div>
+                        <div class="stat-label">Projects Built</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">+41</div>
+                        <div class="stat-label">Happy Clients</div>
+                    </div>
+                </div>
+
+                <div class="hero-buttons">
+                    <a href="#projects" class="btn-primary">
+                        View My Work
+                        <span>→</span>
+                    </a>
+                    <a href="#contact" class="btn-secondary">Get In Touch</a>
+                </div>
+            </div>
+
+            <div class="hero-image">
+                <img src="portfolio_assets/success.jpg" alt="Success - Web Developer" class="profile-img">
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="about">
+        <h2 class="section-title">About Me</h2>
+        <div class="about-content">
+            <div class="about-text">
+                <p>I'm a dedicated developer currently studying at Narayani Model Secondary School in Nepal. My journey into programming started when I was 10, and since then, I've been passionate about creating digital solutions that make a difference.</p>
+
+                <p>I do both frontend and backend development, with a main focus on <strong>Node.js, Firebase, and scalable systems</strong>.</p>
+
+                <p>When I don't have any good ideas for new projects, I like to contribute to open-source. I have contributed to over 600 repositories on GitHub.</p>
+            </div>
+
+            <div class="about-highlights">
+                <div class="highlight-item">
+                    <div class="highlight-icon">🎓</div>
+                    <div>
+                        <strong>Student at Narayani Model Secondary School</strong>
+                        <br>Balancing academics with professional development
+                    </div>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-icon">💼</div>
+                    <div>
+                        <strong>Freelance Developer</strong>
+                        <br>Building custom solutions for various clients
+                    </div>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-icon">🌟</div>
+                    <div>
+                        <strong>Problem Solver</strong>
+                        <br>Love tackling complex challenges with creative solutions
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="skills">
+        <h2 class="section-title">Technical Skills</h2>
+        <div class="skills-grid">
+            <div class="skill-card">
+                <div class="skill-icon"><i data-lucide="server"></i></div>
+                <h3>Node.js & Backend</h3>
+                <p>Expert in building scalable APIs and microservices using Node.js and Express. Focused on performance and reliability.</p>
+            </div>
+            <div class="skill-card">
+                <div class="skill-icon"><i data-lucide="zap"></i></div>
+                <h3>Firebase & Realtime</h3>
+                <p>Deep experience with Firestore, Realtime Database, and Cloud Functions for synchronized applications.</p>
+            </div>
+            <div class="skill-card">
+                <div class="skill-icon"><i data-lucide="terminal"></i></div>
+                <h3>Python & Automation</h3>
+                <p>Scripting and system automation. Experience building custom OS layers and AI integrations.</p>
+            </div>
+            <div class="skill-card">
+                <div class="skill-icon"><i data-lucide="code-2"></i></div>
+                <h3>JavaScript & Web</h3>
+                <p>Solid foundation in modern JavaScript (ES6+) for both frontend and backend environments.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="projects">
+        <h2 class="section-title">Featured Projects</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <!-- Add style="background-image: url('path/to/image.jpg')" to .project-image when available -->
+                <div class="project-image"><i data-lucide="shopping-cart"></i></div>
+                <div class="project-content">
+                    <div class="project-tech">
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">Firebase</span>
+                        <span class="tech-tag">Google Maps</span>
+                    </div>
+                    <h3 class="project-title">Bharatpur Bazar</h3>
+                    <p>A comprehensive grocery and food delivery platform serving Bharatpur. Features real-time ordering, inventory management, and cooked food delivery.</p>
+                    <a href="https://bb.hs.vc" target="_blank" class="project-link">Visit Site →</a>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-image"><i data-lucide="home"></i></div>
+                <div class="project-content">
+                    <div class="project-tech">
+                        <span class="tech-tag">Flutter</span>
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">IoT</span>
+                    </div>
+                    <h3 class="project-title">Success AI Home</h3>
+                    <p>A distributed home automation operating system. Integrates IoT devices, voice control, and mobile apps into a unified smart home experience.</p>
+                    <span class="project-link">Private Project</span>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-image"><i data-lucide="globe"></i></div>
+                <div class="project-content">
+                    <div class="project-tech">
+                        <span class="tech-tag">React</span>
+                        <span class="tech-tag">GSAP</span>
+                        <span class="tech-tag">Responsive Design</span>
+                    </div>
+                    <h3 class="project-title">4Direction</h3>
+                    <p>Professional corporate web presence for 4Direction. Showcases services and portfolio with a clean, modern design.</p>
+                    <a href="https://4direction.com.np/" target="_blank" class="project-link">Visit Site →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="experience">
+        <h2 class="section-title">Experience & Journey</h2>
+        <div class="experience-timeline">
+            <div class="timeline-line"></div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2025 - Present</div>
+                    <h3 class="timeline-title">Freelance Web Developer</h3>
+                    <div class="timeline-company">Self-Employed</div>
+                    <p>Building custom web applications and e-commerce solutions for various clients. Specializing in full-stack development with modern JavaScript frameworks and backend development.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2021</div>
+                    <h3 class="timeline-title">Computer Science Student</h3>
+                    <div class="timeline-company">Narayani Model Secondary School</div>
+                    <p>Pursuing secondary education with a focus on computer science and mathematics. Actively participating in coding competitions and tech-related activities.</p>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">2018</div>
+                    <h3 class="timeline-title">Started Programming Journey</h3>
+                    <div class="timeline-company">Self-Learning</div>
+                    <p> My first teacher was my Dad. Who introduced me to the world of computer. Then I was fascinated by programming. He was the one who ignited this spike to something wonderful.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="contact">
+        <h2 class="section-title">Get In Touch</h2>
+        <div class="contact-content">
+            <div class="contact-text">
+                <p>I'm always open to connect with fellow developers, clients and tech enthusiasts. Whether you have a project in mind, want to collaborate or just want to chat, I'd love to hear from you. :)</p>
+
+                <p>I'm currently available for freelance projects and open to discussing. My goal is to create something new and exciting, doesn't matter if there is meaningful purpose or not.</p>
+
+                <p>I don't have much to say! If you want to contact me, I typically respond to messages within 24 hours.</p>
+            </div>
+
+            <div class="contact-details">
+                <div class="contact-item">
+                    <div class="contact-icon">📞</div>
+                    <div>
+                        <strong>Phone</strong>
+                        <br><a href="tel:+9779809248510" class="contact-link">+977 9809248510</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📧</div>
+                    <div>
+                        <strong>Email</strong>
+                        <br><a href="mailto:success@4direction.com.np" class="contact-link">success@4direction.com.np</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div>
+                        <strong>Location</strong>
+                        <br>Bharatpur-10, Nepal
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">💼</div>
+                    <div>
+                        <strong>Availability</strong>
+                        <br>Open for freelance projects
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blog CTA -->
+        <div style="margin-top: 5rem; text-align: center; background: rgba(30, 41, 59, 0.3); border: 1px solid var(--border); border-radius: 2rem; padding: 3rem 1.5rem; backdrop-filter: blur(10px);">
+            <h3 style="font-size: 1.75rem; margin-bottom: 1rem; color: var(--text);">Explore My DevLog</h3>
+            <p style="color: #94a3b8; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">I document my technical challenges and breakthroughs as I build Success AI Home and other complex systems. Follow my journey.</p>
+            <a href="blog.html" class="btn-primary">
+                <i data-lucide="book-open" style="width: 20px; height: 20px;"></i>
+                Read the Blog
+            </a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-info">
+                <p>&copy; 2026 Success. All rights reserved.</p>
+            </div>
+            <div class="footer-links">
+                <a href="mailto:success@4direction.com.np">Email</a>
+                <a href="index.html">Portfolio</a>
+                <a href="blog.html">Blog</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Logic -->
+    <script src="portfolio_assets/firebase-logic.js"></script>
+    <script src="portfolio_assets/script.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            cacheBlogPosts();
+        });
+    </script>
+</body>
+</html>
