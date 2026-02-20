@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Post - Success</title>
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Firebase SDKs (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
+    <!-- Custom Assets -->
+    <link rel="stylesheet" href="portfolio_assets/style.css">
+    <style>
+        .post-container {
+            max-width: 800px;
+            margin: 10rem auto 5rem;
+            padding: 0 2rem;
+        }
+        .post-header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        .post-content {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: #cbd5e1;
+        }
+        .post-content img {
+            max-width: 100%;
+            border-radius: 1rem;
+            margin: 2rem 0;
+        }
+        .post-content h2, .post-content h3 {
+            color: var(--accent);
+            margin: 2.5rem 0 1rem;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav desktop-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="logo.png" alt="Success Logo">
+            </div>
+            <div class="nav-links">
+                <a href="index.html#home">Home</a>
+                <a href="index.html#about">About</a>
+                <a href="index.html#skills">Skills</a>
+                <a href="index.html#projects">Projects</a>
+                <a href="index.html#experience">Experience</a>
+                <a href="blog.html">Blog</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <a href="index.html#home" class="mobile-nav-item">
+            <i data-lucide="home"></i>
+            <span>Home</span>
+        </a>
+        <a href="index.html#about" class="mobile-nav-item">
+            <i data-lucide="user"></i>
+            <span>About</span>
+        </a>
+        <a href="blog.html" class="mobile-nav-item active">
+            <i data-lucide="book-open"></i>
+            <span>Blog</span>
+        </a>
+        <a href="index.html#contact" class="mobile-nav-item">
+            <i data-lucide="mail"></i>
+            <span>Contact</span>
+        </a>
+    </nav>
+
+    <main class="post-container">
+        <a href="blog.html" class="back-link">← Back to Blog</a>
+        <div id="post-display">
+            <!-- Instant Scaffolding for Post -->
+            <div class="skeleton-post">
+                <div class="skeleton" style="width: 150px; height: 1rem; margin: 0 auto 1.5rem;"></div>
+                <div class="skeleton" style="width: 80%; height: 3rem; margin: 0 auto 3rem;"></div>
+                <div class="skeleton" style="width: 100%; height: 1.2rem; margin-bottom: 1rem;"></div>
+                <div class="skeleton" style="width: 100%; height: 1.2rem; margin-bottom: 1rem;"></div>
+                <div class="skeleton" style="width: 60%; height: 1.2rem; margin-bottom: 3rem;"></div>
+            </div>
+        </div>
+        
+        <div id="post-updates" style="margin-top: 5rem;"></div>
+    </main>
+
+    <script src="portfolio_assets/firebase-logic.js"></script>
+    <script>
+        window.addEventListener('load', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('id');
+            
+            if (!postId) {
+                window.location.href = 'blog.html';
+                return;
+            }
+
+            blogRef.child(postId).on('value', snapshot => {
+                const post = snapshot.val();
+                const container = document.getElementById('post-display');
+                const updatesContainer = document.getElementById('post-updates');
+                
+                if (!post) {
+                    container.innerHTML = '<h2>Post not found.</h2>';
+                    return;
+                }
+
+                document.title = `${post.title} - Success Blog`;
+                
+                const date = new Date(post.timestamp).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+                container.innerHTML = `
+                    <header class="post-header">
+                        <div class="blog-date">${date}</div>
+                        <h1 class="section-title" style="font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.2;">${post.title}</h1>
+                    </header>
+                    <div class="post-content">
+                        ${post.content}
+                    </div>
+                `;
+
+                // Render Updates Timeline
+                if (post.updates) {
+                    let updatesHTML = '<h2 style="margin-bottom: 2rem; color: var(--accent);">Project Updates</h2>';
+                    const sortedUpdates = Object.values(post.updates).sort((a, b) => b.timestamp - a.timestamp);
+                    
+                    sortedUpdates.forEach(update => {
+                        const upDate = new Date(update.timestamp).toLocaleDateString('en-US', {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        });
+                        updatesHTML += `
+                            <div class="update-log-item" style="border-left: 2px solid var(--accent); padding-left: 2rem; margin-bottom: 3rem; position: relative;">
+                                <div style="position: absolute; left: -9px; top: 0; width: 16px; height: 16px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent);"></div>
+                                <div style="color: var(--accent); font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem;">${upDate}</div>
+                                <div class="post-content" style="font-size: 1rem;">${update.content}</div>
+                            </div>
+                        `;
+                    });
+                    updatesContainer.innerHTML = updatesHTML;
+                }
+                
+                lucide.createIcons();
+            });
+        });
+    </script>
+</body>
+</html>

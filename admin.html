@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Admin - Success</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDKs (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --surface-light: #334155;
+            --primary: #38bdf8; --primary-dark: #0ea5e9; --text: #f8fafc;
+            --danger: #ef4444; --danger-dark: #dc2626; --border: rgba(255,255,255,0.1);
+            --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; display: flex; overflow: hidden; }
+        
+        .sidebar { width: 250px; background-color: var(--surface); height: 100vh; position: fixed; border-right: 1px solid var(--border); padding: 2rem 0; display: flex; flex-direction: column; }
+        .sidebar-brand { text-align: center; color: var(--primary); margin-bottom: 2rem; font-size: 1.5rem; font-weight: 800; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 1rem; padding: 1rem 2rem; color: #94a3b8; text-decoration: none; transition: 0.2s; cursor: pointer; }
+        .sidebar-nav a:hover { background: var(--surface-light); color: var(--text); }
+        .sidebar-nav a.active { background: rgba(56, 189, 248, 0.1); color: var(--primary); border-right: 3px solid var(--primary); }
+        
+        main { margin-left: 250px; width: calc(100% - 250px); padding: 3rem; height: 100vh; overflow-y: auto; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: var(--bg); }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-ai { background: #8b5cf6; color: white; }
+        .btn-ai:hover { background: #7c3aed; }
+        
+        .item-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+        .item-card { background: var(--surface); border-radius: 1rem; border: 1px solid var(--border); padding: 1.5rem; transition: 0.2s; }
+        .item-card:hover { border-color: var(--primary); }
+        .card-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .card-meta { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1rem; }
+        .card-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); backdrop-filter: blur(8px); z-index: 100; justify-content: center; align-items: center; padding: 2rem; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--surface); width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; border-radius: 1.5rem; border: 1px solid var(--border); padding: 1.5rem; position: relative; }
+        .modal-header { position: sticky; top: -1.5rem; background: var(--surface); z-index: 10; padding: 1rem 0; margin-top: -1.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; }
+
+        /* Login */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: var(--surface); padding: 3rem; border-radius: 1.5rem; width: 400px; border: 1px solid var(--border); text-align: center; }
+        .login-box h2 { color: var(--primary); margin-bottom: 2rem; }
+        .login-input { width: 100%; padding: 1rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; }
+
+        /* AI Feature */
+        .ai-input-area { background: rgba(139, 92, 246, 0.1); border: 1px dashed #8b5cf6; padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Portfolio Admin</h2>
+            <input type="email" id="login-email" class="login-input" placeholder="Admin Email">
+            <input type="password" id="login-password" class="login-input" placeholder="Password">
+            <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">Login</button>
+            <p id="login-error" style="color: var(--danger); margin-top: 1rem; font-size: 0.875rem;"></p>
+        </div>
+    </div>
+
+    <nav class="sidebar">
+        <div class="sidebar-brand">SUCCESS</div>
+        <div class="sidebar-nav">
+            <a data-target="blog" class="active"><i class="fas fa-newspaper"></i> Blog Posts</a>
+            <a onclick="firebase.auth().signOut()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </nav>
+
+    <main>
+        <section id="blog" class="content-section active">
+            <div class="section-header">
+                <h2>Blog Management</h2>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-ai" onclick="openAIModal()"><i class="fas fa-magic"></i> Write with AI</button>
+                    <button class="btn btn-primary" onclick="openFormForNew()"><i class="fas fa-plus"></i> New Post</button>
+                </div>
+            </div>
+            <div id="posts-list" class="item-list"></div>
+        </section>
+    </main>
+
+    <!-- Post Modal -->
+    <div class="modal" id="form-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Create Post</h2>
+            </div>
+            <form id="post-form">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="post-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Publish Date</label>
+                    <input type="datetime-local" id="post-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Excerpt (Optional)</label>
+                    <input type="text" id="post-excerpt">
+                </div>
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea id="post-content" style="height: 250px;"></textarea>
+                </div>
+
+                <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: var(--primary);">Logs & Updates</h3>
+                        <button type="button" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="addUpdateBlock()">
+                            <i class="fas fa-plus"></i> Add Update
+                        </button>
+                    </div>
+                    <div id="updates-container"></div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; position: sticky; bottom: -1.5rem; background: var(--surface); padding: 1rem 0; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Modal -->
+    <div class="modal" id="ai-modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1.5rem;"><i class="fas fa-magic"></i> AI Post Architect</h2>
+            <div class="ai-input-area">
+                <p style="font-size: 0.875rem; color: #8b5cf6; margin-bottom: 1rem;">Explain what you want to write about. Be as detailed or brief as you like.</p>
+                <textarea id="ai-prompt" placeholder="e.g. Write a post about my new home server setup using Termux and Firebase. Mention the MXQ Pro TV box..." style="height: 150px; background: rgba(0,0,0,0.2);"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button class="btn" onclick="document.getElementById('ai-modal').classList.remove('show')">Cancel</button>
+                <button class="btn btn-ai" onclick="generateWithAI()">Generate Content</button>
+            </div>
+            <p id="ai-status" style="margin-top: 1rem; text-align: center; color: var(--primary);"></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
+    <script src="portfolio_assets/firebase-logic.js"></script>
+    <script>
+        let editor = null;
+        let editingKey = null;
+
+        function adminLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            auth.signInWithEmailAndPassword(email, pass).catch(e => {
+                document.getElementById('login-error').innerText = e.message;
+            });
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user && !user.isAnonymous) {
+                document.getElementById('login-screen').style.display = 'none';
+                initAdmin();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+            }
+        });
+
+        function initAdmin() {
+            editor = SUNEDITOR.create('post-content', {
+                buttonList: [['undo', 'redo'], ['bold', 'italic', 'underline'], ['list'], ['link', 'image'], ['codeView']],
+                theme: 'dark', width: '100%', height: '250px'
+            });
+            loadAdminPosts();
+        }
+
+        function loadAdminPosts() {
+            blogRef.on('value', snapshot => {
+                const list = document.getElementById('posts-list');
+                list.innerHTML = '';
+                const posts = [];
+                snapshot.forEach(child => {
+                    posts.push({ key: child.key, ...child.val() });
+                });
+
+                // Sort newest first
+                posts.sort((a, b) => b.timestamp - a.timestamp);
+
+                posts.forEach(post => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="card-title">${post.title}</div>
+                        <div class="card-meta">${new Date(post.timestamp).toLocaleDateString()}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="openFormForEdit('${post.key}')">Edit</button>
+                            <button class="btn btn-danger" onclick="deletePost('${post.key}')">Delete</button>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            });
+        }
+
+        function openFormForNew() {
+            editingKey = null;
+            document.getElementById('modal-title').innerText = "Create Post";
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-excerpt').value = '';
+            document.getElementById('updates-container').innerHTML = '';
+            
+            // Set current time as default
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('post-date').value = now.toISOString().slice(0, 16);
+            
+            editor.setContents('');
+            document.getElementById('form-modal').classList.add('show');
+        }
+
+        function openFormForEdit(key) {
+            editingKey = key;
+            blogRef.child(key).once('value', snapshot => {
+                const post = snapshot.val();
+                document.getElementById('modal-title').innerText = "Edit Post";
+                document.getElementById('post-title').value = post.title;
+                document.getElementById('post-excerpt').value = post.excerpt || '';
+                
+                // Convert timestamp to local datetime-local format
+                const date = new Date(post.timestamp);
+                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                document.getElementById('post-date').value = date.toISOString().slice(0, 16);
+                
+                editor.setContents(post.content);
+
+                // Handle Updates
+                const updatesContainer = document.getElementById('updates-container');
+                updatesContainer.innerHTML = '';
+                if (post.updates) {
+                    Object.keys(post.updates).forEach(upKey => {
+                        addUpdateBlock(post.updates[upKey], upKey);
+                    });
+                }
+
+                document.getElementById('form-modal').classList.add('show');
+            });
+        }
+
+        function addUpdateBlock(data = null, key = null) {
+            const container = document.getElementById('updates-container');
+            const div = document.createElement('div');
+            div.className = 'update-block';
+            div.style.background = 'rgba(0,0,0,0.2)';
+            div.style.padding = '1rem';
+            div.style.borderRadius = '8px';
+            div.style.marginBottom = '1rem';
+            div.style.border = '1px solid var(--border)';
+            
+            const timestamp = data ? data.timestamp : Date.now();
+            const dateStr = new Date(timestamp).toLocaleDateString();
+            
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem; font-size: 0.8rem; color: #94a3b8;">
+                    <span>Update Log (${dateStr})</span>
+                    <button type="button" style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="this.parentElement.parentElement.remove()">Delete Log</button>
+                </div>
+                <textarea class="update-content" style="width:100%; height:80px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:4px; padding:0.5rem;">${data ? data.content : ''}</textarea>
+                <input type="hidden" class="update-timestamp" value="${timestamp}">
+            `;
+            container.appendChild(div);
+        }
+
+        document.getElementById('post-form').onsubmit = (e) => {
+            e.preventDefault();
+            const dateVal = document.getElementById('post-date').value;
+            const timestamp = new Date(dateVal).getTime();
+
+            // Collect Updates
+            const updates = {};
+            document.querySelectorAll('.update-block').forEach((block, index) => {
+                updates['up' + index] = {
+                    content: block.querySelector('.update-content').value,
+                    timestamp: parseInt(block.querySelector('.update-timestamp').value)
+                };
+            });
+
+            const data = {
+                title: document.getElementById('post-title').value,
+                excerpt: document.getElementById('post-excerpt').value,
+                content: editor.getContents(),
+                timestamp: timestamp,
+                updates: updates
+            };
+            
+            const ref = editingKey ? blogRef.child(editingKey) : blogRef.push();
+            ref.set(data).then(() => closeModal());
+        };
+
+        function deletePost(key) {
+            if(confirm("Delete this post?")) blogRef.child(key).remove();
+        }
+
+        function closeModal() {
+            document.getElementById('form-modal').classList.remove('show');
+        }
+
+        // --- AI Writing Interface ---
+        function openAIModal() {
+            document.getElementById('ai-modal').classList.add('show');
+        }
+
+        function generateWithAI() {
+            const prompt = document.getElementById('ai-prompt').value;
+            const status = document.getElementById('ai-status');
+            if(!prompt) return;
+
+            status.innerText = "Processing request... Copy your prompt and paste it in the Gemini CLI to get the content.";
+            
+            // Interaction logic:
+            // Since this is a static site, we can't call an API without a key (unsafe).
+            // Instead, we create a specialized instructions for the User to use Gemini CLI.
+            alert("I am your AI! Copy your prompt and send it to me in our chat. I will generate the post for you and can even push it to Firebase directly.");
+        }
+    </script>
+</body>
+</html>
