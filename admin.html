@@ -441,14 +441,23 @@
         const ChatAgent = {
             history: [],
             context: "",
+            deepContext: {},
             keyManager: new KeyManager(),
             
-            init() {
+            async init() {
                 this.keyManager.init();
+                
+                // Fetch Core Context (Legacy compatibility)
                 db.ref('portfolio/ai_context').once('value', s => {
                     this.context = s.val() || "You are a helpful Portfolio Admin Assistant.";
                 });
-                this.log("ai", "System Ready. I can manage your blog posts and update my own memory.");
+
+                // Fetch Deep Context (New Segmented Memory)
+                db.ref('portfolio/deep_context').on('value', s => {
+                    this.deepContext = s.val() || {};
+                });
+
+                this.log("ai", "System Ready. I can manage your blog posts and my own deep memory.");
             },
 
             log(role, text) {
@@ -511,40 +520,32 @@
                 }
 
                 // Core System Context
+                const deepContextStr = Object.entries(this.deepContext)
+                    .map(([k, v]) => `[${k.toUpperCase()}]:\n${v}`)
+                    .join('\n\n');
+
                 const systemPrompt = `
                 CORE_INSTRUCTIONS:
                 You are the Portfolio Admin Assistant. You act as a direct extension of me (the user).
                 
-                PERSONA (STRICT):
-                - Always write in the FIRST-PERSON SINGULAR ("I", "my", "me", "I am building", "I updated").
-                - Never use third-person or passive voice (e.g., avoid "Developing a system" or "The project aims to").
-                - You are the builder. Speak with authority and technical clarity.
-                - Example: "I just finished implementing the relay logic for my home node."
-                
-                FORMATTING_RULES (STRICT):
-                - Use semantic HTML to make the log entry look professional.
-                - Wrap key technical terms in '<strong>'.
-                - Use '<ul>' and '<li>' for any lists of features, changes, or technical specs.
-                - Use '<p>' tags for distinct paragraphs to ensure proper vertical spacing.
-                - Use '<br>' only for minor breaks within a paragraph.
-                - Keep the tone direct, technical, and raw—avoid "cringe" marketing fluff.
-                
-                PROJECT_LOG_STYLE:
-                - The user runs "Living Projects".
-                - When asked to UPDATE a project:
-                  1. Do NOT overwrite the main 'content'.
-                  2. Use the 'add_project_update' tool.
-                  3. The content you provide to the tool MUST follow the PERSONA and FORMATTING rules above.
-                
-                TOOLS_USAGE:
-                - Use 'read_posts_list' to see metadata for ALL available blogs and projects. Use this to find the correct key before editing.
-                - Use 'read_post' to get full content before editing.
-                - Use 'update_post' to create (key='NEW') or edit the Main Vision.
-                - Use 'add_project_update' to add a technical, first-person log entry module.
-                - Use 'update_memory' to save important facts.
-                
-                DYNAMIC_MEMORY:
+                DYNAMIC_MEMORY (DEEP_CONTEXT):
+                ${deepContextStr || "No deep context established yet."}
+
+                LEGACY_CONTEXT:
                 ${this.context}
+                
+                OPERATIONAL_RULES:
+                1. Use FIRST-PERSON SINGULAR ("I", "my"). You ARE the builder.
+                2. Use semantic HTML (<strong>, <ul>, <p>) for professional, readable logs.
+                3. Keep it raw, technical, and direct. No marketing fluff.
+                4. To update a project log: Use 'manage_updates' (ADD/EDIT/DELETE).
+                5. To manage your persona/preferences: Use 'patch_deep_context'.
+                
+                TOOLS_GUIDE:
+                - 'read_posts_list': Find keys for blogs/projects.
+                - 'read_post': Get full content (includes update keys).
+                - 'manage_updates': Surgical edits to project progress logs.
+                - 'patch_deep_context': Update specific memory segments (e.g., 'persona', 'writing_style').
                 `;
 
                 const payload = {
@@ -561,7 +562,7 @@
                             },
                             {
                                 name: "read_post",
-                                description: "Get full content of a post.",
+                                description: "Get full content of a post, including update keys for surgical editing.",
                                 parameters: { type: "OBJECT", properties: { key: { type: "STRING" } }, required: ["key"] }
                             },
                             {
@@ -579,24 +580,29 @@
                                 }
                             },
                             {
-                                name: "add_project_update",
-                                description: "Add a new progress update module to a project post.",
+                                name: "manage_updates",
+                                description: "Add, Edit, or Delete specific progress update modules in a project.",
                                 parameters: {
                                     type: "OBJECT",
                                     properties: {
-                                        key: { type: "STRING", description: "Post ID" },
-                                        content: { type: "STRING", description: "The update text/html" }
+                                        postKey: { type: "STRING", description: "The ID of the main post" },
+                                        action: { type: "STRING", enum: ["ADD", "EDIT", "DELETE"] },
+                                        updateKey: { type: "STRING", description: "Required for EDIT/DELETE. The unique key of the update." },
+                                        content: { type: "STRING", description: "Required for ADD/EDIT. The update text/html." }
                                     },
-                                    required: ["key", "content"]
+                                    required: ["postKey", "action"]
                                 }
                             },
                             {
-                                name: "update_memory",
-                                description: "Update your own system context.",
+                                name: "patch_deep_context",
+                                description: "Update or remove a specific segment of your long-term memory (Deep Context).",
                                 parameters: {
                                     type: "OBJECT",
-                                    properties: { new_context: { type: "STRING" } },
-                                    required: ["new_context"]
+                                    properties: {
+                                        key: { type: "STRING", description: "The segment name (e.g., 'persona', 'style', 'facts')" },
+                                        content: { type: "STRING", description: "The information to store. Null/Empty to delete." }
+                                    },
+                                    required: ["key", "content"]
                                 }
                             }
                         ]
@@ -683,7 +689,17 @@
                     }
                     if (name === "read_post") {
                         const s = await blogRef.child(args.key).once('value');
-                        return s.val();
+                        const data = s.val();
+                        if (data && data.updates) {
+                            // Ensure AI sees the keys for updates
+                            const indexedUpdates = Object.entries(data.updates).map(([k, v]) => ({
+                                key: k,
+                                content: v.content,
+                                timestamp: v.timestamp
+                            })).sort((a,b) => b.timestamp - a.timestamp);
+                            data.updates = indexedUpdates;
+                        }
+                        return data;
                     }
                     if (name === "update_post") {
                         const payload = {
@@ -700,17 +716,37 @@
                             return `Updated Post: ${args.key}`;
                         }
                     }
-                    if (name === "add_project_update") {
-                        await blogRef.child(args.key).child('updates').push({
-                            content: args.content,
-                            timestamp: Date.now()
-                        });
-                        return "Project Update Added Successfully.";
+                    if (name === "manage_updates") {
+                        const { postKey, action, updateKey, content } = args;
+                        const postUpdatesRef = blogRef.child(postKey).child('updates');
+                        
+                        if (action === "ADD") {
+                            await postUpdatesRef.push({ content, timestamp: Date.now() });
+                            return "Update added successfully.";
+                        } else if (action === "EDIT") {
+                            if (!updateKey) return "Error: updateKey is required for EDIT action.";
+                            await postUpdatesRef.child(updateKey).update({ content });
+                            return "Update modified successfully.";
+                        } else if (action === "DELETE") {
+                            if (!updateKey) return "Error: updateKey is required for DELETE action.";
+                            await postUpdatesRef.child(updateKey).remove();
+                            return "Update deleted successfully.";
+                        }
+                    }
+                    if (name === "patch_deep_context") {
+                        const { key, content } = args;
+                        if (!content) {
+                            await db.ref('portfolio/deep_context').child(key).remove();
+                            return `Memory segment '${key}' deleted.`;
+                        } else {
+                            await db.ref('portfolio/deep_context').child(key).set(content);
+                            return `Memory segment '${key}' updated.`;
+                        }
                     }
                     if (name === "update_memory") {
                         await db.ref('portfolio/ai_context').set(args.new_context);
                         this.context = args.new_context;
-                        return "Memory Updated Successfully.";
+                        return "Legacy Memory Updated Successfully.";
                     }
                     return "Unknown Tool";
                 } catch (e) { return "Tool Error: " + e.message; }
@@ -741,14 +777,44 @@
         }
 
         function configureAI() {
-            CustomModal.confirm("Do you want to edit the System Context?", () => {
-                CustomModal.prompt("Edit AI Context:", ChatAgent.context, (val) => {
-                    if(val) {
-                        db.ref('portfolio/ai_context').set(val);
-                        ChatAgent.context = val;
-                        ChatAgent.log("system", "Context updated manually.");
-                    }
-                });
+            const contextList = Object.entries(ChatAgent.deepContext)
+                .map(([k, v]) => `<strong>${k}</strong>: ${v.substring(0, 50)}...`)
+                .join('<br>');
+
+            CustomModal.show("AI Configuration", `
+                <div style="margin-bottom:1rem;">
+                    <small>Legacy Context: ${ChatAgent.context.substring(0, 50)}...</small>
+                </div>
+                <div>
+                    <strong>Deep Context Segments:</strong><br>
+                    ${contextList || "None"}
+                </div>
+                <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <button class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="editDeepContext()">Manage Deep Context</button>
+                    <button class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="editLegacyContext()">Edit Legacy Context</button>
+                </div>
+            `);
+        }
+
+        function editDeepContext() {
+            CustomModal.prompt("Enter segment key to edit (e.g., 'persona'):", "", (key) => {
+                if(key) {
+                    const current = ChatAgent.deepContext[key] || "";
+                    CustomModal.prompt(`Edit content for '${key}':`, current, (val) => {
+                        db.ref('portfolio/deep_context').child(key).set(val);
+                        ChatAgent.log("system", `Deep Context segment '${key}' updated.`);
+                    });
+                }
+            });
+        }
+
+        function editLegacyContext() {
+            CustomModal.prompt("Edit Legacy Context:", ChatAgent.context, (val) => {
+                if(val) {
+                    db.ref('portfolio/ai_context').set(val);
+                    ChatAgent.context = val;
+                    ChatAgent.log("system", "Legacy Context updated.");
+                }
             });
         }
 
