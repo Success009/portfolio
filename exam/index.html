@@ -159,7 +159,7 @@ function initRec(){
     rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
     rec.continuous=true; 
     rec.interimResults=false;
-    rec.lang='en-US';
+    rec.lang='ne-NP';
     
     rec.onstart=()=>{ if(!fet && mic) stat('l'); };
     
@@ -194,15 +194,11 @@ function initRec(){
                 if(w){ stat('s'); const sz=Math.min(3.5, 25/w.length); disp(`<div style="font-size:${sz}rem;line-height:1.1;color:#0f8;text-shadow:0 0 20px #0f8;font-weight:700;margin-top:5%;word-break:break-word">${w}</div>`); return; }
             }
 
-            // QUERIES
-            let q='',s=0;
-            if(lt.startsWith("listen")){
-                q = t.substring(6).trim(); 
+            // QUERIES - NEPALI OVERRIDE (DIRECT)
+            let q = t.trim(); 
+            let s=0;
+            if(q.length > 0){
                 trigger=true;
-            } 
-            else if(lt.startsWith("google")){
-                q = t.substring(6).trim(); 
-                s=1; trigger=true;
             }
             
             if(trigger && q){ stat('s'); await getAI(q,s); }
@@ -234,7 +230,7 @@ async function getAI(q,s){
         const sysPrompt = `System: Class 10 Exam Expert (Nepal).
 SUBJECT: ${subj}.
 RULES:
-1. Response: ENGLISH ONLY.
+1. Response: NEPALI ONLY.
 2. Mode: ${len}.
 3. Be direct.
 4. Must give answer(Even if Question is outside class 10 exam)`;
