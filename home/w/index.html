@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>BIGFISH_WATCH_HUD</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        :root {
+            --bg-deep: #050505;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #bc13fe;
+            --accent-green: #05ffa1;
+            --accent-red: #ff2a6d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #8b9bb4;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ambient Grid (matching main site) */
+        #ambient {
+            position: fixed; inset: 0; z-index: 1;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* CORE HUD DISPLAY */
+        #hud-core {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+        }
+
+        /* The Visualizer Orb (Ratio Maintained) */
+        .visualizer-wrapper {
+            position: relative;
+            /* Scale based on smaller dimension of the watch screen */
+            width: 85vmin; 
+            height: 85vmin;
+            max-width: 250px;
+            max-height: 250px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+            background: #000;
+            transition: all 0.5s ease;
+        }
+
+        video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: opacity 1s, filter 0.8s;
+            filter: brightness(0.8) contrast(1.2);
+        }
+
+        .hidden { opacity: 0; pointer-events: none; }
+
+        /* AI STATUS OVERLAY */
+        .ai-status-overlay {
+            margin-top: 15px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #ai-state-text {
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        #ai-sub-text {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: block;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 80%;
+            margin-left: 10%;
+        }
+
+        /* TRANSITION FILTERS (matching main site) */
+        .state-thinking { filter: brightness(1.2) contrast(1.5) hue-rotate(270deg) drop-shadow(0 0 15px var(--accent-purple)) !important; }
+        .state-speaking { filter: brightness(1.1) contrast(1.3) hue-rotate(90deg) drop-shadow(0 0 15px var(--accent-green)) !important; }
+        .state-error { filter: grayscale(1) brightness(0.5) drop-shadow(0 0 10px var(--accent-red)) !important; }
+
+        /* WAKE OVERLAY */
+        #wake-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: #000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer;
+        }
+        .pulse-logo {
+            width: 50px; height: 50px;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px var(--accent-cyan);
+            animation: breathe 2s infinite;
+        }
+        @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="ambient"></div>
+
+    <div id="wake-overlay">
+        <div class="pulse-logo">🐟</div>
+        <div style="font-size: 10px; color: var(--accent-cyan); letter-spacing: 2px;">INITIALIZE_UPLINK</div>
+    </div>
+
+    <div id="hud-core">
+        <div class="visualizer-wrapper" id="orb">
+            <video id="video-active" autoplay muted playsinline></video>
+            <video id="video-buffer" class="hidden" muted playsinline></video>
+        </div>
+
+        <div class="ai-status-overlay">
+            <h2 id="ai-state-text">IDLE</h2>
+            <span id="ai-sub-text">Connecting to Bigfish...</span>
+        </div>
+    </div>
+
+    <script>
+        const config = {
+            databaseURL: "https://community-canvas-255fa-default-rtdb.firebaseio.com",
+        };
+        firebase.initializeApp(config);
+        const db = firebase.database();
+
+        const videoActive = document.getElementById('video-active');
+        const videoBuffer = document.getElementById('video-buffer');
+        const orb = document.getElementById('orb');
+        const stateText = document.getElementById('ai-state-text');
+        const subText = document.getElementById('ai-sub-text');
+        const wakeOverlay = document.getElementById('wake-overlay');
+
+        const ASSETS = {
+            'IDLE': 'fish_idle.mp4',
+            'THINKING': 'fish_thinking.mp4',
+            'SPEAKING': 'fish_idle.mp4'
+        };
+
+        let recognition;
+        let isAlive = false;
+        let currentState = 'IDLE';
+
+        wakeOverlay.onclick = () => {
+            wakeOverlay.style.display = 'none';
+            initAI();
+        };
+
+        function initAI() {
+            isAlive = true;
+            videoActive.src = ASSETS['IDLE'];
+            videoActive.play();
+            videoActive.onended = () => { videoActive.currentTime = 0; videoActive.play(); };
+
+            startListening();
+            syncServer();
+        }
+
+        function setVisualState(state) {
+            state = state.toUpperCase();
+            if (state === currentState) return;
+            
+            console.log("State Change:", state);
+            currentState = state;
+
+            // 1. Text Feedback
+            stateText.textContent = state;
+            
+            // 2. Styling & Glows
+            orb.style.borderColor = "rgba(0, 240, 255, 0.3)";
+            orb.style.boxShadow = "0 0 30px rgba(0, 240, 255, 0.2)";
+            videoActive.className = "";
+
+            if (state === 'THINKING') {
+                videoActive.classList.add('state-thinking');
+                orb.style.borderColor = "var(--accent-purple)";
+                orb.style.boxShadow = "0 0 30px rgba(188, 19, 254, 0.3)";
+                subText.textContent = "Processing Neural Nodes...";
+            } else if (state === 'SPEAKING') {
+                videoActive.classList.add('state-speaking');
+                orb.style.borderColor = "var(--accent-green)";
+                orb.style.boxShadow = "0 0 30px rgba(5, 255, 161, 0.3)";
+                subText.textContent = "Transmitting Audio...";
+            } else {
+                subText.textContent = "Listening for Command...";
+            }
+
+            // 3. Video Swap Logic (Surgical)
+            const targetSrc = ASSETS[state] || ASSETS['IDLE'];
+            if (!videoActive.src.endsWith(targetSrc)) {
+                videoBuffer.src = targetSrc;
+                videoBuffer.play().then(() => {
+                    videoBuffer.classList.remove('hidden');
+                    videoActive.classList.add('hidden');
+                    setTimeout(() => {
+                        videoActive.src = targetSrc;
+                        videoActive.classList.remove('hidden');
+                        videoBuffer.classList.add('hidden');
+                    }, 800);
+                });
+            }
+        }
+
+        function startListening() {
+            const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!Speech) return;
+
+            recognition = new Speech();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => { if(currentState === 'IDLE') subText.textContent = "Listening..."; };
+            recognition.onresult = (e) => {
+                const text = e.results[0][0].transcript;
+                subText.textContent = text;
+                if (e.results[0].isFinal) sendToBigfish(text);
+            };
+            recognition.onend = () => { if (isAlive) recognition.start(); };
+            recognition.onerror = () => { if (isAlive) setTimeout(() => recognition.start(), 1000); };
+
+            recognition.start();
+        }
+
+        function syncServer() {
+            db.ref('home_system/server_info/ai_status').on('value', s => {
+                setVisualState(s.val() || 'IDLE');
+            });
+        }
+
+        function sendToBigfish(text) {
+            if (!text.trim()) return;
+            
+            // Immediate feedback
+            if (text.toLowerCase().includes("stop")) {
+                db.ref('home_system/server_info/stop_requested').set(true);
+            }
+
+            db.ref('home_system/commands').push({
+                type: 'user_input',
+                command: text,
+                source: 'watch',
+                timestamp: Date.now()
+            });
+        }
+    </script>
+</body>
+</html>
