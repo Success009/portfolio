@@ -11,6 +11,7 @@ const Visualizer = {
     currentState: 'IDLE',
     targetState: null,
     isTransitioning: false,
+    forceSyncTimer: null,
     
     assets: {
         'IDLE': 'assets/fish_idle.mp4',
@@ -32,7 +33,6 @@ const Visualizer = {
         this.activeVideo.load();
         this.activeVideo.play().catch(e => console.log("Autoplay blocked"));
         
-        // Use a consistent re-binding approach
         this.bindEvents();
     },
 
@@ -71,10 +71,15 @@ const Visualizer = {
                 sub = "Listening for commands...";
         }
 
+        // Voice Priority: If currently speaking, don't show thinking
+        if (this.currentState === 'SPEAKING' && normalizedState === 'THINKING') {
+            console.log("[VISUALIZER] Suppressing THINKING while SPEAKING.");
+            return;
+        }
+
         if (this.statusText) this.statusText.textContent = label;
         if (this.subText) this.subText.textContent = sub;
 
-        // Update CSS filters immediately for current and buffer videos
         this.updateFilters(normalizedState);
 
         if (normalizedState === this.currentState && !this.targetState) return;
@@ -84,25 +89,36 @@ const Visualizer = {
         const targetSrc = this.assets[normalizedState] || this.assets['IDLE'];
         const currentSrc = this.activeVideo.getAttribute('src') || "";
 
-        // If the video file is ALREADY the one we need, just update state immediately
         if (currentSrc.endsWith(targetSrc)) {
             this.currentState = normalizedState;
             this.targetState = null;
+            if (this.forceSyncTimer) clearTimeout(this.forceSyncTimer);
             return;
         }
 
-        // Otherwise, wait for 'handleVideoEnd' to perform the swap
+        // FORCE SYNC: If we are going to IDLE from THINKING, don't wait forever
+        if (normalizedState === 'IDLE' || normalizedState === 'SPEAKING') {
+            if (this.forceSyncTimer) clearTimeout(this.forceSyncTimer);
+            this.forceSyncTimer = setTimeout(() => {
+                if (this.targetState === normalizedState) {
+                    console.log("[VISUALIZER] Force Sync Triggered.");
+                    this.handleVideoEnd();
+                }
+            }, 2000); // Max 2s of delay
+        }
+
         console.log(`[VISUALIZER] Transition Queued: ${this.currentState} -> ${normalizedState}`);
     },
 
     handleVideoEnd() {
+        if (this.forceSyncTimer) clearTimeout(this.forceSyncTimer);
+        
         if (this.targetState) {
             const targetSrc = this.assets[this.targetState] || this.assets['IDLE'];
             this.swapVideo(targetSrc);
             this.currentState = this.targetState;
             this.targetState = null;
         } else {
-            // Standard Loop
             this.activeVideo.currentTime = 0;
             this.activeVideo.play().catch(e => {});
         }
@@ -120,20 +136,13 @@ const Visualizer = {
             setTimeout(() => {
                 this.activeVideo.pause();
                 this.activeVideo.currentTime = 0;
-                
-                // Swap Elements
                 const temp = this.activeVideo;
                 this.activeVideo = this.bufferVideo;
                 this.bufferVideo = temp;
-                
-                // Re-bind listeners to new active
                 this.bindEvents();
                 this.bufferVideo.onended = null;
-                
             }, 1000);
         }).catch(e => {
-            console.error("Swap failed", e);
-            // Fallback loop if play fails
             this.activeVideo.currentTime = 0;
             this.activeVideo.play().catch(e=>{});
         });
@@ -173,6 +182,7 @@ const UI = {
     },
     
     streamsConnected: false,
+    lastStatusId: 0,
 
     init() {
         // --- AUTH LISTENERS ---
@@ -252,11 +262,50 @@ const UI = {
         // Optimistic UI update
         this.addLog({ message: txt, type: 'user' });
         
-        // INSTANT FEEDBACK: Switch to Thinking immediately
-        Visualizer.setState('THINKING');
+        // Set lock to NOW to prevent stale updates from BEFORE this command, 
+        // but allow any update that comes AFTER.
+        this.lastStatusId = Date.now(); 
+        
+        // Context-aware Visualizer feedback
+        if (txt.startsWith('.')) {
+            Visualizer.setState('SPEAKING');
+        } else {
+            Visualizer.setState('THINKING');
+        }
         
         dbService.sendCommand(txt);
         this.elements.cmdInput.value = '';
+    },
+
+    updateStats(stats) {
+        if (!stats) return;
+        
+        // 1. Atomic Sync Check
+        const sid = stats.status_id || 0;
+        
+        // If server says IDLE, we should generally listen to it unless we just sent a command
+        if (sid < this.lastStatusId && stats.ai_status !== 'IDLE') {
+            console.log("[UI] Skipping stale status update.");
+            return;
+        }
+
+        this.lastStatusId = sid;
+        if (stats.ai_status) Visualizer.setState(stats.ai_status);
+
+        // 2. Resources
+        if (stats.resources) {
+            const { cpu, ram, temp } = stats.resources;
+            const cpuN = parseInt(cpu) || 0;
+            const ramN = parseInt(ram) || 0;
+            this.elements.cpuBar.style.width = `${cpuN}%`;
+            this.elements.cpuVal.textContent = cpu || '--%';
+            this.elements.ramBar.style.width = `${ramN}%`;
+            this.elements.ramVal.textContent = ram || '--%';
+            this.elements.tempVal.textContent = temp || '--°C';
+        }
+
+        // 3. Media
+        if (stats.now_playing) this.updateMedia(stats.now_playing);
     },
 
     processIncomingLog(log) {
