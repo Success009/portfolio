@@ -233,7 +233,15 @@ const UI = {
 
     processIncomingLog(log) {
         if (!log || !log.message) return;
-        const typeMap = {'info': 'system-msg', 'error': 'error', 'tool_exec': 'tool', 'tool_result': 'tool', 'user': 'user', 'ai_raw': 'ai-thought'};
+        const typeMap = {
+            'info': 'system-msg', 
+            'error': 'error', 
+            'tool_exec': 'tool', 
+            'tool_result': 'tool', 
+            'user': 'user', 
+            'ai_raw': 'ai-thought',
+            'ai_voice': 'ai-voice'
+        };
         this.addLog({ message: log.message, type: typeMap[log.type] || 'system-msg' });
     },
 

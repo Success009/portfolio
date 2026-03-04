@@ -399,8 +399,9 @@ body {
 .log-entry.error .label { color: var(--accent-red); }
 .log-entry.error .msg { color: #ff80ab; }
 
-.log-entry.system-msg { border-left: 2px solid #555; }
-.log-entry.system-msg .label { color: #888; }
+.log-entry.system-msg { border-left: 2px solid var(--accent-cyan); background: rgba(0, 240, 255, 0.02); }
+.log-entry.system-msg .label { color: var(--accent-cyan); opacity: 0.8; }
+.log-entry.system-msg .msg { color: var(--accent-cyan); opacity: 0.9; font-size: 11px; }
 
 .log-entry .msg {
     line-height: 1.5;
