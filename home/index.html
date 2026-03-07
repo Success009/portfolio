@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bigfish AI | HUD v4.0</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+    <!-- BACKGROUND ANIMATION LAYER -->
+    <div id="ambient-layer"></div>
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo-ring">
+                    <div class="login-logo-dot"></div>
+                </div>
+                <h2>SYSTEM_LOCKED</h2>
+                <span>Awaiting Security Clearance</span>
+            </div>
+            
+            <div class="login-form">
+                <input type="password" id="login-pass" class="login-input" placeholder="ENTER PASSCODE" autocomplete="current-password" autofocus>
+                <button id="btn-login" class="login-btn">INITIALIZE UPLINK</button>
+            </div>
+            
+            <div id="login-error" class="login-error-msg"></div>
+            
+            <div class="login-footer">
+                <span>SECURE CONNECTION</span>
+                <span>V4.0.1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container" class="hidden">
+        
+        <!-- HEADER -->
+        <header class="hud-header glass-panel">
+            <div class="brand">
+                <div class="logo-pulse"></div>
+                <span class="brand-text">BIGFISH_CORE</span>
+            </div>
+            
+            <div class="telemetry-grid">
+                <div class="stat-item">
+                    <span class="label">CPU</span>
+                    <div class="bar-container"><div id="cpu-bar" class="bar-fill" style="width: 0%"></div></div>
+                    <span id="cpu-val" class="value">--%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">RAM</span>
+                    <div class="bar-container"><div id="ram-bar" class="bar-fill" style="width: 0%"></div></div>
+                    <span id="ram-val" class="value">--%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">TEMP</span>
+                    <span id="temp-val" class="value text-accent">--°C</span>
+                </div>
+                <div class="stat-item status-indicator">
+                    <div id="net-status-dot" class="status-dot offline"></div>
+                    <span id="net-status-text">OFFLINE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CENTER STAGE -->
+        <div class="stage-container">
+            <!-- Left: Logs -->
+            <aside class="panel-left glass-panel scroll-hidden">
+                <div class="panel-header">
+                    <span>SYSTEM_LOGS</span>
+                    <div class="panel-actions">
+                        <button id="btn-clear-logs" class="icon-btn" title="Clear Logs">🗑</button>
+                        <button id="btn-toggle-logs" class="icon-btn" title="Maximize Logs">⛶</button>
+                    </div>
+                </div>
+                <div id="log-feed" class="log-feed">
+                    <div class="log-entry system-msg">
+                        <span class="ts">[INIT]</span>
+                        <span class="msg">System initialized. Waiting for uplink...</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Core -->
+            <main class="core-display">
+                <div class="visualizer-wrapper">
+                    <video id="video-active" class="hud-video state-idle" autoplay muted playsinline loop>
+                        <source src="assets/fish_idle.mp4" type="video/mp4">
+                    </video>
+                    <video id="video-buffer" class="hud-video state-idle hidden" muted playsinline loop>
+                        <source src="" type="video/mp4">
+                    </video>
+                </div>
+                <div class="ai-status-overlay">
+                    <h2 id="ai-state-text">IDLE</h2>
+                    <span id="ai-sub-text">Waiting for command...</span>
+                </div>
+            </main>
+
+            <!-- Right: Context -->
+            <aside class="panel-right glass-panel scroll-hidden">
+                <div class="section">
+                    <div class="section-title">ACTIVE_CONTEXT</div>
+                    <div id="media-card" class="media-card hidden">
+                        <div class="media-icon">🎵</div>
+                        <div class="media-info">
+                            <div id="media-title" class="track-title">--</div>
+                            <div id="media-status" class="track-status">PAUSED</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" style="flex: 1;">
+                    <div class="section-title">ENGINE_REGISTRY</div>
+                    <div id="key-list" class="key-list"></div>
+                    <div class="input-group-sm">
+                        <input id="new-key-input" type="text" placeholder="Add API Key...">
+                        <button id="btn-add-key">+</button>
+                    </div>
+                </div>
+
+                <div class="section actions-grid">
+                    <button id="btn-restart" class="action-btn warning">RESTART_BRIDGE</button>
+                    <button id="btn-stop" class="action-btn danger">EMERGENCY_STOP</button>
+                    <button id="btn-settings" class="action-btn">SETTINGS</button>
+                    <button id="btn-logout-main" class="action-btn">DISCONNECT</button>
+                </div>
+            </aside>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="hud-footer">
+            <div class="input-dock glass-panel">
+                <button id="btn-stt" class="dock-btn" title="Voice Input">🎙️</button>
+                <div class="input-wrapper">
+                    <span class="prompt-char">></span>
+                    <input id="cmd-input" type="text" placeholder="Execute command..." autocomplete="off">
+                </div>
+                <button id="btn-send" class="dock-btn primary">↵</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- MODALS -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-box glass-panel">
+            <h3>SYSTEM_CONFIG</h3>
+            <div class="setting-row">
+                <span>Text-to-Speech (Local)</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-tts">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>Speech-to-Text (Local)</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-stt">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-row">
+                <span>System Volume</span>
+                <input type="range" id="vol-slider" min="0" max="15">
+            </div>
+            <button id="btn-close-settings" class="modal-close">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ansi_up/5.2.1/ansi_up.min.js"></script>
+    
+    <script type="module" src="assets/js/app.js"></script>
+
+</body>
+</html>
