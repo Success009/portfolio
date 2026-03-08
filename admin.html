@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Admin - Success</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDKs (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --surface-light: #334155;
+            --primary: #38bdf8; --primary-dark: #0ea5e9; --text: #f8fafc;
+            --danger: #ef4444; --danger-dark: #dc2626; --border: rgba(255,255,255,0.1);
+            --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; display: flex; overflow: hidden; }
+        
+        .sidebar { width: 250px; background-color: var(--surface); height: 100vh; position: fixed; border-right: 1px solid var(--border); padding: 2rem 0; display: flex; flex-direction: column; }
+        .sidebar-brand { text-align: center; color: var(--primary); margin-bottom: 2rem; font-size: 1.5rem; font-weight: 800; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 1rem; padding: 1rem 2rem; color: #94a3b8; text-decoration: none; transition: 0.2s; cursor: pointer; }
+        .sidebar-nav a:hover { background: var(--surface-light); color: var(--text); }
+        .sidebar-nav a.active { background: rgba(56, 189, 248, 0.1); color: var(--primary); border-right: 3px solid var(--primary); }
+        
+        main { margin-left: 250px; width: calc(100% - 250px); padding: 3rem; height: 100vh; overflow-y: auto; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: var(--bg); }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-ai { background: #8b5cf6; color: white; }
+        .btn-ai:hover { background: #7c3aed; }
+        
+        .item-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+        .item-card { background: var(--surface); border-radius: 1rem; border: 1px solid var(--border); padding: 1.5rem; transition: 0.2s; }
+        .item-card:hover { border-color: var(--primary); }
+        .card-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .card-meta { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1rem; }
+        .card-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); backdrop-filter: blur(8px); z-index: 100; justify-content: center; align-items: center; padding: 2rem; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--surface); width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; border-radius: 1.5rem; border: 1px solid var(--border); padding: 1.5rem; position: relative; }
+        .modal-header { position: sticky; top: -1.5rem; background: var(--surface); z-index: 10; padding: 1rem 0; margin-top: -1.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; }
+
+        /* Login */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: var(--surface); padding: 3rem; border-radius: 1.5rem; width: 400px; border: 1px solid var(--border); text-align: center; }
+        .login-box h2 { color: var(--primary); margin-bottom: 2rem; }
+        .login-input { width: 100%; padding: 1rem; margin-bottom: 1rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; }
+
+        /* AI Feature */
+        .ai-input-area { background: rgba(139, 92, 246, 0.1); border: 1px dashed #8b5cf6; padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem; }
+
+        /* Floating AI Chat */
+        #ai-chat-widget { position: fixed; bottom: 2rem; right: 2rem; width: 400px; height: 600px; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 1000; transform: translateY(110%); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #ai-chat-widget.open { transform: translateY(0); }
+        .chat-header { padding: 1rem; background: var(--surface-light); border-top-left-radius: 1rem; border-top-right-radius: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .chat-body { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; scroll-behavior: smooth; }
+        .chat-footer { padding: 1rem; border-top: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: flex-end; background: var(--surface); border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; }
+        
+        #chat-input { 
+            flex: 1; 
+            background: var(--bg); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            border-radius: 8px; 
+            padding: 0.75rem; 
+            resize: none; 
+            min-height: 44px; 
+            max-height: 150px; 
+            font-family: inherit; 
+            line-height: 1.4;
+            overflow-y: hidden;
+        }
+        #chat-input:focus { outline: 1px solid var(--primary); }
+
+        .chat-bubble { padding: 0.75rem 1rem; border-radius: 1rem; max-width: 85%; word-wrap: break-word; font-size: 0.9rem; line-height: 1.4; position: relative; }
+        .chat-bubble.user { background: var(--primary); color: var(--bg); align-self: flex-end; border-bottom-right-radius: 0.25rem; }
+        .chat-bubble.ai { background: var(--surface-light); color: var(--text); align-self: flex-start; border-bottom-left-radius: 0.25rem; }
+        .chat-bubble.system { font-size: 0.75rem; color: #64748b; align-self: center; text-align: center; background: transparent; padding: 0.5rem; width: 100%; }
+        .chat-bubble.error { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid var(--danger); align-self: center; }
+        
+        .chat-toggle { position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--bg); font-size: 1.5rem; cursor: pointer; box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4); z-index: 1001; transition: 0.2s; }
+        .chat-toggle:hover { transform: scale(1.1); }
+        .chat-toggle.hidden { transform: scale(0); pointer-events: none; }
+
+        /* Custom Modal System */
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.2s; }
+        .custom-modal-overlay.active { opacity: 1; pointer-events: all; }
+        .custom-modal-box { background: var(--surface); border: 1px solid var(--border); width: 90%; max-width: 400px; padding: 1.5rem; border-radius: 1rem; transform: scale(0.9); transition: 0.2s; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .custom-modal-overlay.active .custom-modal-box { transform: scale(1); }
+        .cm-title { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+        .cm-content { color: #94a3b8; margin-bottom: 1.5rem; line-height: 1.5; font-size: 0.95rem; }
+        .cm-input { width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 0.5rem; margin-bottom: 1.5rem; }
+        .cm-actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+        /* Manual Updates UI */
+        .manual-update-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            transition: 0.2s;
+        }
+        .manual-update-item:hover { border-color: var(--primary); }
+        .manual-update-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--primary); font-size: 0.85rem; font-weight: 600; }
+        .manual-update-remove { color: var(--danger); cursor: pointer; opacity: 0.7; }
+        .manual-update-remove:hover { opacity: 1; }
+        .update-input { 
+            width: 100%; 
+            min-height: 80px; 
+            background: var(--bg); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            border-radius: 4px; 
+            padding: 0.75rem; 
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        /* --- Mobile Redesign --- */
+        .mobile-header { display: none; }
+        
+        @media (max-width: 768px) {
+            body { display: block; overflow-y: auto; padding-bottom: 80px; }
+            
+            .sidebar { display: none; }
+            
+            .mobile-header { 
+                display: flex; 
+                position: fixed; 
+                top: 0; left: 0; width: 100%; 
+                background: var(--surface); 
+                padding: 1rem 1.5rem; 
+                border-bottom: 1px solid var(--border); 
+                justify-content: space-between; 
+                align-items: center; 
+                z-index: 1000; 
+            }
+            .mobile-header .sidebar-brand { margin-bottom: 0; font-size: 1.25rem; }
+            .logout-mini { background: none; border: none; color: #94a3b8; font-size: 1.2rem; }
+
+            main { margin-left: 0; width: 100%; padding: 5rem 1rem 2rem; }
+            
+            .section-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .section-header div { width: 100%; }
+            .section-header .btn { width: 100%; justify-content: center; }
+
+            .item-list { grid-template-columns: 1fr; }
+            .item-card { padding: 1.25rem; }
+            .card-actions { justify-content: stretch; }
+            .card-actions .btn { flex: 1; justify-content: center; }
+
+            /* Full Screen Modal */
+            .modal { padding: 0; align-items: flex-start; }
+            .modal-content { 
+                max-width: 100%; 
+                height: 100vh; 
+                max-height: 100vh; 
+                border-radius: 0; 
+                border: none; 
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+            }
+            .modal-header { position: sticky; top: -1.5rem; background: var(--surface); padding: 1rem 0; }
+            #post-form { flex: 1; }
+            
+            /* AI Chat Mobile */
+            #ai-chat-widget { 
+                width: 100%; 
+                height: 100%; 
+                bottom: 0; 
+                right: 0; 
+                border-radius: 0; 
+                border: none;
+                transform: translateY(100%);
+            }
+            #ai-chat-widget.open { transform: translateY(0); }
+            .chat-toggle { width: 50px; height: 50px; bottom: 1.5rem; right: 1.5rem; }
+            
+            /* Input prevention of zoom */
+            input, textarea, select { font-size: 16px !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobile Top Header -->
+    <header class="mobile-header">
+        <div class="sidebar-brand">SUCCESS</div>
+        <button class="logout-mini" onclick="firebase.auth().signOut()"><i class="fas fa-sign-out-alt"></i></button>
+    </header>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Portfolio Admin</h2>
+            <input type="email" id="login-email" class="login-input" placeholder="Admin Email">
+            <input type="password" id="login-password" class="login-input" placeholder="Password">
+            <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">Login</button>
+            <p id="login-error" style="color: var(--danger); margin-top: 1rem; font-size: 0.875rem;"></p>
+        </div>
+    </div>
+
+    <nav class="sidebar">
+        <div class="sidebar-brand">SUCCESS</div>
+        <div class="sidebar-nav">
+            <a data-target="blog" class="active"><i class="fas fa-newspaper"></i> Blog Posts</a>
+            <a onclick="firebase.auth().signOut()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </nav>
+
+    <main>
+        <section id="blog" class="content-section active">
+            <div class="section-header">
+                <h2>Blog Management</h2>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="openFormForNew()"><i class="fas fa-plus"></i> New Post</button>
+                </div>
+            </div>
+            <div id="posts-list" class="item-list"></div>
+        </section>
+    </main>
+
+    <!-- Post Modal -->
+    <div class="modal" id="form-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Create Post</h2>
+            </div>
+            <form id="post-form">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="post-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Publish Date</label>
+                    <input type="datetime-local" id="post-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Excerpt (Optional)</label>
+                    <input type="text" id="post-excerpt">
+                </div>
+
+                <!-- Project Updates Section -->
+                <div style="margin-bottom: 1.5rem; border: 1px solid var(--border); padding: 1rem; border-radius: 8px; background: rgba(0,0,0,0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <label style="margin:0;">Project Updates (Newest First)</label>
+                        <button type="button" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" onclick="addManualUpdateField()">
+                            <i class="fas fa-plus"></i> Add Update
+                        </button>
+                    </div>
+                    <div id="manual-updates-container" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Original Vision / Content</label>
+                    <textarea id="post-content" style="height: 250px;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; position: sticky; bottom: -1.5rem; background: var(--surface); padding: 1rem 0; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Chat Widget -->
+    <div id="ai-chat-widget">
+        <div class="chat-header" onclick="toggleChat()">
+            <span style="font-weight: 700; color: var(--primary);"><i class="fas fa-robot"></i> Assistant</span>
+            <div style="display:flex; gap:0.5rem;">
+                <i class="fas fa-cog" style="color: #94a3b8; cursor: pointer;" onclick="event.stopPropagation(); configureAI()"></i>
+                <i class="fas fa-chevron-down" style="color: #94a3b8;"></i>
+            </div>
+        </div>
+        <div class="chat-body" id="chat-messages">
+            <div class="chat-bubble system">Initializing connection...</div>
+        </div>
+        <div class="chat-footer">
+            <textarea id="chat-input" rows="1" placeholder="Ask me to update posts... (Ctrl+Enter for new line)"></textarea>
+            <button class="btn btn-primary" style="padding: 0.5rem; height: 44px;" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    <div class="chat-toggle" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></div>
+
+    <!-- Custom Modal Container -->
+    <div class="custom-modal-overlay" id="custom-modal">
+        <div class="custom-modal-box">
+            <div class="cm-title" id="cm-title">Title</div>
+            <div class="cm-content" id="cm-content">Content goes here...</div>
+            <input type="text" class="cm-input" id="cm-input" style="display:none;">
+            <div class="cm-actions" id="cm-actions">
+                <button class="btn" onclick="CustomModal.close()">Cancel</button>
+                <button class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> <!-- Markdown Parser -->
+    <script src="portfolio_assets/firebase-logic.js"></script>
+    <script>
+        // --- 1. Utilities & UI ---
+        const getLatestTimestamp = (post) => {
+            let latest = post.timestamp || 0;
+            if (post.updates) {
+                Object.values(post.updates).forEach(up => {
+                    if (up.timestamp > latest) latest = up.timestamp;
+                });
+            }
+            return latest;
+        };
+
+        const CustomModal = {
+            overlay: document.getElementById('custom-modal'),
+            title: document.getElementById('cm-title'),
+            content: document.getElementById('cm-content'),
+            input: document.getElementById('cm-input'),
+            actions: document.getElementById('cm-actions'),
+            
+            show(title, text, type = 'info', callback = null) {
+                this.title.innerText = title;
+                this.content.innerHTML = text; // Allow HTML
+                this.input.style.display = type === 'prompt' ? 'block' : 'none';
+                this.input.value = '';
+                
+                this.actions.innerHTML = '';
+                
+                if (type === 'custom') {
+                    this.overlay.classList.add('active');
+                    return;
+                }
+
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'btn';
+                closeBtn.innerText = type === 'info' ? 'Close' : 'Cancel';
+                closeBtn.onclick = () => this.close();
+                this.actions.appendChild(closeBtn);
+
+                if (type !== 'info') {
+                    const confirmBtn = document.createElement('button');
+                    confirmBtn.className = 'btn btn-primary';
+                    confirmBtn.innerText = 'Confirm';
+                    confirmBtn.onclick = () => {
+                        const val = this.input.value;
+                        this.close();
+                        if (callback) callback(val);
+                    };
+                    this.actions.appendChild(confirmBtn);
+                    
+                    if(type === 'prompt') {
+                        this.input.onkeydown = (e) => { if(e.key === 'Enter') confirmBtn.click(); };
+                        setTimeout(() => this.input.focus(), 100);
+                    }
+                }
+
+                this.overlay.classList.add('active');
+            },
+            close() { this.overlay.classList.remove('active'); },
+            alert(text) { this.show('Alert', text, 'info'); },
+            confirm(text, cb) { this.show('Confirm', text, 'confirm', cb); },
+            prompt(text, val, cb) { 
+                this.show('Input', text, 'prompt', cb); 
+                if(val) this.input.value = val;
+            }
+        };
+
+        // Auto-resize Textarea
+        const chatInput = document.getElementById('chat-input');
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.ctrlKey) {
+                e.preventDefault();
+                sendChat();
+            } else if (e.key === 'Enter' && e.ctrlKey) {
+                // Allow new line
+                this.value += '\n';
+            }
+        });
+
+        // --- 2. Key Manager (Resilience) ---
+        class KeyManager {
+            constructor() {
+                this.keys = [];
+                this.currentIndex = 0;
+            }
+
+            async init() {
+                // Load from Local Config first
+                const localSnap = await db.ref('portfolio/config/api_key').once('value');
+                if (localSnap.exists()) this.keys.push(localSnap.val());
+
+                // Load from Global Home System (Fallback)
+                try {
+                    const globalSnap = await db.ref('home_system/config/api_keys').once('value');
+                    if (globalSnap.exists()) {
+                        const val = globalSnap.val();
+                        if (Array.isArray(val)) this.keys.push(...val);
+                        else if (typeof val === 'object') this.keys.push(...Object.values(val));
+                        else if (typeof val === 'string') this.keys.push(val);
+                    }
+                } catch (e) { console.warn("Could not load global keys", e); }
+
+                // Deduplicate and Shuffle
+                this.keys = [...new Set(this.keys)].filter(k => k && k.length > 10);
+                this.keys.sort(() => Math.random() - 0.5); // Randomize order
+                
+                if (this.keys.length === 0) ChatAgent.log("system", "No API Keys found. Please configure.");
+                else ChatAgent.log("system", `Loaded ${this.keys.length} API Keys.`);
+            }
+
+            getKey() {
+                if (this.keys.length === 0) return null;
+                return this.keys[this.currentIndex];
+            }
+
+            rotate() {
+                if (this.keys.length <= 1) return false;
+                this.currentIndex = (this.currentIndex + 1) % this.keys.length;
+                ChatAgent.log("system", "Rotating API Key due to rate limit...");
+                return true;
+            }
+        }
+
+        // --- 3. Chat Agent (Logic & Tools) ---
+        const ChatAgent = {
+            history: [],
+            context: "",
+            deepContext: {},
+            keyManager: new KeyManager(),
+            
+            async init() {
+                this.keyManager.init();
+                
+                // Fetch Core Context (Legacy compatibility)
+                db.ref('portfolio/ai_context').once('value', s => {
+                    this.context = s.val() || "You are a helpful Portfolio Admin Assistant.";
+                });
+
+                // Fetch Deep Context (New Segmented Memory)
+                db.ref('portfolio/deep_context').on('value', s => {
+                    this.deepContext = s.val() || {};
+                });
+
+                this.log("ai", "System Ready. I can manage your blog posts and my own deep memory.");
+            },
+
+            log(role, text) {
+                const c = document.getElementById('chat-messages');
+                
+                // Remove existing typing indicator
+                const existingTyping = document.querySelector('.chat-bubble.system.typing');
+                if(existingTyping) existingTyping.remove();
+
+                const b = document.createElement('div');
+                b.className = `chat-bubble ${role}`;
+                
+                if (role === 'ai') {
+                    // Parse Markdown for AI
+                    try { b.innerHTML = marked.parse(text); } 
+                    catch(e) { b.innerText = text; }
+                } else {
+                    b.innerText = text;
+                }
+                
+                c.appendChild(b);
+                c.scrollTop = c.scrollHeight;
+            },
+
+            setTyping(isTyping) {
+                const c = document.getElementById('chat-messages');
+                const existing = document.querySelector('.chat-bubble.system.typing');
+                if(isTyping) {
+                    if(!existing) {
+                        const b = document.createElement('div');
+                        b.className = `chat-bubble system typing`;
+                        b.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Thinking...';
+                        c.appendChild(b);
+                        c.scrollTop = c.scrollHeight;
+                    }
+                } else {
+                    if(existing) existing.remove();
+                }
+            },
+
+            async processUserMessage(msg) {
+                this.log("user", msg);
+                this.history.push({ role: "user", parts: [{ text: msg }] });
+                this.processTurn();
+            },
+
+            async processTurn(retryCount = 0) {
+                this.setTyping(true);
+                const key = this.keyManager.getKey();
+                if (!key) {
+                    this.setTyping(false);
+                    CustomModal.prompt("Enter API Key:", "", (val) => {
+                        if(val) {
+                            db.ref('portfolio/config/api_key').set(val);
+                            this.keyManager.keys.push(val);
+                            this.processTurn();
+                        }
+                    });
+                    return;
+                }
+
+                // Core System Context
+                const deepContextStr = Object.entries(this.deepContext)
+                    .map(([k, v]) => `[${k.toUpperCase()}]:\n${v}`)
+                    .join('\n\n');
+
+                const systemPrompt = `
+                I am Success's Technical Ghostwriter. I listen to his casual engineering chat and transform it into professional, coherent project logs.
+
+                ### PERSONA & TONE
+                - **Chat Mode (Listener):** I am a helpful peer. Success might use filler words or share secrets; I listen for the technical "Truth".
+                - **Post Mode (Writer):** I write as "I" (Success). The tone is Senior System Engineer: Technical, authoritative, and narrative-driven.
+                - **Formatting:** I strictly use HTML (<p>, <ul>, <h3>, <pre><code>, <strong>, <blockquote>). The website's 2026 Timeline CSS depends on these.
+                - **Dates:** I don't need to add the current date, but if Success mentions a timeframe (e.g., "Back in 2024" or "last month"), I MUST include that context in the prose.
+
+                ### DYNAMIC MEMORY (Internal State)
+                ${deepContextStr || "No internal technical facts established yet."}
+
+                ### OPERATIONAL LOGIC (Multi-Step Execution)
+                1. **Deconstruct Intent:** Identify all projects mentioned (e.g., "Flappy Bird" and "Compiler").
+                2. **Orient:** Use 'read_posts_list' to find matching IDs.
+                3. **Contextualize (Optional):** If the update is a continuation, call 'read_post' to ensure the new log flows naturally from previous entries. If I already have enough info, I skip this to save resources.
+                4. **Draft & Commit:** Generate the HTML and use 'manage_updates' (ADD) to push the logs.
+                5. **Internalize:** If Success shares technical specs (IPs, SDKs, Logic) that are NOT for the blog, I save them via 'patch_deep_context'.
+
+                ### PRIVACY & SAFETY
+                - DO NOT publish private IPs (192.168.x.x), API Keys, or passwords in blog posts. Save them to 'patch_deep_context' if they are important for me to remember.
+                - Ensure all HTML tags are closed.
+                - Avoid "AI-assistant" filler in the final blog post (no "I have updated...", just the technical narrative).
+
+                ### TOOLS_GUIDE
+                - 'read_posts_list': Lists all project logs. Use this first to find IDs.
+                - 'read_post': Reads the full content of a log. Use this for context/coherence.
+                - 'manage_updates': Add, Edit, or Delete surgical log entries. CONTENT MUST BE HTML.
+                - 'patch_deep_context': My private technical memory. Use for internal facts/secrets.
+                - 'update_post': Edits the 'Original Vision' (the core project description).
+                `;
+
+                const payload = {
+                    contents: [
+                        { role: "user", parts: [{ text: systemPrompt }] },
+                        ...this.history
+                    ],
+                    tools: [{
+                        function_declarations: [
+                            {
+                                name: "read_posts_list",
+                                description: "Retrieve a list of all blog posts/projects to find matching IDs by title.",
+                                parameters: { type: "OBJECT", properties: { limit: { type: "NUMBER" } } }
+                            },
+                            {
+                                name: "read_post",
+                                description: "Get full content and log history of a specific post. Use this when you need to understand the current state of a project before adding a new update.",
+                                parameters: { type: "OBJECT", properties: { key: { type: "STRING" } }, required: ["key"] }
+                            },
+                            {
+                                name: "update_post",
+                                description: "Edit the 'Original Vision' or main content of a project. Only use this if the core goal of the project has changed.",
+                                parameters: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        key: { type: "STRING", description: "Post ID" },
+                                        title: { type: "STRING" },
+                                        content: { type: "STRING", description: "The new vision text in HTML." },
+                                        excerpt: { type: "STRING" }
+                                    },
+                                    required: ["key", "title", "content"]
+                                }
+                            },
+                            {
+                                name: "manage_updates",
+                                description: "Surgically manage log entries in a project's timeline. Use 'ADD' for new progress updates.",
+                                parameters: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        postKey: { type: "STRING", description: "The ID of the project blog." },
+                                        action: { type: "STRING", enum: ["ADD", "EDIT", "DELETE"], description: "ADD for new logs, EDIT to fix typos in the latest log." },
+                                        updateKey: { type: "STRING", description: "Required for EDIT/DELETE. Find this key by first calling 'read_post'." },
+                                        content: { type: "STRING", description: "The log entry content in HTML. Use <p>, <ul>, <h3>, <code> tags." }
+                                    },
+                                    required: ["postKey", "action"]
+                                }
+                            },
+                            {
+                                name: "patch_deep_context",
+                                description: "Store or update internal technical facts in my private memory. Use this for secrets, IP addresses, and low-level specs that should NOT be public on the blog.",
+                                parameters: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        key: { type: "STRING", description: "The memory segment name (e.g., 'internal_specs', 'server_logic')." },
+                                        content: { type: "STRING", description: "The technical data to remember. Set to null to delete." }
+                                    },
+                                    required: ["key", "content"]
+                                }
+                            }
+                        ]
+                    }]
+                };
+
+                try {
+                    // Using Gemini 2.5 Flash as requested
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429) {
+                        if (this.keyManager.rotate()) {
+                            console.log("Retrying with new key in 2s...");
+                            setTimeout(() => this.processTurn(retryCount), 2000);
+                            return;
+                        } else {
+                            throw new Error("Rate limit exceeded (All keys exhausted).");
+                        }
+                    }
+
+                    const data = await response.json();
+                    
+                    if(!data.candidates || !data.candidates[0]) {
+                        console.error("API Error", data);
+                        throw new Error(data.error?.message || "Unknown API Error");
+                    }
+
+                    const aiMsg = data.candidates[0].content;
+                    const aiPart = aiMsg.parts[0];
+
+                    this.history.push(aiMsg); // Add AI response to history
+                    this.setTyping(false);
+
+                    if (aiPart.text) {
+                        this.log("ai", aiPart.text);
+                    }
+
+                    if (aiPart.functionCall) {
+                        const fn = aiPart.functionCall;
+                        this.log("system", `Executing ${fn.name}...`);
+                        
+                        const result = await this.executeTool(fn.name, fn.args);
+                        
+                        // Send result back to AI
+                        this.history.push({
+                            role: "function",
+                            parts: [{
+                                functionResponse: {
+                                    name: fn.name,
+                                    response: { result: result } 
+                                }
+                            }]
+                        });
+                        
+                        // Loop back for AI to process result
+                        this.processTurn(retryCount); 
+                    }
+
+                } catch (e) {
+                    this.setTyping(false);
+                    this.log("error", `Error: ${e.message}`);
+                }
+            },
+
+            async executeTool(name, args) {
+                try {
+                    if (name === "read_posts_list") {
+                        const limit = args.limit || 50;
+                        const s = await blogRef.orderByChild('timestamp').limitToLast(limit).once('value');
+                        const p = [];
+                        s.forEach(c => {
+                            const val = c.val();
+                            p.push({ 
+                                key: c.key, 
+                                title: val.title, 
+                                last_activity: new Date(getLatestTimestamp(val)).toISOString()
+                            });
+                        });
+                        return p.reverse(); // Newest first for AI
+                    }
+                    if (name === "read_post") {
+                        const s = await blogRef.child(args.key).once('value');
+                        const data = s.val();
+                        if (data && data.updates) {
+                            // Ensure AI sees the keys for updates
+                            const indexedUpdates = Object.entries(data.updates).map(([k, v]) => ({
+                                key: k,
+                                content: v.content,
+                                timestamp: v.timestamp
+                            })).sort((a,b) => b.timestamp - a.timestamp);
+                            data.updates = indexedUpdates;
+                        }
+                        return data;
+                    }
+                    if (name === "update_post") {
+                        const payload = {
+                            title: args.title,
+                            content: args.content,
+                            excerpt: args.excerpt || "",
+                            timestamp: Date.now()
+                        };
+                        if (args.key === "NEW") {
+                            const newRef = await blogRef.push(payload);
+                            return `Created Post: ${newRef.key}`;
+                        } else {
+                            await blogRef.child(args.key).update(payload);
+                            return `Updated Post: ${args.key}`;
+                        }
+                    }
+                    if (name === "manage_updates") {
+                        const { postKey, action, updateKey, content } = args;
+                        const postUpdatesRef = blogRef.child(postKey).child('updates');
+                        
+                        if (action === "ADD") {
+                            await postUpdatesRef.push({ content, timestamp: Date.now() });
+                            return "Update added successfully.";
+                        } else if (action === "EDIT") {
+                            if (!updateKey) return "Error: updateKey is required for EDIT action.";
+                            await postUpdatesRef.child(updateKey).update({ content });
+                            return "Update modified successfully.";
+                        } else if (action === "DELETE") {
+                            if (!updateKey) return "Error: updateKey is required for DELETE action.";
+                            await postUpdatesRef.child(updateKey).remove();
+                            return "Update deleted successfully.";
+                        }
+                    }
+                    if (name === "patch_deep_context") {
+                        const { key, content } = args;
+                        if (!content) {
+                            await db.ref('portfolio/deep_context').child(key).remove();
+                            return `Memory segment '${key}' deleted.`;
+                        } else {
+                            await db.ref('portfolio/deep_context').child(key).set(content);
+                            return `Memory segment '${key}' updated.`;
+                        }
+                    }
+                    if (name === "update_memory") {
+                        await db.ref('portfolio/ai_context').set(args.new_context);
+                        this.context = args.new_context;
+                        return "Legacy Memory Updated Successfully.";
+                    }
+                    return "Unknown Tool";
+                } catch (e) { return "Tool Error: " + e.message; }
+            }
+        };
+
+        // --- 4. Main Integration ---
+        function toggleChat() {
+            const w = document.getElementById('ai-chat-widget');
+            const t = document.querySelector('.chat-toggle');
+            if(w.classList.contains('open')) {
+                w.classList.remove('open');
+                t.classList.remove('hidden');
+            } else {
+                w.classList.add('open');
+                t.classList.add('hidden');
+                setTimeout(() => document.getElementById('chat-input').focus(), 300);
+            }
+        }
+
+        function sendChat() {
+            const inp = document.getElementById('chat-input');
+            const txt = inp.value.trim();
+            if(!txt) return;
+            inp.value = '';
+            inp.style.height = 'auto'; // Reset height
+            ChatAgent.processUserMessage(txt);
+        }
+
+        function configureAI() {
+            const memorySegments = Object.entries(ChatAgent.deepContext);
+            
+            let memoryListHTML = memorySegments.length > 0 
+                ? memorySegments.map(([key, value]) => `
+                    <div class="memory-item" style="background:var(--bg); border:1px solid var(--border); padding:1rem; border-radius:8px; margin-bottom:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <span style="font-weight:700; color:var(--primary); text-transform:uppercase; font-size:0.8rem;">${key}</span>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="btn" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="editMemorySegment('${key}')"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-danger" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="deleteMemorySegment('${key}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div style="font-size:0.85rem; color:#94a3b8; max-height:60px; overflow:hidden; text-overflow:ellipsis;">
+                            ${value.replace(/</g, "&lt;").substring(0, 150)}...
+                        </div>
+                    </div>
+                `).join('')
+                : '<div style="color:#64748b; text-align:center; padding:1rem;">No active project context. Add one to track current status (e.g., "mobile_build_status").</div>';
+
+            CustomModal.show("Active Project Context Manager", `
+                <div style="margin-bottom:1.5rem;">
+                    <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:1rem;">
+                        Manage the AI's <strong>Working Memory</strong> here. Add segments for current project status, server IPs, or build errors.
+                        <br><small>Note: Writing style and persona are now hardcoded.</small>
+                    </p>
+                    <button class="btn btn-primary" style="width:100%;" onclick="addMemorySegment()"><i class="fas fa-plus"></i> Add New Status Segment</button>
+                </div>
+                <div style="max-height:400px; overflow-y:auto; padding-right:0.5rem;">
+                    ${memoryListHTML}
+                </div>
+            `);
+        }
+
+        function addMemorySegment() {
+            CustomModal.prompt("Enter a unique key (e.g., 'server_ip', 'mobile_errors'):", "", (key) => {
+                if(key) {
+                    key = key.trim().toLowerCase().replace(/\s+/g, '_');
+                    if(ChatAgent.deepContext[key]) {
+                        CustomModal.alert("A memory with this key already exists. Please edit it instead.");
+                        return;
+                    }
+                    editMemorySegment(key, true); // Open editor for new key
+                }
+            });
+        }
+
+        function editMemorySegment(key, isNew = false) {
+            const currentVal = ChatAgent.deepContext[key] || "";
+            // We'll use a larger text area for editing
+            const content = `
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:600;">${key.toUpperCase()}</label>
+                    <textarea id="memory-editor-input" style="width:100%; height:200px; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:0.75rem; border-radius:8px; resize:vertical;">${currentVal}</textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                    <button class="btn" onclick="configureAI()">Back</button>
+                    <button class="btn btn-primary" onclick="saveMemorySegment('${key}')">Save Memory</button>
+                </div>
+            `;
+            CustomModal.show(`Edit Memory: ${key}`, content, 'custom'); // 'custom' type to prevent default buttons
+        }
+
+        function saveMemorySegment(key) {
+            const val = document.getElementById('memory-editor-input').value;
+            if(val) {
+                db.ref('portfolio/deep_context').child(key).set(val)
+                    .then(() => {
+                        ChatAgent.log("system", `Memory segment '${key}' saved.`);
+                        configureAI(); // Reload list
+                    });
+            } else {
+                CustomModal.alert("Content cannot be empty.");
+            }
+        }
+
+        function deleteMemorySegment(key) {
+            CustomModal.confirm(`Are you sure you want to delete the '${key}' memory?`, () => {
+                db.ref('portfolio/deep_context').child(key).remove()
+                    .then(() => {
+                        ChatAgent.log("system", `Memory segment '${key}' deleted.`);
+                        configureAI(); // Reload list
+                    });
+            });
+        }
+
+        // --- Legacy Admin Functions ---
+        let editor = null;
+        let editingKey = null;
+
+        function adminLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            auth.signInWithEmailAndPassword(email, pass).catch(e => {
+                document.getElementById('login-error').innerText = e.message;
+            });
+        }
+
+        function initAdmin() {
+            editor = SUNEDITOR.create('post-content', {
+                buttonList: [['undo', 'redo'], ['bold', 'italic', 'underline'], ['list'], ['link', 'image'], ['codeView']],
+                theme: 'dark', width: '100%', height: '250px'
+            });
+            loadAdminPosts();
+        }
+
+        function loadAdminPosts() {
+            blogRef.on('value', snapshot => {
+                const list = document.getElementById('posts-list');
+                list.innerHTML = '';
+                const posts = [];
+                snapshot.forEach(child => {
+                    posts.push({ key: child.key, ...child.val() });
+                });
+
+                posts.sort((a, b) => getLatestTimestamp(b) - getLatestTimestamp(a));
+                
+                posts.forEach(post => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="card-title">${post.title}</div>
+                        <div class="card-meta">${new Date(post.timestamp).toLocaleDateString()}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="openFormForEdit('${post.key}')">Edit</button>
+                            <button class="btn btn-danger" onclick="deletePost('${post.key}')">Delete</button>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            });
+        }
+
+        function openFormForNew() {
+            editingKey = null;
+            document.getElementById('modal-title').innerText = "Create Post";
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-excerpt').value = '';
+            document.getElementById('manual-updates-container').innerHTML = ''; // Clear updates
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('post-date').value = now.toISOString().slice(0, 16);
+            editor.setContents('');
+            document.getElementById('form-modal').classList.add('show');
+        }
+
+        function openFormForEdit(key) {
+            editingKey = key;
+            blogRef.child(key).once('value', snapshot => {
+                const post = snapshot.val();
+                document.getElementById('modal-title').innerText = "Edit Post";
+                document.getElementById('post-title').value = post.title;
+                document.getElementById('post-excerpt').value = post.excerpt || '';
+                const date = new Date(post.timestamp);
+                date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+                document.getElementById('post-date').value = date.toISOString().slice(0, 16);
+                editor.setContents(post.content);
+                
+                // Load Updates
+                const updatesContainer = document.getElementById('manual-updates-container');
+                updatesContainer.innerHTML = '';
+                if (post.updates) {
+                    const sortedUpdates = Object.entries(post.updates).sort((a,b) => b[1].timestamp - a[1].timestamp);
+                    sortedUpdates.forEach(([upKey, upData]) => {
+                        addManualUpdateField(upData.content, upKey, upData.timestamp);
+                    });
+                }
+
+                document.getElementById('form-modal').classList.add('show');
+            });
+        }
+
+        function addManualUpdateField(content = '', key = null, timestamp = null) {
+            const container = document.getElementById('manual-updates-container');
+            const div = document.createElement('div');
+            div.className = 'manual-update-item';
+            
+            const ts = timestamp || Date.now();
+            const dateStr = new Date(ts).toLocaleDateString() + ' ' + new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            div.innerHTML = `
+                <div class="manual-update-header">
+                    <span>${dateStr}</span>
+                    <span class="manual-update-remove" onclick="this.closest('.manual-update-item').remove()">Remove</span>
+                </div>
+                <textarea class="update-input" placeholder="Enter update details...">${content}</textarea>
+                <input type="hidden" class="update-timestamp" value="${ts}">
+            `;
+            
+            // Insert at the top (Newest First)
+            if(container.firstChild) {
+                container.insertBefore(div, container.firstChild);
+            } else {
+                container.appendChild(div);
+            }
+        }
+
+        document.getElementById('post-form').onsubmit = (e) => {
+            e.preventDefault();
+            const dateVal = document.getElementById('post-date').value;
+            const timestamp = new Date(dateVal).getTime();
+            
+            // Collect Manual Updates
+            const updates = {};
+            document.querySelectorAll('.manual-update-item').forEach((item, idx) => {
+                const content = item.querySelector('.update-input').value;
+                const ts = parseInt(item.querySelector('.update-timestamp').value);
+                // We use timestamp as key prefix to maintain rough order if needed, but random key is better for firebase.
+                // Actually, let's just push them as a new object or map them.
+                // For simplicity in this manual save, we'll generate simple keys or use existing.
+                // Ideally, we shouldn't overwrite all updates every time if we can avoid it, but for a simple admin, replacing the object is okay.
+                updates['update_' + ts + '_' + idx] = { content: content, timestamp: ts };
+            });
+
+            const data = {
+                title: document.getElementById('post-title').value,
+                excerpt: document.getElementById('post-excerpt').value,
+                content: editor.getContents(),
+                timestamp: timestamp,
+                updates: updates // Overwrite updates with current form state
+            };
+            const ref = editingKey ? blogRef.child(editingKey) : blogRef.push();
+            ref.set(data).then(() => closeModal());
+        };
+
+        function deletePost(key) {
+            CustomModal.confirm("Are you sure you want to delete this post?", () => {
+                blogRef.child(key).remove();
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('form-modal').classList.remove('show');
+        }
+
+        // --- Auth Listener ---
+        auth.onAuthStateChanged(user => {
+            if (user && !user.isAnonymous) {
+                document.getElementById('login-screen').style.display = 'none';
+                initAdmin();
+                ChatAgent.init(); // Init AI
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>
