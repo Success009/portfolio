@@ -1043,3 +1043,62 @@ body {
     color: var(--bg);
     border-color: var(--accent);
 }
+
+/* Custom Beautiful Form Styling */
+.contact-form-container {
+    max-width: 600px;
+    margin: 4rem auto 0;
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    padding: 3rem;
+    backdrop-filter: blur(10px);
+}
+
+.contact-form-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color  ease, box-shadow  ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+}
+
+.form-group textarea {
+    resize: none;
+    min-height: 120px;
+}

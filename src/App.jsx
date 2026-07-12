@@ -17,7 +17,8 @@ import {
   Menu,
   X,
   User,
-  ExternalLink
+  ExternalLink,
+  Clock
 } from 'lucide-react';
 
 export default function App() {
@@ -26,6 +27,21 @@ export default function App() {
 
   const logoPath = "logo.png";
   const profilePicPath = "portfolio_assets/success.jpg";
+
+  // Form submission handler to directly open WhatsApp with pre-filled details
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    const name = e.target.name.value;
+    const email = e.target.email.value;
+    const message = e.target.message.value;
+
+    const whatsappNumber = "9779809248510";
+    const text = `Hello Success,\n\nMy name is ${name} (${email}).\n\nMessage: ${message}`;
+    const encodedText = encodeURIComponent(text);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodedText}`;
+    
+    window.open(whatsappUrl, '_blank');
+  };
 
   // Authentic, simplified projects list showcasing real achievements
   const projects = [
@@ -317,13 +333,13 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
           
           <div className="about-text reveal-left">
             <p>
-              I am a student currently studying at <strong className="text-white">Narayani Model Secondary School</strong> in Bharatpur, Nepal. I started self-learning computer programming when I was 10, taught first by my Dad who showed me how software worked.
+              I'm a dedicated developer currently studying at <strong className="text-white">Narayani Model Secondary School</strong> in Nepal. My journey into programming started when I was 10, and since then, I've been passionate about creating digital solutions that make a difference.
             </p>
             <p>
-              While I enjoy working with frontend technologies to display interfaces, my main focus is on <strong className="text-white">backend systems, robust databases, and automation</strong>. I build fast REST and WebSocket APIs, design relational and real-time database schemas, and handle hardware/software integrations.
+              I do both frontend and backend development, with a main focus on <strong className="text-white">Node.js, Firebase, and scalable systems</strong>.
             </p>
             <p>
-              When I'm not working on client projects, I enjoy learning new low-level concepts and contributing to open-source software. I've made contributions to over <strong className="text-white">600 open-source repositories</strong> on GitHub.
+              When I don't have any good ideas for new projects, I like to contribute to open-source. I have contributed to over <strong className="text-white">600 repositories</strong> on GitHub.
             </p>
           </div>
 
@@ -331,22 +347,22 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
             <div className="highlight-item">
               <div className="highlight-icon">🎓</div>
               <div>
-                <strong>Narayani Model Secondary School</strong>
-                <br />Pursuing secondary education while working as a developer
+                <strong>Student at Narayani Model Secondary School</strong>
+                <br />Balancing academics with professional development
               </div>
             </div>
             <div className="highlight-item">
               <div className="highlight-icon">💼</div>
               <div>
-                <strong>Full-Stack Freelancer</strong>
-                <br />Building fast web and mobile systems directly for local and international clients
+                <strong>Freelance Developer</strong>
+                <br />Building custom solutions for various clients
               </div>
             </div>
             <div className="highlight-item">
               <div className="highlight-icon">🌟</div>
               <div>
-                <strong>Straightforward Solutions</strong>
-                <br />I focus on building clean, practical applications without unnecessary layers or complications
+                <strong>Problem Solver</strong>
+                <br />Love tackling complex challenges with creative solutions
               </div>
             </div>
           </div>
@@ -363,32 +379,32 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
             <div className="skill-icon">
               <Server className="w-8 h-8" />
             </div>
-            <h3>Backend & APIs</h3>
-            <p>Developing reliable server code, RESTful APIs, and synchronized web sockets. Proficient in Node.js, Express, and microservice structures.</p>
+            <h3>Node.js & Backend</h3>
+            <p>Expert in building scalable APIs and microservices using Node.js and Express. Focused on performance and reliability.</p>
           </div>
 
           <div className="skill-card reveal">
             <div className="skill-icon">
               <Zap className="w-8 h-8" />
             </div>
-            <h3>Databases & Sync</h3>
-            <p>Designing structures with Google Firebase, Firestore, and SQLite ring buffers. Focused on low latencies and offline durability.</p>
+            <h3>Firebase & Realtime</h3>
+            <p>Deep experience with Firestore, Realtime Database, and Cloud Functions for synchronized applications.</p>
           </div>
 
           <div className="skill-card reveal">
             <div className="skill-icon">
               <Terminal className="w-8 h-8" />
             </div>
-            <h3>Systems & Automation</h3>
-            <p>Writing reliable scripts in Python for system administration, smart IoT home setups, and background services.</p>
+            <h3>Python & Automation</h3>
+            <p>Scripting and system automation. Experience building custom OS layers and AI integrations.</p>
           </div>
 
           <div className="skill-card reveal">
             <div className="skill-icon">
               <Code2 className="w-8 h-8" />
             </div>
-            <h3>Frontend & Mobile</h3>
-            <p>Building responsive and simple client interfaces using modern JavaScript (ES6+), React, TypeScript, and Flutter.</p>
+            <h3>JavaScript & Web</h3>
+            <p>Solid foundation in modern JavaScript (ES6+) for both frontend and backend environments.</p>
           </div>
 
         </div>
@@ -443,9 +459,9 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
             <div className="timeline-dot" />
             <div className="timeline-content">
               <div className="timeline-date">2025 - Present</div>
-              <h3 className="timeline-title font-sans">Independent Web & App Developer</h3>
-              <div className="timeline-company">Freelance (Self-Employed)</div>
-              <p>Designing, coding, and launching full-stack digital solutions for small businesses, restaurants, NGOs, and local platforms in Nepal and internationally.</p>
+              <h3 className="timeline-title font-sans">Freelance Web Developer</h3>
+              <div className="timeline-company">Self-Employed</div>
+              <p>Building custom web applications and e-commerce solutions for various clients. Specializing in full-stack development with modern JavaScript frameworks and backend development.</p>
             </div>
           </div>
 
@@ -455,7 +471,7 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
               <div className="timeline-date">2021</div>
               <h3 className="timeline-title font-sans">Computer Science Student</h3>
               <div className="timeline-company">Narayani Model Secondary School</div>
-              <p>Studying technical computer science, mathematics, and algorithms, while simultaneously building software for active clients.</p>
+              <p>Pursuing secondary education with a focus on computer science and mathematics. Actively participating in coding competitions and tech-related activities.</p>
             </div>
           </div>
 
@@ -464,8 +480,8 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
             <div className="timeline-content">
               <div className="timeline-date">2018</div>
               <h3 className="timeline-title font-sans">Started Programming Journey</h3>
-              <div className="timeline-company">Self-Directed Learning</div>
-              <p>My Dad introduced me to software development. I was fascinated by how programs execute instructions, sparking my years of learning backend systems and scripting.</p>
+              <div className="timeline-company">Self-Learning</div>
+              <p>My first teacher was my Dad. Who introduced me to the world of computer. Then I was fascinated by programming. He was the one who ignited this spike to something wonderful.</p>
             </div>
           </div>
 
@@ -475,9 +491,9 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
       {/* DEVLOG / BLOG CTA */}
       <section className="section" id="blog">
         <div className="reveal" style={{ background: 'rgba(30, 41, 59, 0.3)', border: '1px solid var(--border)', borderRadius: '2rem', padding: '3rem 1.5rem', backdropFilter: 'blur(10px)', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--text)', fontWeight: '700' }}>Developer DevLog</h3>
+          <h3 style={{ fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--text)', fontWeight: '700' }}>Explore My DevLog</h3>
           <p style={{ color: '#94a3b8', marginBottom: '2rem', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', fontSize: '0.95rem' }}>
-            I write occasional, straightforward articles detailing my development process, system designs, and solutions to real coding challenges.
+            I document my technical challenges and breakthroughs as I build Success AI Home and other complex systems. Follow my journey.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8 font-sans text-left">
@@ -505,9 +521,9 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
         <div className="contact-content">
           
           <div className="contact-text reveal-left">
-            <p>I am always open to connecting with businesses, restaurant owners, schools, and local organizations who need software built. If you have an idea for a website or application, feel free to reach out.</p>
-            <p>I specialize in building systems that fit your specific requirements. I focus on clear communication and building robust, practical applications that are easy for both you and your clients to use.</p>
-            <p>Send me an email, call, or drop a message in the form. I typically respond to messages within 24 hours.</p>
+            <p>I'm always open to connect with fellow developers, clients and tech enthusiasts. Whether you have a project in mind, want to collaborate or just want to chat, I'd love to hear from you. :)</p>
+            <p>I'm currently available for freelance projects and open to discussing. My goal is to create something new and exciting, doesn't matter if there is meaningful purpose or not.</p>
+            <p>I don't have much to say! If you want to contact me, I typically respond to messages within 24 hours.</p>
           </div>
 
           <div className="contact-details reveal-right">
@@ -540,7 +556,7 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
               <div className="contact-icon">💼</div>
               <div>
                 <strong>Availability</strong>
-                <br /><span className="contact-link">Available for web and mobile projects</span>
+                <br /><span className="contact-link">Available (9:00 AM - 10:00 PM NPT)</span>
               </div>
             </div>
 
@@ -548,42 +564,37 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
 
         </div>
 
-        {/* Simplified Message Form */}
-        <div className="reveal max-w-xl mx-auto mt-12 bg-[#1e293b]/20 p-6 md:p-8 rounded-2xl border border-white/5 text-sm">
-          <h3 className="text-sm font-semibold text-white mb-4 text-center font-sans">Send a Message</h3>
+        {/* Beautiful Form Styled via Custom CSS - Automatically Opens WhatsApp */}
+        <div className="contact-form-container reveal">
+          <h3 className="contact-form-title">Send a Message</h3>
           <form 
-            action="https://formspree.io/f/xvonzgnz" 
-            method="POST" 
+            onSubmit={handleSendMessage}
             className="space-y-4"
           >
-            <div className="space-y-1">
-              <label className="text-zinc-400 block text-xs">Name :</label>
+            <div className="form-group">
+              <label>Name :</label>
               <input 
                 type="text" 
                 name="name" 
                 required 
                 placeholder="Your Name"
-                className="w-full bg-[#0f172a] border border-white/5 focus:border-sky-400 rounded-lg p-2.5 text-zinc-200 placeholder:text-zinc-700 outline-none transition text-sm"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-zinc-400 block text-xs">Email :</label>
+            <div className="form-group">
+              <label>Email :</label>
               <input 
                 type="email" 
                 name="email" 
                 required 
                 placeholder="your.email@example.com"
-                className="w-full bg-[#0f172a] border border-white/5 focus:border-sky-400 rounded-lg p-2.5 text-zinc-200 placeholder:text-zinc-700 outline-none transition text-sm"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-zinc-400 block text-xs">Message :</label>
+            <div className="form-group">
+              <label>Message :</label>
               <textarea 
                 name="message" 
                 required 
-                rows="4" 
                 placeholder="Describe what kind of website or application you would like to build..."
-                className="w-full bg-[#0f172a] border border-white/5 focus:border-sky-400 rounded-lg p-2.5 text-zinc-200 placeholder:text-zinc-700 outline-none transition resize-none text-sm"
               />
             </div>
             <button 
@@ -606,7 +617,7 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
           <div className="footer-links">
             <a href="mailto:success@4direction.com.np">Email</a>
             <a href="#home" onClick={(e) => handleScrollToSection(e, 'home')}>Portfolio</a>
-            <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')}>DevLog</a>
+            <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')}>Blog</a>
           </div>
         </div>
       </footer>
