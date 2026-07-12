@@ -24,6 +24,7 @@ import {
 export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeBlogPost, setActiveBlogPost] = useState(null);
+  const [cachedPosts, setCachedPosts] = useState([ ]);
 
   const logoPath = "logo.png";
   const profilePicPath = "portfolio_assets/success.jpg";
@@ -42,6 +43,21 @@ export default function App() {
     
     window.open(whatsappUrl, '_blank');
   };
+
+  // Attempt to read published Firebase blogs from local storage cache
+  useEffect(() => {
+    const cache = localStorage.getItem('portfolio_blog_cache');
+    if (cache) {
+      try {
+        const posts = JSON.parse(cache);
+        if (Array.isArray(posts)) {
+          setCachedPosts(posts.slice(0, 3)); // Display latest 3
+        }
+      } catch (e) {
+        console.error("React Cache Read Error:", e);
+      }
+    }
+  }, [ ]);
 
   // Authentic, simplified projects list showcasing real achievements
   const projects = [
@@ -110,34 +126,6 @@ export default function App() {
       isPrivate: false,
       iconType: "corporate",
       logo: ""
-    }
-  ];
-
-  // Authentic developer logs with straightforward, down-to-earth tone
-  const blogPosts = [
-    {
-      id: 1,
-      title: "How I Built Bharatpur Bazar's Real-time Updates System",
-      excerpt: "A simple, practical look at using database listeners to sync ordering states and restaurant coordination under a second.",
-      date: "May 14, 2026",
-      readTime: "4 min read",
-      content: `When building Bharatpur Bazar, our main engineering challenge was making sure that when someone places an order, the kitchen and the delivery riders get notified instantly.
-
-Instead of writing complex and heavy REST polling loops that constantly tax the server, I used Firebase Firestore's real-time listeners. When a customer confirms a checkout, the event updates a collection that the merchant's screen listens to. The kitchen gets the order ticket immediately, and the driver gets a notification in real-time.
-
-It is simple, low-bandwidth, and ensures that local customers get their hot meals and groceries delivered without delay.`
-    },
-    {
-      id: 2,
-      title: "Making Smart Homes Private: Building an Offline-first OS",
-      excerpt: "Why standard cloud smart devices pose a privacy issue, and how to command hardware locally via Python.",
-      date: "April 20, 2026",
-      readTime: "5 min read",
-      content: `Many commercial home smart plugs and switches route your telemetry data to servers abroad. I wanted a smart home setup that is secure and works even if the internet goes down.
-
-I built Success AI HomeOS using a local server running a multi-threaded Python daemon. The daemon continuously monitors and commands smart hardware using MQTT protocol over our local home network.
-
-All event logs are saved locally in an encrypted circular SQLite database, avoiding cloud dependency completely. A Flutter-based mobile client connects directly over local sockets. It is fast (under 15ms command execution), works completely offline, and keeps home data where it belongs.`
     }
   ];
 
@@ -215,8 +203,13 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
   };
 
   return (
-    <div className="portfolio-wrapper">
+    <div className="portfolio-wrapper" style={{ position: 'relative', overflowX: 'hidden' }}>
       
+      {/* Creative Background Blobs for organic visual depth */}
+      <div className="bg-blob blob-1"></div>
+      <div className="bg-blob blob-2"></div>
+      <div className="bg-blob blob-3"></div>
+
       {/* Scroll Progress Bar */}
       <div 
         className="scroll-progress-indicator" 
@@ -241,7 +234,7 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
             <a href="#skills" onClick={(e) => handleScrollToSection(e, 'skills')}>Skills</a>
             <a href="#projects" onClick={(e) => handleScrollToSection(e, 'projects')}>Projects</a>
             <a href="#experience" onClick={(e) => handleScrollToSection(e, 'experience')}>Experience</a>
-            <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')}>DevLog</a>
+            <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')}>Blogs</a>
             <a href="#contact" onClick={(e) => handleScrollToSection(e, 'contact')}>Contact</a>
           </div>
         </div>
@@ -261,9 +254,9 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
           <Briefcase className="w-5 h-5" />
           <span>Work</span>
         </a>
-        <a href="#contact" onClick={(e) => handleScrollToSection(e, 'contact')} className="mobile-nav-item">
-          <Mail className="w-5 h-5" />
-          <span>Contact</span>
+        <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')} className="mobile-nav-item">
+          <BookOpen className="w-5 h-5" />
+          <span>Blogs</span>
         </a>
       </nav>
 
@@ -488,28 +481,96 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
         </div>
       </section>
 
-      {/* DEVLOG / BLOG CTA */}
+      {/* BLOGS SECTION */}
       <section className="section" id="blog">
-        <div className="reveal" style={{ background: 'rgba(30, 41, 59, 0.3)', border: '1px solid var(--border)', borderRadius: '2rem', padding: '3rem 1.5rem', backdropFilter: 'blur(10px)', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--text)', fontWeight: '700' }}>Explore My DevLog</h3>
-          <p style={{ color: '#94a3b8', marginBottom: '2rem', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', fontSize: '0.95rem' }}>
-            I document my technical challenges and breakthroughs as I build Success AI Home and other complex systems. Follow my journey.
+        <h2 className="section-title reveal">Blogs</h2>
+        <div className="reveal" style={{ background: 'rgba(30, 41, 59, 0.3)', border: '1px solid var(--border)', borderRadius: '2rem', padding: '3.5rem 1.5rem', backdropFilter: 'blur(10px)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          
+          <h3 style={{ fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--text)', fontWeight: '700' }}>Explore My Technical Blogs</h3>
+          <p style={{ color: '#94a3b8', marginBottom: '2.5rem', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
+            I write detailed articles on local delivery architectures, private home automation systems, and database optimization. Explore my full blog platform to read all my technical logs.
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8 font-sans text-left">
-            {blogPosts.map((post) => (
-              <div 
-                key={post.id} 
-                onClick={() => setActiveBlogPost(post)}
-                className="p-4 rounded-xl border border-white/5 bg-[#0f172a]/80 hover:border-sky-500/30 transition-all duration-300 cursor-pointer flex justify-between items-center"
-              >
-                <div>
-                  <h4 className="text-xs font-bold text-white line-clamp-1">{post.title}</h4>
-                  <span className="text-[10px] text-zinc-500 font-mono mt-1 block">{post.date}</span>
+          {/* Grid of Dynamic Firebase Posts (Cached) or high-end featured place holders */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-10 text-left">
+            {cachedPosts.length > 0 ? (
+              cachedPosts.map((post) => {
+                const date = new Date(post.timestamp).toLocaleDateString('en-US', {
+                  year: 'numeric', month: 'short', day: 'numeric'
+                });
+                return (
+                  <div 
+                    key={post.key || post.id} 
+                    onClick={() => window.open(`post.html?id=${post.key || post.id}`, '_self')}
+                    className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">{date}</span>
+                      <h4 className="text-base font-bold text-white mb-2 line-clamp-2 leading-snug">{post.title}</h4>
+                      <p className="text-xs text-zinc-400 line-clamp-3 leading-relaxed mb-4">
+                        {post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : '')}
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
+                  </div>
+                );
+              })
+            ) : (
+              <>
+                <div 
+                  onClick={() => window.open('blog.html', '_self')}
+                  className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">System Design</span>
+                    <h4 className="text-base font-bold text-white mb-2 leading-snug">How I Built Bharatpur Bazar's Real-time Updates System</h4>
+                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                      A deep look at using real-time database listeners to coordinate checkout, kitchen notifications, and driver status in under a second.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-sky-400" />
-              </div>
-            ))}
+
+                <div 
+                  onClick={() => window.open('blog.html', '_self')}
+                  className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">HomeOS & Private IoT</span>
+                    <h4 className="text-base font-bold text-white mb-2 leading-snug">Making Smart Homes Private: Building an Offline OS</h4>
+                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                      Why commercial smart devices pose telemetry privacy concerns and how to command hardware locally via secure offline sockets.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
+                </div>
+
+                <div 
+                  onClick={() => window.open('blog.html', '_self')}
+                  className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">Web Optimization</span>
+                    <h4 className="text-base font-bold text-white mb-2 leading-snug">Database Architecture for Distributed Microservices</h4>
+                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                      Exploring proper schema layouts, horizontal scaling, and local ring-buffer optimizations for high-throughput tracking.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+            <a href="blog.html" className="btn-primary" style={{ textDecoration: 'none' }}>
+              <BookOpen className="w-4 h-4" />
+              Go to my Blogs
+            </a>
+            <a href="admin.html" className="btn-secondary" style={{ textDecoration: 'none' }}>
+              <Terminal className="w-4 h-4" />
+              Blog Admin Panel
+            </a>
           </div>
 
         </div>
@@ -617,7 +678,7 @@ All event logs are saved locally in an encrypted circular SQLite database, avoid
           <div className="footer-links">
             <a href="mailto:success@4direction.com.np">Email</a>
             <a href="#home" onClick={(e) => handleScrollToSection(e, 'home')}>Portfolio</a>
-            <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')}>Blog</a>
+            <a href="blog.html">Blogs</a>
           </div>
         </div>
       </footer>
