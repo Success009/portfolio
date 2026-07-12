@@ -32,12 +32,10 @@ export default function App() {
   // Form submission handler to directly open WhatsApp with pre-filled details
   const handleSendMessage = (e) => {
     e.preventDefault();
-    const name = e.target.name.value;
-    const email = e.target.email.value;
     const message = e.target.message.value;
 
     const whatsappNumber = "9779809248510";
-    const text = `Hello Success,\n\nMy name is ${name} (${email}).\n\nMessage: ${message}`;
+    const text = `*From Portfolio*\n\n${message}`;
     const encodedText = encodeURIComponent(text);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodedText}`;
     
@@ -583,24 +581,6 @@ export default function App() {
             onSubmit={handleSendMessage}
             className="space-y-4"
           >
-            <div className="form-group">
-              <label>Name :</label>
-              <input 
-                type="text" 
-                name="name" 
-                required 
-                placeholder="Your Name"
-              />
-            </div>
-            <div className="form-group">
-              <label>Email :</label>
-              <input 
-                type="email" 
-                name="email" 
-                required 
-                placeholder="your.email@example.com"
-              />
-            </div>
             <div className="form-group">
               <label>Message :</label>
               <textarea 
