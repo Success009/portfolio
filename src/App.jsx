@@ -20,12 +20,12 @@ import {
   ExternalLink,
   Clock
 } from 'lucide-react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function App() {
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [activeBlogPost, setActiveBlogPost] = useState(null);
-  const [cachedPosts, setCachedPosts] = useState([ ]);
-
   const logoPath = "logo.png";
   const profilePicPath = "portfolio_assets/success.jpg";
 
@@ -44,20 +44,145 @@ export default function App() {
     window.open(whatsappUrl, '_blank');
   };
 
-  // Attempt to read published Firebase blogs from local storage cache
+  // Dynamic GSAP scroll and entry timeline animations matching script.js from backup
   useEffect(() => {
-    const cache = localStorage.getItem('portfolio_blog_cache');
-    if (cache) {
-      try {
-        const posts = JSON.parse(cache);
-        if (Array.isArray(posts)) {
-          setCachedPosts(posts.slice(0, 3)); // Display latest 3
-        }
-      } catch (e) {
-        console.error("React Cache Read Error:", e);
-      }
+    // 1. Navigation Background Shift
+    gsap.to('.nav', {
+      scrollTrigger: {
+        start: 'top top',
+        end: '+=100',
+        toggleActions: 'play none none reverse'
+      },
+      backgroundColor: 'rgba(15, 23, 42, 0.98)',
+      duration: 0.3
+    });
+
+    // 2. Hero Section Entry Timeline
+    const heroTl = gsap.timeline();
+    heroTl.from('.hero-text h1', { opacity: 0, y: 50, duration: 1, delay: 0.3 })
+          .from('.hero-text .subtitle', { opacity: 0, y: 30, duration: 0.8 }, '-=0.5')
+          .from('.hero-text p', { opacity: 0, y: 30, duration: 0.8 }, '-=0.4')
+          .from('.hero-stats', { opacity: 0, scale: 0.8, duration: 0.8 }, '-=0.3')
+          .from('.hero-buttons', { opacity: 0, y: 30, duration: 0.8 }, '-=0.3')
+          .from('.profile-img', { opacity: 0, scale: 0.8, duration: 1 }, '-=0.8');
+
+    // 3. Section Content Reveal Pattern (Responsive)
+    const isMobile = window.innerWidth <= 768;
+
+    const revealOnScroll = (elements, xValue) => {
+      elements.forEach(selector => {
+        const matchedElements = document.querySelectorAll(selector);
+        matchedElements.forEach(el => {
+          gsap.from(el, {
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 85%',
+              toggleActions: 'play none none none'
+            },
+            opacity: 0,
+            x: xValue,
+            duration: 1,
+            ease: "power2.out"
+          });
+        });
+      });
+    };
+
+    if (!isMobile) {
+      revealOnScroll(['.about-text', '.skill-card', '.contact-text'], -50);
+      revealOnScroll(['.about-highlights', '.project-card', '.contact-details'], 50);
+    } else {
+      const mobileElements = document.querySelectorAll('.about-text, .skill-card, .contact-text, .about-highlights, .project-card, .contact-details');
+      mobileElements.forEach(el => {
+        gsap.from(el, {
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 90%',
+            toggleActions: 'play none none none'
+          },
+          opacity: 0,
+          y: 30,
+          duration: 0.8,
+          ease: "power2.out"
+        });
+      });
     }
+
+    // 4. Experience Timeline Sequential Reveal (Lighter for Mobile)
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    timelineItems.forEach((item) => {
+      const content = item.querySelector('.timeline-content');
+      const dot = item.querySelector('.timeline-dot');
+
+      if (content) {
+        gsap.from(content, {
+          scrollTrigger: {
+            trigger: item,
+            start: isMobile ? 'top 90%' : 'top 85%',
+            toggleActions: 'play none none none'
+          },
+          opacity: 0,
+          y: isMobile ? 20 : 50,
+          scale: isMobile ? 1 : 0.95,
+          duration: isMobile ? 0.7 : 1,
+          ease: isMobile ? "power2.out" : "back.out(1.7)"
+        });
+      }
+
+      if (dot) {
+        gsap.from(dot, {
+          scrollTrigger: {
+            trigger: item,
+            start: isMobile ? 'top 90%' : 'top 85%',
+          },
+          scale: 0,
+          opacity: 0,
+          duration: 0.5,
+          delay: 0.1
+        });
+      }
+    });
+
+    ScrollTrigger.refresh();
+
+    return () => {
+      // Clean up ScrollTrigger instances on unmount
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
   }, [ ]);
+
+  // Smooth Scroll Helper
+  const handleScrollToSection = (e, targetId) => {
+    e.preventDefault();
+    const element = document.getElementById(targetId);
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop - (window.innerWidth <= 768 ? 10 : 70),
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const renderProjectIcon = (project) => {
+    if (project.logo) {
+      return (
+        <img 
+          src={project.logo} 
+          alt={`${project.title} logo`} 
+          className="w-16 h-16 object-contain rounded-xl bg-white/5 p-2 border border-white/10 animate-float"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+      );
+    }
+    switch (project.iconType) {
+      case 'delivery': return <ShoppingCart className="w-12 h-12 text-sky-400" />;
+      case 'home': return <HomeIcon className="w-12 h-12 text-sky-400" />;
+      case 'corporate': return <Globe className="w-12 h-12 text-sky-400" />;
+      default: return <Code2 className="w-12 h-12 text-sky-400" />;
+    }
+  };
 
   // Authentic, simplified projects list showcasing real achievements
   const projects = [
@@ -129,79 +254,6 @@ export default function App() {
     }
   ];
 
-  // Scroll Progress Observer
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalScroll > 0) {
-        setScrollProgress((window.scrollY / totalScroll) * 100);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [ ]);
-
-  // Scroll-Reveal Intersection Observer
-  useEffect(() => {
-    const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, {
-      root: null,
-      threshold: 0.1,
-      rootMargin: "0px 0px -50px 0px"
-    });
-
-    revealElements.forEach(el => observer.observe(el));
-
-    const heroElements = document.querySelectorAll('.hero-reveal');
-    heroElements.forEach((el, idx) => {
-      setTimeout(() => {
-        el.classList.add('visible');
-      }, 150 + idx * 150);
-    });
-
-    return () => observer.disconnect();
-  }, [ ]);
-
-  // Smooth Scroll Helper
-  const handleScrollToSection = (e, targetId) => {
-    e.preventDefault();
-    const element = document.getElementById(targetId);
-    if (element) {
-      window.scrollTo({
-        top: element.offsetTop - (window.innerWidth <= 768 ? 10 : 70),
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const renderProjectIcon = (project) => {
-    if (project.logo) {
-      return (
-        <img 
-          src={project.logo} 
-          alt={`${project.title} logo`} 
-          className="w-16 h-16 object-contain rounded-xl bg-white/5 p-2 border border-white/10"
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
-      );
-    }
-    switch (project.iconType) {
-      case 'delivery': return <ShoppingCart className="w-12 h-12 text-sky-400" />;
-      case 'home': return <HomeIcon className="w-12 h-12 text-sky-400" />;
-      case 'corporate': return <Globe className="w-12 h-12 text-sky-400" />;
-      default: return <Code2 className="w-12 h-12 text-sky-400" />;
-    }
-  };
-
   return (
     <div className="portfolio-wrapper" style={{ position: 'relative', overflowX: 'hidden' }}>
       
@@ -209,12 +261,6 @@ export default function App() {
       <div className="bg-blob blob-1"></div>
       <div className="bg-blob blob-2"></div>
       <div className="bg-blob blob-3"></div>
-
-      {/* Scroll Progress Bar */}
-      <div 
-        className="scroll-progress-indicator" 
-        style={{ width: `${scrollProgress}%` }}
-      />
 
       {/* DESKTOP STICKY NAVIGATION */}
       <nav className="nav desktop-nav">
@@ -234,7 +280,7 @@ export default function App() {
             <a href="#skills" onClick={(e) => handleScrollToSection(e, 'skills')}>Skills</a>
             <a href="#projects" onClick={(e) => handleScrollToSection(e, 'projects')}>Projects</a>
             <a href="#experience" onClick={(e) => handleScrollToSection(e, 'experience')}>Experience</a>
-            <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')}>Blogs</a>
+            <a href="blog.html">Blogs</a>
             <a href="#contact" onClick={(e) => handleScrollToSection(e, 'contact')}>Contact</a>
           </div>
         </div>
@@ -254,7 +300,7 @@ export default function App() {
           <Briefcase className="w-5 h-5" />
           <span>Work</span>
         </a>
-        <a href="#blog" onClick={(e) => handleScrollToSection(e, 'blog')} className="mobile-nav-item">
+        <a href="blog.html" className="mobile-nav-item">
           <BookOpen className="w-5 h-5" />
           <span>Blogs</span>
         </a>
@@ -265,13 +311,13 @@ export default function App() {
         <div className="hero-container">
           
           <div className="hero-text">
-            <h1 className="hero-reveal reveal">Hello, I'm Success</h1>
-            <div className="subtitle hero-reveal reveal">Backend & System Developer</div>
-            <p className="hero-reveal reveal">
+            <h1>Hello, I'm Success</h1>
+            <div className="subtitle">Backend & System Developer</div>
+            <p>
               An 18-year-old system and web developer from Bharatpur, Nepal. I specialize in backend code, clean databases, and custom system solutions. I write code in Python, JavaScript, TypeScript, React, and Flutter to build software that works reliably for real businesses.
             </p>
 
-            <div className="hero-stats hero-reveal reveal">
+            <div className="hero-stats">
               <div className="stat">
                 <div className="stat-number">7+</div>
                 <div className="stat-label">Years Coding</div>
@@ -286,7 +332,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="hero-buttons hero-reveal reveal">
+            <div className="hero-buttons">
               <a 
                 href="#projects" 
                 onClick={(e) => handleScrollToSection(e, 'projects')} 
@@ -309,7 +355,7 @@ export default function App() {
             <img 
               src={profilePicPath} 
               alt="Success - Backend & System Developer" 
-              className="profile-img hero-reveal reveal-scale"
+              className="profile-img"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -321,10 +367,10 @@ export default function App() {
 
       {/* ABOUT ME SECTION */}
       <section className="section" id="about">
-        <h2 className="section-title reveal">About Me</h2>
+        <h2 className="section-title">About Me</h2>
         <div className="about-content">
           
-          <div className="about-text reveal-left">
+          <div className="about-text">
             <p>
               I'm a dedicated developer currently studying at <strong className="text-white">Narayani Model Secondary School</strong> in Nepal. My journey into programming started when I was 10, and since then, I've been passionate about creating digital solutions that make a difference.
             </p>
@@ -336,7 +382,7 @@ export default function App() {
             </p>
           </div>
 
-          <div className="about-highlights reveal-right">
+          <div className="about-highlights">
             <div className="highlight-item">
               <div className="highlight-icon">🎓</div>
               <div>
@@ -365,10 +411,10 @@ export default function App() {
 
       {/* TECHNICAL SKILLS SECTION */}
       <section className="section" id="skills">
-        <h2 className="section-title reveal">Technical Skills</h2>
+        <h2 className="section-title">Technical Skills</h2>
         <div className="skills-grid">
           
-          <div className="skill-card reveal">
+          <div className="skill-card">
             <div className="skill-icon">
               <Server className="w-8 h-8" />
             </div>
@@ -376,7 +422,7 @@ export default function App() {
             <p>Expert in building scalable APIs and microservices using Node.js and Express. Focused on performance and reliability.</p>
           </div>
 
-          <div className="skill-card reveal">
+          <div className="skill-card">
             <div className="skill-icon">
               <Zap className="w-8 h-8" />
             </div>
@@ -384,7 +430,7 @@ export default function App() {
             <p>Deep experience with Firestore, Realtime Database, and Cloud Functions for synchronized applications.</p>
           </div>
 
-          <div className="skill-card reveal">
+          <div className="skill-card">
             <div className="skill-icon">
               <Terminal className="w-8 h-8" />
             </div>
@@ -392,7 +438,7 @@ export default function App() {
             <p>Scripting and system automation. Experience building custom OS layers and AI integrations.</p>
           </div>
 
-          <div className="skill-card reveal">
+          <div className="skill-card">
             <div className="skill-icon">
               <Code2 className="w-8 h-8" />
             </div>
@@ -405,11 +451,11 @@ export default function App() {
 
       {/* PROJECTS SECTION */}
       <section className="section" id="projects">
-        <h2 className="section-title reveal font-bold">Featured Projects</h2>
+        <h2 className="section-title font-bold">Featured Projects</h2>
         <div className="projects-grid">
           
           {projects.map((project) => (
-            <div key={project.id} className="project-card reveal">
+            <div key={project.id} className="project-card">
               <div className="project-image">
                 {renderProjectIcon(project)}
               </div>
@@ -444,11 +490,11 @@ export default function App() {
 
       {/* EXPERIENCE SECTION */}
       <section className="section" id="experience">
-        <h2 className="section-title reveal">Experience & Journey</h2>
+        <h2 className="section-title">Experience & Journey</h2>
         <div className="experience-timeline">
           <div className="timeline-line" />
 
-          <div className="timeline-item reveal">
+          <div className="timeline-item">
             <div className="timeline-dot" />
             <div className="timeline-content">
               <div className="timeline-date">2025 - Present</div>
@@ -458,7 +504,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="timeline-item reveal">
+          <div className="timeline-item">
             <div className="timeline-dot" />
             <div className="timeline-content">
               <div className="timeline-date">2021</div>
@@ -468,7 +514,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="timeline-item reveal">
+          <div className="timeline-item">
             <div className="timeline-dot" />
             <div className="timeline-content">
               <div className="timeline-date">2018</div>
@@ -481,113 +527,18 @@ export default function App() {
         </div>
       </section>
 
-      {/* BLOGS SECTION */}
-      <section className="section" id="blog">
-        <h2 className="section-title reveal">Blogs</h2>
-        <div className="reveal" style={{ background: 'rgba(30, 41, 59, 0.3)', border: '1px solid var(--border)', borderRadius: '2rem', padding: '3.5rem 1.5rem', backdropFilter: 'blur(10px)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          
-          <h3 style={{ fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--text)', fontWeight: '700' }}>Explore My Technical Blogs</h3>
-          <p style={{ color: '#94a3b8', marginBottom: '2.5rem', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
-            I write detailed articles on local delivery architectures, private home automation systems, and database optimization. Explore my full blog platform to read all my technical logs.
-          </p>
-          
-          {/* Grid of Dynamic Firebase Posts (Cached) or high-end featured place holders */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-10 text-left">
-            {cachedPosts.length > 0 ? (
-              cachedPosts.map((post) => {
-                const date = new Date(post.timestamp).toLocaleDateString('en-US', {
-                  year: 'numeric', month: 'short', day: 'numeric'
-                });
-                return (
-                  <div 
-                    key={post.key || post.id} 
-                    onClick={() => window.open(`post.html?id=${post.key || post.id}`, '_self')}
-                    className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
-                  >
-                    <div>
-                      <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">{date}</span>
-                      <h4 className="text-base font-bold text-white mb-2 line-clamp-2 leading-snug">{post.title}</h4>
-                      <p className="text-xs text-zinc-400 line-clamp-3 leading-relaxed mb-4">
-                        {post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : '')}
-                      </p>
-                    </div>
-                    <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
-                  </div>
-                );
-              })
-            ) : (
-              <>
-                <div 
-                  onClick={() => window.open('blog.html', '_self')}
-                  className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">System Design</span>
-                    <h4 className="text-base font-bold text-white mb-2 leading-snug">How I Built Bharatpur Bazar's Real-time Updates System</h4>
-                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                      A deep look at using real-time database listeners to coordinate checkout, kitchen notifications, and driver status in under a second.
-                    </p>
-                  </div>
-                  <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
-                </div>
-
-                <div 
-                  onClick={() => window.open('blog.html', '_self')}
-                  className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">HomeOS & Private IoT</span>
-                    <h4 className="text-base font-bold text-white mb-2 leading-snug">Making Smart Homes Private: Building an Offline OS</h4>
-                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                      Why commercial smart devices pose telemetry privacy concerns and how to command hardware locally via secure offline sockets.
-                    </p>
-                  </div>
-                  <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
-                </div>
-
-                <div 
-                  onClick={() => window.open('blog.html', '_self')}
-                  className="p-6 rounded-2xl border border-white/5 bg-[#0f172a]/90 hover:border-sky-400/40 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <span className="text-xs text-sky-400 font-mono font-semibold uppercase tracking-wider block mb-2">Web Optimization</span>
-                    <h4 className="text-base font-bold text-white mb-2 leading-snug">Database Architecture for Distributed Microservices</h4>
-                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                      Exploring proper schema layouts, horizontal scaling, and local ring-buffer optimizations for high-throughput tracking.
-                    </p>
-                  </div>
-                  <span className="text-xs font-semibold text-sky-400 inline-flex items-center gap-1 mt-auto">Read Post <ArrowRight className="w-3 h-3" /></span>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-            <a href="blog.html" className="btn-primary" style={{ textDecoration: 'none' }}>
-              <BookOpen className="w-4 h-4" />
-              Go to my Blogs
-            </a>
-            <a href="admin.html" className="btn-secondary" style={{ textDecoration: 'none' }}>
-              <Terminal className="w-4 h-4" />
-              Blog Admin Panel
-            </a>
-          </div>
-
-        </div>
-      </section>
-
       {/* CONTACT SECTION */}
       <section className="section" id="contact">
-        <h2 className="section-title reveal">Get In Touch</h2>
+        <h2 className="section-title">Get In Touch</h2>
         <div className="contact-content">
           
-          <div className="contact-text reveal-left">
+          <div className="contact-text">
             <p>I'm always open to connect with fellow developers, clients and tech enthusiasts. Whether you have a project in mind, want to collaborate or just want to chat, I'd love to hear from you. :)</p>
             <p>I'm currently available for freelance projects and open to discussing. My goal is to create something new and exciting, doesn't matter if there is meaningful purpose or not.</p>
             <p>I don't have much to say! If you want to contact me, I typically respond to messages within 24 hours.</p>
           </div>
 
-          <div className="contact-details reveal-right">
+          <div className="contact-details">
             
             <div className="contact-item">
               <div className="contact-icon">📞</div>
@@ -626,7 +577,7 @@ export default function App() {
         </div>
 
         {/* Beautiful Form Styled via Custom CSS - Automatically Opens WhatsApp */}
-        <div className="contact-form-container reveal">
+        <div className="contact-form-container">
           <h3 className="contact-form-title">Send a Message</h3>
           <form 
             onSubmit={handleSendMessage}
@@ -669,6 +620,20 @@ export default function App() {
 
       </section>
 
+      {/* BLOG DEDICATED CTA AT THE VERY END OF THE PAGE */}
+      <section className="section" id="blog" style={{ borderTop: '1px solid var(--border)', paddingTop: '4rem', marginTop: '2rem' }}>
+        <div style={{ background: 'rgba(30, 41, 59, 0.3)', border: '1px solid var(--border)', borderRadius: '2rem', padding: '3.5rem 1.5rem', backdropFilter: 'blur(10px)', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+          <h3 style={{ fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--text)', fontWeight: '700' }}>Explore My Blogs</h3>
+          <p style={{ color: '#94a3b8', marginBottom: '2rem', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto', fontSize: '1.05rem', lineHeight: '1.6' }}>
+            In short, I make blogs in real time about my projects and my life. I highly recommend giving it a read once!
+          </p>
+          <a href="blog.html" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BookOpen className="w-5 h-5" />
+            Read my Blogs
+          </a>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="footer">
         <div className="footer-container">
@@ -682,30 +647,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-
-      {/* DEVLOG DETAIL MODAL (Overlay) */}
-      <div className={`devlog-modal-overlay ${activeBlogPost ? 'open' : ''}`} onClick={() => setActiveBlogPost(null)}>
-        {activeBlogPost && (
-          <div className="devlog-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={() => setActiveBlogPost(null)}
-              className="devlog-modal-close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '0.75rem', marginBottom: '1rem', fontFamily: 'monospace' }}>
-              <span>{activeBlogPost.date}</span>
-              <span>{activeBlogPost.readTime}</span>
-            </div>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text)', marginBottom: '1.5rem', lineHeight: '1.3' }}>
-              {activeBlogPost.title}
-            </h2>
-            <div style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.8', whiteSpace: 'pre-wrap', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-              {activeBlogPost.content}
-            </div>
-          </div>
-        )}
-      </div>
 
     </div>
   );
